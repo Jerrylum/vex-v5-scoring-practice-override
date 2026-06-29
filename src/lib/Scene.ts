@@ -32,6 +32,8 @@ export class Scene {
 	}
 
 	private async loadField(): Promise<void> {
+		this.field = await this.addField();
+
 		const maxDim = 1600;
 
 		this.renderer.setCameraView(new THREE.Vector3(0, 1600, 1600), new THREE.Vector3(0, 0, 0));
@@ -48,8 +50,8 @@ export class Scene {
 		console.log('Game object preload ready');
 	}
 
-	public async addField(modelPath: string, position: THREE.Vector3 = new THREE.Vector3(0, 0, 0)): Promise<Field> {
-		const model = await this.modelLoader.loadModel(modelPath, 'Field');
+	public async addField(position: THREE.Vector3 = new THREE.Vector3(0, 0, 0)): Promise<Field> {
+		const model = await this.modelLoader.loadModel('/V5RC-Override-H2H-_-FieldElements.glb', 'Field');
 		const field = new Field(model);
 		field.setPosition(position);
 

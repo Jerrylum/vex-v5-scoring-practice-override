@@ -20,21 +20,52 @@ export class ModelLoader {
 		}
 	}
 
+	private isClearMaterial(material: THREE.Material): boolean {
+		return /acrylic|clear|glass|polycarbonate|transparent/i.test(material.name);
+	}
+
+	private createClearMaterial(material: THREE.MeshStandardMaterial): THREE.MeshPhysicalMaterial {
+		return new THREE.MeshPhysicalMaterial({
+			color: material.color,
+			metalness: 0,
+			roughness: 0.05,
+			transmission: 0.85,
+			thickness: 2,
+			transparent: true,
+			opacity: 1,
+			side: THREE.DoubleSide,
+			depthWrite: false,
+			envMapIntensity: 1,
+			name: material.name
+		});
+	}
+
+	private prepareMaterial(material: THREE.Material): THREE.Material {
+		if (material instanceof THREE.MeshStandardMaterial && this.isClearMaterial(material)) {
+			return this.createClearMaterial(material);
+		}
+
+		if (material instanceof THREE.MeshStandardMaterial) {
+			material.envMapIntensity = 1;
+		}
+
+		return material;
+	}
+
 	private prepareMeshes(object: THREE.Group): number {
 		let meshCount = 0;
 
 		object.traverse((child) => {
 			if (child instanceof THREE.Mesh) {
 				meshCount++;
-				child.castShadow = true;
-				child.receiveShadow = true;
 
 				const materials = Array.isArray(child.material) ? child.material : [child.material];
-				for (const material of materials) {
-					if (material instanceof THREE.MeshStandardMaterial) {
-						material.envMapIntensity = 1;
-					}
-				}
+				const prepared = materials.map((material) => this.prepareMaterial(material));
+				child.material = Array.isArray(child.material) ? prepared : prepared[0]!;
+
+				const isClear = prepared.some((material) => this.isClearMaterial(material));
+				child.castShadow = !isClear;
+				child.receiveShadow = !isClear;
 
 				if (child.geometry) {
 					child.geometry.computeBoundingBox();
