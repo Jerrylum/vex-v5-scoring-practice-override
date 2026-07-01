@@ -5,8 +5,9 @@ import type { PinType } from './GameObject';
 export type PinHalfColor = 'red' | 'blue' | 'yellow';
 export type { ToggleColor } from './Scoring';
 
+/** [bottom, top] — pin names read top-first: redBlue = top red, bottom blue. */
 const PIN_HALF_COLORS: Record<PinType, [PinHalfColor, PinHalfColor]> = {
-	redBlue: ['red', 'blue'],
+	redBlue: ['blue', 'red'],
 	redYellow: ['yellow', 'red'],
 	blueYellow: ['yellow', 'blue'],
 	yellowYellow: ['yellow', 'yellow']
