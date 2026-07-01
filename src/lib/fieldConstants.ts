@@ -6,7 +6,7 @@
  * Three.js `RobotObject` container.rotation.y.
  */
 import * as THREE from 'three';
-import { FT, ROBOT_MAX_SIZE } from './utils';
+import { FT, ROBOT_MAX_SIZE, TILE } from './utils';
 
 /** Square field size per game spec (mm). */
 export const FIELD_SIZE = 3570;
@@ -30,14 +30,14 @@ export const MIDFIELD_GOAL_BASE = new THREE.Vector3(0, 145, 0);
 /** Goal and fixed field element centers robots must not overlap (x, z in mm). */
 export const EXCLUSION_ZONES: ReadonlyArray<{ x: number; z: number }> = [
 	{ x: 0, z: 0 },
-	{ x: 4 * FT, z: 2 * FT },
-	{ x: 2 * FT, z: 4 * FT },
-	{ x: -2 * FT, z: 4 * FT },
-	{ x: -4 * FT, z: 2 * FT },
-	{ x: -4 * FT, z: -2 * FT },
-	{ x: -2 * FT, z: -4 * FT },
-	{ x: 2 * FT, z: -4 * FT },
-	{ x: 4 * FT, z: -2 * FT },
+	{x: 2 * TILE, z: 1 * TILE},
+	{x: 1 * TILE, z: 2 * TILE},
+	{x: -1 * TILE, z: 2 * TILE},
+	{x: -2 * TILE, z: 1 * TILE},
+	{x: -2 * TILE, z: -1 * TILE},
+	{x: -1 * TILE, z: -2 * TILE},
+	{x: 1 * TILE, z: -2 * TILE},
+	{x: 2 * TILE, z: -1 * TILE},
 	{ x: 6 * FT, z: 5 * FT },
 	{ x: -6 * FT, z: 5 * FT },
 	{ x: -6 * FT, z: -5 * FT },
