@@ -147,7 +147,7 @@
 					</div>
 				</div>
 
-				<div class="rounded-md border border-[#374151] bg-[#111827] p-3">
+				<div class="mb-4 rounded-md border border-[#374151] bg-[#111827] p-3">
 					<h3 class="mb-2 text-sm font-semibold text-gray-300">Midfield Goal (Actual)</h3>
 					<div class="space-y-1 text-sm">
 						<div class="flex justify-between">
@@ -172,6 +172,49 @@
 						</div>
 					</div>
 				</div>
+
+				{#if actualCounts.redQuadrantOne}
+					<div class="rounded-md border border-[#374151] bg-[#111827] p-3">
+						<h3 class="mb-2 text-sm font-semibold text-gray-300">Red Quadrant One (Actual)</h3>
+						<div class="mb-2 text-xs text-gray-400">Toggle: {actualCounts.redQuadrantOne.toggleColor}</div>
+						<div class="space-y-2 text-sm">
+							<div>
+								<div class="text-red-300">Alliance Goal</div>
+								<div class="flex justify-between">
+									<span class="text-red-400">Red</span>
+									<span>{actualCounts.redQuadrantOne.allianceGoal.visible.red}</span>
+								</div>
+								<div class="flex justify-between">
+									<span class="text-blue-400">Blue</span>
+									<span>{actualCounts.redQuadrantOne.allianceGoal.visible.blue}</span>
+								</div>
+								<div class="flex justify-between">
+									<span class="text-yellow-400">Yellow (visible)</span>
+									<span>{actualCounts.redQuadrantOne.allianceGoal.visible.yellow}</span>
+								</div>
+							</div>
+							<div class="border-t border-[#374151] pt-2">
+								<div class="text-gray-300">Neutral Goal</div>
+								<div class="flex justify-between">
+									<span class="text-red-400">Red</span>
+									<span>{actualCounts.redQuadrantOne.neutralGoal.visible.red}</span>
+								</div>
+								<div class="flex justify-between">
+									<span class="text-blue-400">Blue</span>
+									<span>{actualCounts.redQuadrantOne.neutralGoal.visible.blue}</span>
+								</div>
+								<div class="flex justify-between">
+									<span class="text-yellow-400">Yellow (visible)</span>
+									<span>{actualCounts.redQuadrantOne.neutralGoal.visible.yellow}</span>
+								</div>
+								<div class="flex justify-between">
+									<span class="text-yellow-400">Yellow (scored)</span>
+									<span>{actualCounts.redQuadrantOne.neutralGoal.scored.yellow}</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				{/if}
 			</div>
 		{/if}
 	</div>

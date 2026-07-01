@@ -1,13 +1,11 @@
-import { Pin, Cup, Structure, ScoringObject } from '../ScoringObject';
+import { Structure, ScoringObject } from '../ScoringObject';
 import type { Scene } from '../Scene';
 import { type ScenarioContext, type StructureScoring } from '../Scoring';
 import type { MidfieldSnapshot, StackItem } from '../ScenarioSnapshot';
-import type { PinType } from '../GameObject';
-import { scoreMidfieldStack } from '../midfieldScoring';
-import { mulberry32 } from '../utils';
-import { visualizeMidfieldStack } from './MidfieldStackVisualization';
-
-const ALL_PIN_TYPES: PinType[] = ['redBlue', 'redYellow', 'blueYellow', 'yellowYellow'];
+import { scoreMidfieldStack } from '../goalScoring';
+import { stackToElements } from '../stackGeneration';
+import { visualizeGoalStack } from './GoalStackVisualization';
+import { MIDFIELD_GOAL_BASE } from '../fieldConstants';
 
 export class MidfieldStructure extends Structure {
 	public readonly theCase: MidfieldCase;
@@ -42,7 +40,7 @@ export class MidfieldStructure extends Structure {
 		const stack = snapshot.stack;
 		switch (snapshot.caseType) {
 			case 'oneYY':
-				return new MidfieldStructure(new MidfieldOneYYPinCase(), snapshot.seed);
+				return new MidfieldStructure(new MidfieldOneYYPinCase(stack), snapshot.seed);
 			case 'shortStack':
 				return new MidfieldStructure(new MidfieldShortStackPinCase(stack), snapshot.seed);
 			case 'tallStack':
@@ -59,39 +57,6 @@ export abstract class MidfieldCase {
 	public abstract toSnapshot(seed: number): MidfieldSnapshot;
 }
 
-function baseYYStack(): StackItem[] {
-	return [{ kind: 'pin', pinType: 'yellowYellow', isFlipped: false }];
-}
-
-export function generateMidfieldStack(seed: number, totalItems: number): StackItem[] {
-	if (totalItems < 1 || totalItems > 14) {
-		throw new Error(`Invalid midfield stack length: ${totalItems}`);
-	}
-
-	const stack: StackItem[] = [{ kind: 'pin', pinType: 'yellowYellow', isFlipped: false }];
-	const random = mulberry32(seed);
-
-	for (let i = 1; i < totalItems; i++) {
-		if (i % 2 === 1) {
-			stack.push({ kind: 'cup', isFlipped: random() < 0.5 });
-		} else {
-			const pinType = ALL_PIN_TYPES[Math.floor(random() * ALL_PIN_TYPES.length)];
-			stack.push({ kind: 'pin', pinType, isFlipped: random() < 0.5 });
-		}
-	}
-
-	return stack;
-}
-
-function stackToElements(stack: StackItem[]): ScoringObject[] {
-	return stack.map((item) => {
-		if (item.kind === 'pin') {
-			return new Pin(item.pinType, item.isFlipped);
-		}
-		return new Cup(item.isFlipped);
-	});
-}
-
 function scoringFromStack(stack: StackItem[], context: ScenarioContext): StructureScoring {
 	return {
 		midfieldGoal: scoreMidfieldStack(stack, context.midfieldCounts)
@@ -99,8 +64,15 @@ function scoringFromStack(stack: StackItem[], context: ScenarioContext): Structu
 }
 
 export class MidfieldOneYYPinCase extends MidfieldCase {
+	constructor(private readonly stack: StackItem[]) {
+		super();
+		if (stack.length > 1) {
+			throw new Error(`MidfieldOneYYPinCase allows at most 1 item, got ${stack.length}`);
+		}
+	}
+
 	public getStack(): StackItem[] {
-		return baseYYStack();
+		return this.stack;
 	}
 
 	public getElements(): ScoringObject[] {
@@ -112,7 +84,7 @@ export class MidfieldOneYYPinCase extends MidfieldCase {
 	}
 
 	public async visualize(scene: Scene): Promise<void> {
-		await visualizeMidfieldStack(scene, this.getStack());
+		await visualizeGoalStack(scene, MIDFIELD_GOAL_BASE, this.getStack());
 	}
 
 	public toSnapshot(seed: number): MidfieldSnapshot {
@@ -123,9 +95,8 @@ export class MidfieldOneYYPinCase extends MidfieldCase {
 export class MidfieldShortStackPinCase extends MidfieldCase {
 	constructor(public readonly stack: StackItem[]) {
 		super();
-		const len = stack.length;
-		if (len < 2 || len > 7) {
-			throw new Error(`MidfieldShortStackPinCase requires 2–7 items, got ${len}`);
+		if (stack.length > 7) {
+			throw new Error(`MidfieldShortStackPinCase exceeds max 7 items, got ${stack.length}`);
 		}
 	}
 
@@ -142,7 +113,7 @@ export class MidfieldShortStackPinCase extends MidfieldCase {
 	}
 
 	public async visualize(scene: Scene): Promise<void> {
-		await visualizeMidfieldStack(scene, this.stack);
+		await visualizeGoalStack(scene, MIDFIELD_GOAL_BASE, this.stack);
 	}
 
 	public toSnapshot(seed: number): MidfieldSnapshot {
@@ -153,9 +124,8 @@ export class MidfieldShortStackPinCase extends MidfieldCase {
 export class MidfieldTallStackPinCase extends MidfieldCase {
 	constructor(public readonly stack: StackItem[]) {
 		super();
-		const len = stack.length;
-		if (len < 8 || len > 14) {
-			throw new Error(`MidfieldTallStackPinCase requires 8–14 items, got ${len}`);
+		if (stack.length > 14) {
+			throw new Error(`MidfieldTallStackPinCase exceeds max 14 items, got ${stack.length}`);
 		}
 	}
 
@@ -172,7 +142,7 @@ export class MidfieldTallStackPinCase extends MidfieldCase {
 	}
 
 	public async visualize(scene: Scene): Promise<void> {
-		await visualizeMidfieldStack(scene, this.stack);
+		await visualizeGoalStack(scene, MIDFIELD_GOAL_BASE, this.stack);
 	}
 
 	public toSnapshot(seed: number): MidfieldSnapshot {

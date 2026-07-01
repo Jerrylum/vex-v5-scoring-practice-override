@@ -4,6 +4,9 @@ export const IN = 25.4;
 /** One foot in scene units (millimeters). */
 export const FT = 12 * IN;
 
+/** One tile in scene units (millimeters). */
+export const TILE = 598.156;
+
 /** Maximum Robot starting size per <SG1>. */
 export const ROBOT_MAX_SIZE = 18 * IN;
 

@@ -1,4 +1,5 @@
 import type { PinType } from './GameObject';
+import type { ToggleColor } from './Scoring';
 import type { Level } from './Generator';
 
 export interface RobotPlacement {
@@ -23,10 +24,20 @@ export interface MidfieldSnapshot {
 	stack: StackItem[];
 }
 
+export interface QuadrantSnapshot {
+	quadrantId: 'redQuadrantOne';
+	caseType: 'noPin' | 'shortStack' | 'mediumStack' | 'hardStack';
+	seed: number;
+	toggleColor: ToggleColor;
+	allianceStack: StackItem[];
+	neutralStack: StackItem[];
+}
+
 export interface ScenarioSnapshot {
-	version: 1;
+	version: 2;
 	difficulty: Level;
 	masterSeed: number;
 	robots: RobotsSnapshot;
 	midfield: MidfieldSnapshot;
+	redQuadrantOne: QuadrantSnapshot;
 }

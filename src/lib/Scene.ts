@@ -15,6 +15,7 @@ import {
 } from './GameObject';
 import { Renderer } from './Renderer';
 import { FT } from './utils';
+import type { ToggleId } from './structure/QuadrantDefinition';
 
 export class Scene {
 	private renderer: Renderer;
@@ -141,11 +142,7 @@ export class Scene {
 		return this.addPin('yellowYellow', position, isFlipped, rotation);
 	}
 
-	public async addCup(
-		position: THREE.Vector3,
-		isFlipped = false,
-		rotation: THREE.Euler = new THREE.Euler(0, 0, 0)
-	): Promise<CupObject> {
+	public async addCup(position: THREE.Vector3, isFlipped = false, rotation: THREE.Euler = new THREE.Euler(0, 0, 0)): Promise<CupObject> {
 		const model = await this.modelLoader.loadModel(CUP_MODEL, 'Cup');
 
 		const instanceId = this.cupCounter++;
@@ -193,20 +190,23 @@ export class Scene {
 		return toggle;
 	}
 
-	public getNorthToggle(): ToggleObject | null {
-		return this.northToggle;
+
+	public setToggleColor(toggleId: ToggleId, color: 'red' | 'blue' | 'yellow'): void {
+		const toggle = this.getToggleById(toggleId);
+		toggle?.setColor(color);
 	}
 
-	public getEastToggle(): ToggleObject | null {
-		return this.eastToggle;
-	}
-
-	public getSouthToggle(): ToggleObject | null {
-		return this.southToggle;
-	}
-
-	public getWestToggle(): ToggleObject | null {
-		return this.westToggle;
+	private getToggleById(toggleId: ToggleId): ToggleObject | null {
+		switch (toggleId) {
+			case 'north':
+				return this.northToggle;
+			case 'east':
+				return this.eastToggle;
+			case 'south':
+				return this.southToggle;
+			case 'west':
+				return this.westToggle;
+		}
 	}
 
 	public removeScoringObject(gameObject: GameObject): void {

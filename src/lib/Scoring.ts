@@ -5,20 +5,32 @@ export interface PinHalfCounts {
 	yellow: number;
 }
 
-/** Alliance that owns midfield yellow pins per <SC5>/<SC6>, or null when tied / unowned. */
+/** Alliance that owns yellow pins per <SC5>/<SC6>, or null when tied / unowned. */
 export type YellowOwner = 'red' | 'blue' | null;
 
-export interface MidfieldGoalScoring {
+export type ToggleColor = 'red' | 'blue' | 'yellow';
+
+export interface GoalScoring {
 	/** Visible halves in the goal (cup opacity and flip applied). */
 	visible: PinHalfCounts;
-	/** Derived from robot midfield counts at end of match. */
+	/** Alliance that owns yellow pins in this goal, if applicable. */
 	yellowOwner: YellowOwner;
 	/** Point-relevant halves: yellow counts only when {@link yellowOwner} is set. */
 	scored: PinHalfCounts;
 }
 
+/** @deprecated Use GoalScoring */
+export type MidfieldGoalScoring = GoalScoring;
+
+export interface QuadrantGoalPairScoring {
+	allianceGoal: GoalScoring;
+	neutralGoal: GoalScoring;
+	toggleColor: ToggleColor;
+}
+
 export interface StructureScoring {
-	midfieldGoal: MidfieldGoalScoring;
+	midfieldGoal: GoalScoring;
+	redQuadrantOne?: QuadrantGoalPairScoring;
 }
 
 export interface ScenarioScoring {
@@ -38,7 +50,7 @@ export function emptyPinHalfCounts(): PinHalfCounts {
 	return { red: 0, blue: 0, yellow: 0 };
 }
 
-export function emptyMidfieldGoalScoring(): MidfieldGoalScoring {
+export function emptyGoalScoring(): GoalScoring {
 	return {
 		visible: emptyPinHalfCounts(),
 		yellowOwner: null,
@@ -46,8 +58,11 @@ export function emptyMidfieldGoalScoring(): MidfieldGoalScoring {
 	};
 }
 
+/** @deprecated Use emptyGoalScoring */
+export const emptyMidfieldGoalScoring = emptyGoalScoring;
+
 export function emptyStructureScoring(): StructureScoring {
-	return { midfieldGoal: emptyMidfieldGoalScoring() };
+	return { midfieldGoal: emptyGoalScoring() };
 }
 
 function addPinHalfCounts(a: PinHalfCounts, b: PinHalfCounts): PinHalfCounts {
@@ -62,14 +77,36 @@ function mergeYellowOwner(a: YellowOwner, b: YellowOwner): YellowOwner {
 	return b ?? a;
 }
 
+function mergeGoalScoring(a: GoalScoring, b: GoalScoring): GoalScoring {
+	return {
+		visible: addPinHalfCounts(a.visible, b.visible),
+		yellowOwner: mergeYellowOwner(a.yellowOwner, b.yellowOwner),
+		scored: addPinHalfCounts(a.scored, b.scored)
+	};
+}
+
+function mergeQuadrantGoalPair(
+	a: QuadrantGoalPairScoring | undefined,
+	b: QuadrantGoalPairScoring | undefined
+): QuadrantGoalPairScoring | undefined {
+	if (!a) {
+		return b;
+	}
+	if (!b) {
+		return a;
+	}
+	return {
+		allianceGoal: mergeGoalScoring(a.allianceGoal, b.allianceGoal),
+		neutralGoal: mergeGoalScoring(a.neutralGoal, b.neutralGoal),
+		toggleColor: b.toggleColor
+	};
+}
+
 export function aggregateStructureScorings(structures: StructureScoring[]): StructureScoring {
 	return structures.reduce(
 		(total, scoring) => ({
-			midfieldGoal: {
-				visible: addPinHalfCounts(total.midfieldGoal.visible, scoring.midfieldGoal.visible),
-				yellowOwner: mergeYellowOwner(total.midfieldGoal.yellowOwner, scoring.midfieldGoal.yellowOwner),
-				scored: addPinHalfCounts(total.midfieldGoal.scored, scoring.midfieldGoal.scored)
-			}
+			midfieldGoal: mergeGoalScoring(total.midfieldGoal, scoring.midfieldGoal),
+			redQuadrantOne: mergeQuadrantGoalPair(total.redQuadrantOne, scoring.redQuadrantOne)
 		}),
 		emptyStructureScoring()
 	);
