@@ -19,10 +19,6 @@ export class Scenario {
 		const midfieldCounts = this.robots.getMidfieldCounts();
 		const context = { midfieldCounts };
 
-		return mergeScoringSlices(
-			this.robots.getScoring(),
-			this.midfield.getScoring(context),
-			this.redQuadrantOne.getScoring()
-		);
+		return mergeScoringSlices(this.robots.getScoring(), this.midfield.getScoring(context), this.redQuadrantOne.getScoring());
 	}
 }

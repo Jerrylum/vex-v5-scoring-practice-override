@@ -118,10 +118,7 @@ export class RobotObject extends GameObject {
 		mesh.position.y = ROBOT_FLOOR_Y + size / 2;
 
 		const edges = new THREE.EdgesGeometry(geometry);
-		const outline = new THREE.LineSegments(
-			edges,
-			new THREE.LineBasicMaterial({ color: alliance === 'red' ? 0x991111 : 0x111199 })
-		);
+		const outline = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: alliance === 'red' ? 0x991111 : 0x111199 }));
 		outline.position.copy(mesh.position);
 
 		const group = new THREE.Group();

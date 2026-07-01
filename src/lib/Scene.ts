@@ -190,7 +190,6 @@ export class Scene {
 		return toggle;
 	}
 
-
 	public setToggleColor(toggleId: ToggleId, color: 'red' | 'blue' | 'yellow'): void {
 		const toggle = this.getToggleById(toggleId);
 		toggle?.setColor(color);

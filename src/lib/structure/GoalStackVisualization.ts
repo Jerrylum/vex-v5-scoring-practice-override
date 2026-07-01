@@ -4,11 +4,7 @@ import type { StackItem } from '../ScenarioSnapshot';
 import { PIN_STACK_STEP } from '../fieldConstants';
 import type { PinType } from '../GameObject';
 
-export async function visualizeGoalStack(
-	scene: Scene,
-	basePosition: THREE.Vector3,
-	stack: StackItem[]
-): Promise<void> {
+export async function visualizeGoalStack(scene: Scene, basePosition: THREE.Vector3, stack: StackItem[]): Promise<void> {
 	let y = basePosition.y;
 
 	for (const item of stack) {
@@ -24,12 +20,7 @@ export async function visualizeGoalStack(
 	}
 }
 
-async function addPin(
-	scene: Scene,
-	pinType: PinType,
-	position: THREE.Vector3,
-	isFlipped: boolean
-): Promise<void> {
+async function addPin(scene: Scene, pinType: PinType, position: THREE.Vector3, isFlipped: boolean): Promise<void> {
 	switch (pinType) {
 		case 'redBlue':
 			await scene.addRedBluePin(position, isFlipped);

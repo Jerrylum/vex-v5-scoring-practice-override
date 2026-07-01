@@ -1,22 +1,10 @@
 import type { Level, MidfieldCaseType, QuadrantCaseType } from './Generator';
-import {
-	pickMidfieldCaseType,
-	pickQuadrantCaseType,
-	pickRobotsCaseType,
-	pickShortStackLength,
-	pickTallStackLength
-} from './Generator';
+import { pickMidfieldCaseType, pickQuadrantCaseType, pickRobotsCaseType, pickShortStackLength, pickTallStackLength } from './Generator';
 import { FieldResourcePool } from './FieldResources';
 import { Scenario } from './Scenario';
 import type { ScenarioSnapshot } from './ScenarioSnapshot';
 import type { ToggleColor } from './Scoring';
-import {
-	ALL_PIN_TYPES,
-	generateGoalStack,
-	pickStackLengthSeeded,
-	shuffleSeeded,
-	type StackLengthRange
-} from './stackGeneration';
+import { ALL_PIN_TYPES, generateGoalStack, pickStackLengthSeeded, shuffleSeeded, type StackLengthRange } from './stackGeneration';
 import { mulberry32 } from './utils';
 import {
 	generateRobotPlacements,
@@ -229,11 +217,7 @@ function buildMidfieldStructure(stack: StackItem[], seed: number): MidfieldStruc
 	}
 }
 
-function buildRedQuadrantOneStructure(
-	allianceStack: StackItem[],
-	neutralStack: StackItem[],
-	seed: number
-): QuadrantStructure {
+function buildRedQuadrantOneStructure(allianceStack: StackItem[], neutralStack: StackItem[], seed: number): QuadrantStructure {
 	const toggleColor = pickToggleColor(seed);
 	const definition = RED_QUADRANT_ONE;
 	const caseType = classifyQuadrantCase(allianceStack.length, neutralStack.length);
@@ -242,23 +226,11 @@ function buildRedQuadrantOneStructure(
 		case 'noPin':
 			return new QuadrantStructure(definition, new QuadrantNoPinCase(neutralStack, toggleColor), seed);
 		case 'shortStack':
-			return new QuadrantStructure(
-				definition,
-				new QuadrantShortStackCase(allianceStack, neutralStack, toggleColor),
-				seed
-			);
+			return new QuadrantStructure(definition, new QuadrantShortStackCase(allianceStack, neutralStack, toggleColor), seed);
 		case 'mediumStack':
-			return new QuadrantStructure(
-				definition,
-				new QuadrantMediumStackCase(allianceStack, neutralStack, toggleColor),
-				seed
-			);
+			return new QuadrantStructure(definition, new QuadrantMediumStackCase(allianceStack, neutralStack, toggleColor), seed);
 		case 'hardStack':
-			return new QuadrantStructure(
-				definition,
-				new QuadrantHardStackCase(allianceStack, neutralStack, toggleColor),
-				seed
-			);
+			return new QuadrantStructure(definition, new QuadrantHardStackCase(allianceStack, neutralStack, toggleColor), seed);
 	}
 }
 
@@ -271,19 +243,12 @@ export function generateScenario(difficulty: Level, masterSeed?: number): Scenar
 	const midfieldCaseType = pickMidfieldCaseType(difficulty);
 	const quadrantCaseType = pickQuadrantCaseType(difficulty);
 
-	const jobs = shuffleSeeded(
-		buildStackJobs(midfieldCaseType, quadrantCaseType, midfieldSeed, redQuadrantOneSeed),
-		stackShuffleSeed
-	);
+	const jobs = shuffleSeeded(buildStackJobs(midfieldCaseType, quadrantCaseType, midfieldSeed, redQuadrantOneSeed), stackShuffleSeed);
 	const stacks = generateScenarioStacks(pool, jobs);
 
 	const robots = buildRobotsStructure(robotsCaseType, robotsSeed);
 	const midfield = buildMidfieldStructure(stacks.midfield, midfieldSeed);
-	const redQuadrantOne = buildRedQuadrantOneStructure(
-		stacks.redQuadrantOneAlliance,
-		stacks.redQuadrantOneNeutral,
-		redQuadrantOneSeed
-	);
+	const redQuadrantOne = buildRedQuadrantOneStructure(stacks.redQuadrantOneAlliance, stacks.redQuadrantOneNeutral, redQuadrantOneSeed);
 
 	return new Scenario(robots, midfield, redQuadrantOne, seed);
 }
