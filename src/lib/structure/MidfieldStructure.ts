@@ -1,6 +1,6 @@
 import { Structure, ScoringObject } from '../ScoringObject';
 import type { Scene } from '../Scene';
-import { type ScenarioContext, type StructureScoring } from '../Scoring';
+import { type ScenarioContext, type ScoringSlice } from '../Scoring';
 import type { MidfieldSnapshot, StackItem } from '../ScenarioSnapshot';
 import { scoreMidfieldStack } from '../goalScoring';
 import { stackToElements } from '../stackGeneration';
@@ -21,7 +21,7 @@ export class MidfieldStructure extends Structure {
 		return this.theCase.getElements();
 	}
 
-	public getScoring(context?: ScenarioContext): StructureScoring {
+	public getScoring(context?: ScenarioContext): ScoringSlice {
 		if (!context) {
 			throw new Error('MidfieldStructure.getScoring requires ScenarioContext');
 		}
@@ -52,12 +52,12 @@ export class MidfieldStructure extends Structure {
 export abstract class MidfieldCase {
 	public abstract getStack(): StackItem[];
 	public abstract getElements(): ScoringObject[];
-	public abstract getScoring(context: ScenarioContext): StructureScoring;
+	public abstract getScoring(context: ScenarioContext): ScoringSlice;
 	public abstract visualize(scene: Scene): Promise<void>;
 	public abstract toSnapshot(seed: number): MidfieldSnapshot;
 }
 
-function scoringFromStack(stack: StackItem[], context: ScenarioContext): StructureScoring {
+function scoringFromStack(stack: StackItem[], context: ScenarioContext): ScoringSlice {
 	return {
 		midfieldGoal: scoreMidfieldStack(stack, context.midfieldCounts)
 	};
@@ -79,7 +79,7 @@ export class MidfieldOneYYPinCase extends MidfieldCase {
 		return stackToElements(this.getStack());
 	}
 
-	public getScoring(context: ScenarioContext): StructureScoring {
+	public getScoring(context: ScenarioContext): ScoringSlice {
 		return scoringFromStack(this.getStack(), context);
 	}
 
@@ -108,7 +108,7 @@ export class MidfieldShortStackPinCase extends MidfieldCase {
 		return stackToElements(this.stack);
 	}
 
-	public getScoring(context: ScenarioContext): StructureScoring {
+	public getScoring(context: ScenarioContext): ScoringSlice {
 		return scoringFromStack(this.stack, context);
 	}
 
@@ -137,7 +137,7 @@ export class MidfieldTallStackPinCase extends MidfieldCase {
 		return stackToElements(this.stack);
 	}
 
-	public getScoring(context: ScenarioContext): StructureScoring {
+	public getScoring(context: ScenarioContext): ScoringSlice {
 		return scoringFromStack(this.stack, context);
 	}
 

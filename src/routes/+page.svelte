@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Scene } from '$lib/Scene';
-	import { aggregateStructureScorings, emptyStructureScoring, type StructureScoring } from '$lib/Scoring';
+	import { emptyScenarioScoring, type ScenarioScoring } from '$lib/Scoring';
 	import { generateScenario, type Level } from '$lib/ScenarioGenerator';
 
 	let currentScene: Scene | null = null;
@@ -11,7 +11,7 @@
 	let loadingMessage = $state('Loading scene...');
 	let isPanelCollapsed = $state(false);
 
-	let actualCounts = $state<StructureScoring>(emptyStructureScoring());
+	let actualCounts = $state<ScenarioScoring>(emptyScenarioScoring());
 	let midfieldCounts = $state({ red: 0, blue: 0 });
 
 	function togglePanel() {
@@ -30,7 +30,7 @@
 			await structure.visualize(scene);
 		}
 
-		actualCounts = aggregateStructureScorings(scenario.calculateScoring().structures);
+		actualCounts = scenario.calculateScoring();
 		midfieldCounts = scenario.robots.getMidfieldCounts();
 	}
 

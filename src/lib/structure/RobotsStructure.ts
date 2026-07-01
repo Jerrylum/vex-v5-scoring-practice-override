@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Structure, ScoringObject, Robot } from '../ScoringObject';
 import type { Scene } from '../Scene';
-import { emptyStructureScoring, type MidfieldCounts, type ScenarioContext, type StructureScoring } from '../Scoring';
+import { type MidfieldCounts, type ScenarioContext, type ScoringSlice } from '../Scoring';
 import type { RobotsSnapshot, RobotPlacement } from '../ScenarioSnapshot';
 import {
 	isRobotInExclusionZone,
@@ -27,7 +27,7 @@ export class RobotsStructure extends Structure {
 		return this.theCase.getElements();
 	}
 
-	public getScoring(_context?: ScenarioContext): StructureScoring {
+	public getScoring(_context?: ScenarioContext): ScoringSlice {
 		return this.theCase.getScoring();
 	}
 
@@ -56,7 +56,7 @@ export class RobotsStructure extends Structure {
 
 export abstract class RobotsCase {
 	public abstract getElements(): ScoringObject[];
-	public abstract getScoring(): StructureScoring;
+	public abstract getScoring(): ScoringSlice;
 	public abstract getMidfieldCounts(): MidfieldCounts;
 	public abstract visualize(scene: Scene): Promise<void>;
 	public abstract toSnapshot(seed: number): RobotsSnapshot;
@@ -67,8 +67,8 @@ export class NoRobotCase extends RobotsCase {
 		return [];
 	}
 
-	public getScoring(): StructureScoring {
-		return emptyStructureScoring();
+	public getScoring(): ScoringSlice {
+		return {};
 	}
 
 	public getMidfieldCounts(): MidfieldCounts {
@@ -140,8 +140,8 @@ export class RobotsOnFieldCase extends RobotsCase {
 		return this.placements.map((p) => new Robot(p.alliance, p.slot, p.x, p.z, p.rotationY));
 	}
 
-	public getScoring(): StructureScoring {
-		return emptyStructureScoring();
+	public getScoring(): ScoringSlice {
+		return {};
 	}
 
 	public getMidfieldCounts(): MidfieldCounts {

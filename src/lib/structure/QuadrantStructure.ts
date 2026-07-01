@@ -1,6 +1,6 @@
 import { Structure, ScoringObject } from '../ScoringObject';
 import type { Scene } from '../Scene';
-import { emptyStructureScoring, type StructureScoring } from '../Scoring';
+import { type ScoringSlice } from '../Scoring';
 import type { QuadrantSnapshot, StackItem } from '../ScenarioSnapshot';
 import { scoreQuadrantGoal } from '../goalScoring';
 import type { ToggleColor } from '../Scoring';
@@ -22,7 +22,7 @@ export class QuadrantStructure extends Structure {
 		return this.theCase.getElements();
 	}
 
-	public getScoring(): StructureScoring {
+	public getScoring(): ScoringSlice {
 		return this.theCase.getScoring(this.definition.id);
 	}
 
@@ -68,7 +68,7 @@ export abstract class QuadrantCase {
 	public abstract getNeutralStack(): StackItem[];
 	public abstract getToggleColor(): ToggleColor;
 	public abstract getElements(): ScoringObject[];
-	public abstract getScoring(quadrantId: QuadrantSnapshot['quadrantId']): StructureScoring;
+	public abstract getScoring(quadrantId: QuadrantSnapshot['quadrantId']): ScoringSlice;
 	public abstract visualize(scene: Scene, definition: QuadrantDefinition): Promise<void>;
 	public abstract toSnapshot(quadrantId: QuadrantSnapshot['quadrantId'], seed: number): QuadrantSnapshot;
 }
@@ -78,7 +78,7 @@ function scoringFromStacks(
 	allianceStack: StackItem[],
 	neutralStack: StackItem[],
 	toggleColor: ToggleColor
-): StructureScoring {
+): ScoringSlice {
 	const quadrantScoring = {
 		allianceGoal: scoreQuadrantGoal(allianceStack, toggleColor),
 		neutralGoal: scoreQuadrantGoal(neutralStack, toggleColor),
@@ -86,7 +86,7 @@ function scoringFromStacks(
 	};
 
 	if (quadrantId === 'redQuadrantOne') {
-		return { ...emptyStructureScoring(), redQuadrantOne: quadrantScoring };
+		return { redQuadrantOne: quadrantScoring };
 	}
 
 	throw new Error(`Unknown quadrant id: ${quadrantId}`);
@@ -120,7 +120,7 @@ export class QuadrantNoPinCase extends QuadrantCase {
 		return elementsFromStacks(this.getAllianceStack(), this.getNeutralStack());
 	}
 
-	public getScoring(quadrantId: QuadrantSnapshot['quadrantId']): StructureScoring {
+	public getScoring(quadrantId: QuadrantSnapshot['quadrantId']): ScoringSlice {
 		return scoringFromStacks(quadrantId, this.getAllianceStack(), this.getNeutralStack(), this.toggleColor);
 	}
 
@@ -171,7 +171,7 @@ abstract class QuadrantStackCase extends QuadrantCase {
 		return elementsFromStacks(this.allianceStack, this.neutralStack);
 	}
 
-	public getScoring(quadrantId: QuadrantSnapshot['quadrantId']): StructureScoring {
+	public getScoring(quadrantId: QuadrantSnapshot['quadrantId']): ScoringSlice {
 		return scoringFromStacks(quadrantId, this.allianceStack, this.neutralStack, this.toggleColor);
 	}
 

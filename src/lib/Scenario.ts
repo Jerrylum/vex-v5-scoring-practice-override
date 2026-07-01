@@ -1,4 +1,4 @@
-import type { ScenarioScoring } from './Scoring';
+import { mergeScoringSlices, type ScenarioScoring } from './Scoring';
 import type { MidfieldStructure } from './structure/MidfieldStructure';
 import type { QuadrantStructure } from './structure/QuadrantStructure';
 import type { RobotsStructure } from './structure/RobotsStructure';
@@ -19,8 +19,10 @@ export class Scenario {
 		const midfieldCounts = this.robots.getMidfieldCounts();
 		const context = { midfieldCounts };
 
-		return {
-			structures: [this.robots.getScoring(), this.midfield.getScoring(context), this.redQuadrantOne.getScoring()]
-		};
+		return mergeScoringSlices(
+			this.robots.getScoring(),
+			this.midfield.getScoring(context),
+			this.redQuadrantOne.getScoring()
+		);
 	}
 }

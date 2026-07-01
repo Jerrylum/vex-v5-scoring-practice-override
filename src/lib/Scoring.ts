@@ -28,14 +28,14 @@ export interface QuadrantGoalPairScoring {
 	toggleColor: ToggleColor;
 }
 
-export interface StructureScoring {
+/** Full scenario answer key — one field per scoring region on the field. */
+export interface ScenarioScoring {
 	midfieldGoal: GoalScoring;
 	redQuadrantOne?: QuadrantGoalPairScoring;
 }
 
-export interface ScenarioScoring {
-	structures: StructureScoring[];
-}
+/** Partial scoring returned by a single structure. */
+export type ScoringSlice = Partial<ScenarioScoring>;
 
 export interface MidfieldCounts {
 	red: number;
@@ -61,53 +61,10 @@ export function emptyGoalScoring(): GoalScoring {
 /** @deprecated Use emptyGoalScoring */
 export const emptyMidfieldGoalScoring = emptyGoalScoring;
 
-export function emptyStructureScoring(): StructureScoring {
+export function emptyScenarioScoring(): ScenarioScoring {
 	return { midfieldGoal: emptyGoalScoring() };
 }
 
-function addPinHalfCounts(a: PinHalfCounts, b: PinHalfCounts): PinHalfCounts {
-	return {
-		red: a.red + b.red,
-		blue: a.blue + b.blue,
-		yellow: a.yellow + b.yellow
-	};
-}
-
-function mergeYellowOwner(a: YellowOwner, b: YellowOwner): YellowOwner {
-	return b ?? a;
-}
-
-function mergeGoalScoring(a: GoalScoring, b: GoalScoring): GoalScoring {
-	return {
-		visible: addPinHalfCounts(a.visible, b.visible),
-		yellowOwner: mergeYellowOwner(a.yellowOwner, b.yellowOwner),
-		scored: addPinHalfCounts(a.scored, b.scored)
-	};
-}
-
-function mergeQuadrantGoalPair(
-	a: QuadrantGoalPairScoring | undefined,
-	b: QuadrantGoalPairScoring | undefined
-): QuadrantGoalPairScoring | undefined {
-	if (!a) {
-		return b;
-	}
-	if (!b) {
-		return a;
-	}
-	return {
-		allianceGoal: mergeGoalScoring(a.allianceGoal, b.allianceGoal),
-		neutralGoal: mergeGoalScoring(a.neutralGoal, b.neutralGoal),
-		toggleColor: b.toggleColor
-	};
-}
-
-export function aggregateStructureScorings(structures: StructureScoring[]): StructureScoring {
-	return structures.reduce(
-		(total, scoring) => ({
-			midfieldGoal: mergeGoalScoring(total.midfieldGoal, scoring.midfieldGoal),
-			redQuadrantOne: mergeQuadrantGoalPair(total.redQuadrantOne, scoring.redQuadrantOne)
-		}),
-		emptyStructureScoring()
-	);
+export function mergeScoringSlices(...slices: ScoringSlice[]): ScenarioScoring {
+	return slices.reduce<ScenarioScoring>((total, slice) => ({ ...total, ...slice }), emptyScenarioScoring());
 }

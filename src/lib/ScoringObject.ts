@@ -1,6 +1,6 @@
 import type { Scene } from './Scene';
 import type { PinType } from './GameObject';
-import type { ScenarioContext, StructureScoring } from './Scoring';
+import type { ScenarioContext, ScoringSlice } from './Scoring';
 
 export abstract class ScoringObject {
 	public robot1Contacted = false;
@@ -42,5 +42,5 @@ export class Robot extends ScoringObject {
 export abstract class Structure {
 	public abstract getElements(): ScoringObject[];
 	public abstract visualize(scene: Scene): Promise<void>;
-	public abstract getScoring(context?: ScenarioContext): StructureScoring;
+	public abstract getScoring(context?: ScenarioContext): ScoringSlice;
 }
