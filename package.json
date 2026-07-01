@@ -12,6 +12,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
+		"test": "vitest run",
 		"deploy": "wrangler pages deploy --project-name vex-v5-scoring-practice-override --branch main build"
 	},
 	"devDependencies": {

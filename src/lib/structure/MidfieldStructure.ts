@@ -9,12 +9,10 @@ import { MIDFIELD_GOAL_BASE } from '../fieldConstants';
 
 export class MidfieldStructure extends Structure {
 	public readonly theCase: MidfieldCase;
-	public readonly randomSeed: number;
 
-	constructor(theCase: MidfieldCase, randomSeed: number) {
+	constructor(theCase: MidfieldCase) {
 		super();
 		this.theCase = theCase;
-		this.randomSeed = randomSeed;
 	}
 
 	public getElements(): ScoringObject[] {
@@ -33,18 +31,18 @@ export class MidfieldStructure extends Structure {
 	}
 
 	public toSnapshot(): MidfieldSnapshot {
-		return this.theCase.toSnapshot(this.randomSeed);
+		return this.theCase.toSnapshot();
 	}
 
 	public static fromSnapshot(snapshot: MidfieldSnapshot): MidfieldStructure {
 		const stack = snapshot.stack;
 		switch (snapshot.caseType) {
 			case 'oneYY':
-				return new MidfieldStructure(new MidfieldOneYYPinCase(stack), snapshot.seed);
+				return new MidfieldStructure(new MidfieldOneYYPinCase(stack));
 			case 'shortStack':
-				return new MidfieldStructure(new MidfieldShortStackPinCase(stack), snapshot.seed);
+				return new MidfieldStructure(new MidfieldShortStackPinCase(stack));
 			case 'tallStack':
-				return new MidfieldStructure(new MidfieldTallStackPinCase(stack), snapshot.seed);
+				return new MidfieldStructure(new MidfieldTallStackPinCase(stack));
 		}
 	}
 }
@@ -54,7 +52,7 @@ export abstract class MidfieldCase {
 	public abstract getElements(): ScoringObject[];
 	public abstract getScoring(context: ScenarioContext): ScoringSlice;
 	public abstract visualize(scene: Scene): Promise<void>;
-	public abstract toSnapshot(seed: number): MidfieldSnapshot;
+	public abstract toSnapshot(): MidfieldSnapshot;
 }
 
 function scoringFromStack(stack: StackItem[], context: ScenarioContext): ScoringSlice {
@@ -87,8 +85,8 @@ export class MidfieldOneYYPinCase extends MidfieldCase {
 		await visualizeGoalStack(scene, MIDFIELD_GOAL_BASE, this.getStack());
 	}
 
-	public toSnapshot(seed: number): MidfieldSnapshot {
-		return { caseType: 'oneYY', seed, stack: this.getStack() };
+	public toSnapshot(): MidfieldSnapshot {
+		return { caseType: 'oneYY', stack: this.getStack() };
 	}
 }
 
@@ -116,8 +114,8 @@ export class MidfieldShortStackPinCase extends MidfieldCase {
 		await visualizeGoalStack(scene, MIDFIELD_GOAL_BASE, this.stack);
 	}
 
-	public toSnapshot(seed: number): MidfieldSnapshot {
-		return { caseType: 'shortStack', seed, stack: this.stack };
+	public toSnapshot(): MidfieldSnapshot {
+		return { caseType: 'shortStack', stack: this.stack };
 	}
 }
 
@@ -145,7 +143,7 @@ export class MidfieldTallStackPinCase extends MidfieldCase {
 		await visualizeGoalStack(scene, MIDFIELD_GOAL_BASE, this.stack);
 	}
 
-	public toSnapshot(seed: number): MidfieldSnapshot {
-		return { caseType: 'tallStack', seed, stack: this.stack };
+	public toSnapshot(): MidfieldSnapshot {
+		return { caseType: 'tallStack', stack: this.stack };
 	}
 }

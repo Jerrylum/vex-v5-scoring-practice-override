@@ -1,11 +1,28 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { Scene } from '$lib/Scene';
+	import { GENERATOR_VERSION } from '$lib/generatorVersion';
 	import { emptyScenarioScoring, type ScenarioScoring } from '$lib/Scoring';
-	import { generateScenario, type Level } from '$lib/ScenarioGenerator';
+	import type { Scenario } from '$lib/Scenario';
+	import {
+		generateScenario,
+		GeneratorVersionMismatchError,
+		type GenerateScenarioOptions,
+		type Level
+	} from '$lib/ScenarioGenerator';
+	import {
+		buildScenarioShareUrl,
+		parseScenarioLink,
+		scenarioLinkParamsFromProvenance,
+		type ScenarioLinkParseOutcome
+	} from '$lib/scenarioLink';
+	import { randomMasterSeed } from '$lib/utils';
 
 	let currentScene: Scene | null = null;
 	let currentDifficulty = $state<Level>('medium');
+	let currentSeed = $state<number | null>(null);
+	let linkMessage = $state<string | null>(null);
 	let isLoading = $state(true);
 	let isReloading = $state(false);
 	let loadingMessage = $state('Loading scene...');
@@ -23,29 +40,99 @@
 		}, 350);
 	}
 
-	async function generateNewScenario(scene: Scene) {
-		const scenario = generateScenario(currentDifficulty);
+	function resolveGenerateOptions(linkOutcome: ScenarioLinkParseOutcome): GenerateScenarioOptions {
+		if (linkOutcome.ok) {
+			currentDifficulty = linkOutcome.params.difficulty;
+			return {
+				difficulty: linkOutcome.params.difficulty,
+				masterSeed: linkOutcome.params.masterSeed,
+				generatorVersion: linkOutcome.params.generatorVersion
+			};
+		}
 
+		if (linkOutcome.error === 'version_mismatch') {
+			linkMessage = `This link uses an older scenario format (v${GENERATOR_VERSION} required). Starting a new scenario.`;
+		}
+
+		return {
+			difficulty: currentDifficulty,
+			masterSeed: randomMasterSeed()
+		};
+	}
+
+	async function applyScenario(scenario: Scenario, scene: Scene) {
 		for (const structure of scenario.structures) {
 			await structure.visualize(scene);
 		}
 
 		actualCounts = scenario.calculateScoring();
 		midfieldCounts = scenario.robots.getMidfieldCounts();
+		currentSeed = scenario.provenance?.masterSeed ?? null;
+
+		if (scenario.provenance) {
+			updateShareUrl(scenario, currentDifficulty);
+		}
+	}
+
+	function updateShareUrl(scenario: Scenario, difficulty: Level) {
+		if (!scenario.provenance) return;
+
+		const shareUrl = buildScenarioShareUrl(
+			window.location.origin + window.location.pathname,
+			scenarioLinkParamsFromProvenance(scenario.provenance, difficulty)
+		);
+		const path = shareUrl.slice(window.location.origin.length);
+		goto(path, { replaceState: true, keepFocus: true, noScroll: true });
+	}
+
+	async function generateNewScenario(scene: Scene, linkOutcome: ScenarioLinkParseOutcome) {
+		const options = resolveGenerateOptions(linkOutcome);
+
+		try {
+			const scenario = generateScenario(options);
+			await applyScenario(scenario, scene);
+		} catch (error) {
+			if (error instanceof GeneratorVersionMismatchError) {
+				linkMessage = `This link uses an older scenario format (v${GENERATOR_VERSION} required). Starting a new scenario.`;
+				const scenario = generateScenario({ difficulty: currentDifficulty, masterSeed: randomMasterSeed() });
+				await applyScenario(scenario, scene);
+				return;
+			}
+			throw error;
+		}
 	}
 
 	async function reloadScenario() {
 		if (!currentScene || isReloading) return;
 
 		isReloading = true;
+		linkMessage = null;
 
 		try {
 			currentScene.clearScoringObjects();
-			await generateNewScenario(currentScene);
+			await generateNewScenario(currentScene, { ok: false, error: 'missing_token' });
 		} catch (error) {
 			console.error('Failed to reload scenario:', error);
 		} finally {
 			isReloading = false;
+		}
+	}
+
+	async function copyShareLink() {
+		if (currentSeed === null) return;
+
+		const shareUrl = buildScenarioShareUrl(window.location.origin + window.location.pathname, {
+			generatorVersion: GENERATOR_VERSION,
+			masterSeed: currentSeed,
+			difficulty: currentDifficulty
+		});
+
+		try {
+			await navigator.clipboard.writeText(shareUrl);
+			linkMessage = 'Link copied to clipboard.';
+		} catch (error) {
+			console.error('Failed to copy share link:', error);
+			linkMessage = 'Could not copy link.';
 		}
 	}
 
@@ -54,7 +141,10 @@
 			try {
 				currentScene = new Scene('container');
 				await currentScene.initialize();
-				await generateNewScenario(currentScene);
+
+				const linkOutcome = parseScenarioLink(new URLSearchParams(window.location.search));
+				await generateNewScenario(currentScene, linkOutcome);
+
 				isLoading = false;
 			} catch (error) {
 				console.error('Failed to initialize scene:', error);
@@ -138,6 +228,30 @@
 				>
 					{isReloading ? 'Generating…' : 'New Scenario'}
 				</button>
+
+				<div class="mb-4 rounded-md border border-[#374151] bg-[#111827] p-3">
+					<h3 class="mb-2 text-sm font-semibold text-gray-300">Scenario</h3>
+					<div class="space-y-1 text-sm">
+						<div class="flex justify-between">
+							<span class="text-gray-400">Seed</span>
+							<span class="font-mono">{currentSeed ?? '—'}</span>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-gray-400">Generator</span>
+							<span>v{GENERATOR_VERSION}</span>
+						</div>
+					</div>
+					<button
+						class="mt-3 w-full rounded-md border border-[#374151] bg-[#111827] px-3 py-2 text-sm text-white hover:bg-[#1f2937] disabled:opacity-50"
+						onclick={copyShareLink}
+						disabled={currentSeed === null || isLoading || isReloading}
+					>
+						Copy link
+					</button>
+					{#if linkMessage}
+						<p class="mt-2 text-xs text-gray-400">{linkMessage}</p>
+					{/if}
+				</div>
 
 				<div class="mb-4 rounded-md border border-[#374151] bg-[#111827] p-3">
 					<h3 class="mb-2 text-sm font-semibold text-gray-300">Robots in Midfield</h3>

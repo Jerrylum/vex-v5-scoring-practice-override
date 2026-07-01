@@ -15,12 +15,10 @@ import { mulberry32 } from '../utils';
 
 export class RobotsStructure extends Structure {
 	public readonly theCase: RobotsCase;
-	public readonly randomSeed: number;
 
-	constructor(theCase: RobotsCase, randomSeed: number) {
+	constructor(theCase: RobotsCase) {
 		super();
 		this.theCase = theCase;
-		this.randomSeed = randomSeed;
 	}
 
 	public getElements(): ScoringObject[] {
@@ -40,17 +38,17 @@ export class RobotsStructure extends Structure {
 	}
 
 	public toSnapshot(): RobotsSnapshot {
-		return this.theCase.toSnapshot(this.randomSeed);
+		return this.theCase.toSnapshot();
 	}
 
 	public static fromSnapshot(snapshot: RobotsSnapshot): RobotsStructure {
 		if (snapshot.caseType === 'none') {
-			return new RobotsStructure(new NoRobotCase(), snapshot.seed);
+			return new RobotsStructure(new NoRobotCase());
 		}
 		if (!snapshot.placements || snapshot.placements.length !== 4) {
 			throw new Error('RobotsOnFieldCase snapshot requires 4 placements');
 		}
-		return new RobotsStructure(new RobotsOnFieldCase(snapshot.placements), snapshot.seed);
+		return new RobotsStructure(new RobotsOnFieldCase(snapshot.placements));
 	}
 }
 
@@ -59,7 +57,7 @@ export abstract class RobotsCase {
 	public abstract getScoring(): ScoringSlice;
 	public abstract getMidfieldCounts(): MidfieldCounts;
 	public abstract visualize(scene: Scene): Promise<void>;
-	public abstract toSnapshot(seed: number): RobotsSnapshot;
+	public abstract toSnapshot(): RobotsSnapshot;
 }
 
 export class NoRobotCase extends RobotsCase {
@@ -77,8 +75,8 @@ export class NoRobotCase extends RobotsCase {
 
 	public async visualize(_scene: Scene): Promise<void> {}
 
-	public toSnapshot(seed: number): RobotsSnapshot {
-		return { caseType: 'none', seed };
+	public toSnapshot(): RobotsSnapshot {
+		return { caseType: 'none' };
 	}
 }
 
@@ -158,7 +156,7 @@ export class RobotsOnFieldCase extends RobotsCase {
 		await Promise.all(this.placements.map((p) => scene.addRobot(p.alliance, new THREE.Vector3(p.x, 0, p.z), p.rotationY)));
 	}
 
-	public toSnapshot(seed: number): RobotsSnapshot {
-		return { caseType: 'allOnField', seed, placements: this.placements };
+	public toSnapshot(): RobotsSnapshot {
+		return { caseType: 'allOnField', placements: this.placements };
 	}
 }

@@ -19,3 +19,8 @@ export function mulberry32(seed: number) {
 		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 	};
 }
+
+/** Picks a new scenario master seed — only call at the UI / session boundary. */
+export function randomMasterSeed(): number {
+	return Math.floor(Math.random() * 1e9);
+}

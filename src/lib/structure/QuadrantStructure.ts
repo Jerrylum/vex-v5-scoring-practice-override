@@ -12,8 +12,7 @@ import { visualizeQuadrantGoals } from './QuadrantStackVisualization';
 export class QuadrantStructure extends Structure {
 	constructor(
 		public readonly definition: QuadrantDefinition,
-		public readonly theCase: QuadrantCase,
-		public readonly randomSeed: number
+		public readonly theCase: QuadrantCase
 	) {
 		super();
 	}
@@ -31,7 +30,7 @@ export class QuadrantStructure extends Structure {
 	}
 
 	public toSnapshot(): QuadrantSnapshot {
-		return this.theCase.toSnapshot(this.definition.id, this.randomSeed);
+		return this.theCase.toSnapshot(this.definition.id);
 	}
 
 	public static fromSnapshot(snapshot: QuadrantSnapshot): QuadrantStructure {
@@ -40,13 +39,13 @@ export class QuadrantStructure extends Structure {
 
 		switch (caseType) {
 			case 'noPin':
-				return new QuadrantStructure(definition, new QuadrantNoPinCase(neutralStack, toggleColor), snapshot.seed);
+				return new QuadrantStructure(definition, new QuadrantNoPinCase(neutralStack, toggleColor));
 			case 'shortStack':
-				return new QuadrantStructure(definition, new QuadrantShortStackCase(allianceStack, neutralStack, toggleColor), snapshot.seed);
+				return new QuadrantStructure(definition, new QuadrantShortStackCase(allianceStack, neutralStack, toggleColor));
 			case 'mediumStack':
-				return new QuadrantStructure(definition, new QuadrantMediumStackCase(allianceStack, neutralStack, toggleColor), snapshot.seed);
+				return new QuadrantStructure(definition, new QuadrantMediumStackCase(allianceStack, neutralStack, toggleColor));
 			case 'hardStack':
-				return new QuadrantStructure(definition, new QuadrantHardStackCase(allianceStack, neutralStack, toggleColor), snapshot.seed);
+				return new QuadrantStructure(definition, new QuadrantHardStackCase(allianceStack, neutralStack, toggleColor));
 		}
 	}
 }
@@ -58,7 +57,7 @@ export abstract class QuadrantCase {
 	public abstract getElements(): ScoringObject[];
 	public abstract getScoring(quadrantId: QuadrantSnapshot['quadrantId']): ScoringSlice;
 	public abstract visualize(scene: Scene, definition: QuadrantDefinition): Promise<void>;
-	public abstract toSnapshot(quadrantId: QuadrantSnapshot['quadrantId'], seed: number): QuadrantSnapshot;
+	public abstract toSnapshot(quadrantId: QuadrantSnapshot['quadrantId']): QuadrantSnapshot;
 }
 
 function scoringFromStacks(
@@ -116,11 +115,10 @@ export class QuadrantNoPinCase extends QuadrantCase {
 		await visualizeQuadrantGoals(scene, definition, this.getAllianceStack(), this.getNeutralStack(), this.toggleColor);
 	}
 
-	public toSnapshot(quadrantId: QuadrantSnapshot['quadrantId'], seed: number): QuadrantSnapshot {
+	public toSnapshot(quadrantId: QuadrantSnapshot['quadrantId']): QuadrantSnapshot {
 		return {
 			quadrantId,
 			caseType: 'noPin',
-			seed,
 			toggleColor: this.toggleColor,
 			allianceStack: this.getAllianceStack(),
 			neutralStack: this.getNeutralStack()
@@ -163,11 +161,10 @@ abstract class QuadrantStackCase extends QuadrantCase {
 
 	protected abstract getCaseType(): QuadrantSnapshot['caseType'];
 
-	public toSnapshot(quadrantId: QuadrantSnapshot['quadrantId'], seed: number): QuadrantSnapshot {
+	public toSnapshot(quadrantId: QuadrantSnapshot['quadrantId']): QuadrantSnapshot {
 		return {
 			quadrantId,
 			caseType: this.getCaseType(),
-			seed,
 			toggleColor: this.toggleColor,
 			allianceStack: this.allianceStack,
 			neutralStack: this.neutralStack

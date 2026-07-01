@@ -1,4 +1,5 @@
 import { mergeScoringSlices, type ScenarioScoring } from './Scoring';
+import type { ScenarioProvenance } from './ScenarioSnapshot';
 import type { MidfieldStructure } from './structure/MidfieldStructure';
 import type { QuadrantStructure } from './structure/QuadrantStructure';
 import type { RobotsStructure } from './structure/RobotsStructure';
@@ -8,7 +9,7 @@ export class Scenario {
 		public readonly robots: RobotsStructure,
 		public readonly midfield: MidfieldStructure,
 		public readonly redQuadrantOne: QuadrantStructure,
-		public readonly masterSeed: number
+		public readonly provenance: ScenarioProvenance | null = null
 	) {}
 
 	get structures() {

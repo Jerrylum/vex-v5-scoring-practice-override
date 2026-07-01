@@ -1,8 +1,15 @@
 import type { Level, MidfieldCaseType, QuadrantCaseType } from './Generator';
-import { pickMidfieldCaseType, pickQuadrantCaseType, pickRobotsCaseType, pickShortStackLength, pickTallStackLength } from './Generator';
+import {
+	pickMidfieldCaseTypeSeeded,
+	pickQuadrantCaseType,
+	pickRobotsCaseType,
+	pickShortStackLengthSeeded,
+	pickTallStackLengthSeeded
+} from './Generator';
 import { FieldResourcePool } from './FieldResources';
+import { GENERATOR_VERSION } from './generatorVersion';
 import { Scenario } from './Scenario';
-import type { ScenarioSnapshot } from './ScenarioSnapshot';
+import type { ScenarioSnapshot, ScenarioProvenance } from './ScenarioSnapshot';
 import type { ToggleColor } from './Scoring';
 import { ALL_PIN_TYPES, generateGoalStack, pickStackLengthSeeded, shuffleSeeded, type StackLengthRange } from './stackGeneration';
 import { mulberry32 } from './utils';
@@ -28,6 +35,22 @@ import type { StackItem } from './ScenarioSnapshot';
 
 export type { Level };
 
+export interface GenerateScenarioOptions {
+	difficulty: Level;
+	masterSeed: number;
+	generatorVersion?: number;
+}
+
+export class GeneratorVersionMismatchError extends Error {
+	constructor(
+		public readonly expected: number,
+		public readonly received: number
+	) {
+		super(`Generator version mismatch: expected ${expected}, got ${received}`);
+		this.name = 'GeneratorVersionMismatchError';
+	}
+}
+
 const MAX_ROBOT_ATTEMPTS = 10;
 
 type StackJobId = 'midfield' | 'redQuadrantOneAlliance' | 'redQuadrantOneNeutral';
@@ -51,13 +74,15 @@ function deriveSeeds(masterSeed: number): {
 	midfieldSeed: number;
 	redQuadrantOneSeed: number;
 	stackShuffleSeed: number;
+	planningSeed: number;
 } {
 	const random = mulberry32(masterSeed);
 	return {
 		robotsSeed: Math.floor(random() * 1e9),
 		midfieldSeed: Math.floor(random() * 1e9),
 		redQuadrantOneSeed: Math.floor(random() * 1e9),
-		stackShuffleSeed: Math.floor(random() * 1e9)
+		stackShuffleSeed: Math.floor(random() * 1e9),
+		planningSeed: Math.floor(random() * 1e9)
 	};
 }
 
@@ -75,13 +100,13 @@ function pickToggleColor(seed: number): ToggleColor {
 
 function buildRobotsStructure(caseType: ReturnType<typeof pickRobotsCaseType>, seed: number): RobotsStructure {
 	if (caseType === 'none') {
-		return new RobotsStructure(new NoRobotCase(), seed);
+		return new RobotsStructure(new NoRobotCase());
 	}
 
 	for (let attempt = 0; attempt < MAX_ROBOT_ATTEMPTS; attempt++) {
 		try {
 			const placements = generateRobotPlacements(seed + attempt);
-			return new RobotsStructure(new RobotsOnFieldCase(placements), seed);
+			return new RobotsStructure(new RobotsOnFieldCase(placements));
 		} catch {
 			// retry with offset seed
 		}
@@ -103,14 +128,14 @@ function quadrantCaseToRange(caseType: QuadrantCaseType): StackLengthRange {
 	}
 }
 
-function getMidfieldTarget(caseType: MidfieldCaseType): number {
+function getMidfieldTarget(caseType: MidfieldCaseType, planningSeed: number): number {
 	switch (caseType) {
 		case 'oneYY':
 			return 1;
 		case 'shortStack':
-			return pickShortStackLength();
+			return pickShortStackLengthSeeded(planningSeed + 1);
 		case 'tallStack':
-			return pickTallStackLength();
+			return pickTallStackLengthSeeded(planningSeed + 2);
 	}
 }
 
@@ -142,14 +167,15 @@ function buildStackJobs(
 	midfieldCaseType: MidfieldCaseType,
 	quadrantCaseType: QuadrantCaseType,
 	midfieldSeed: number,
-	redQuadrantOneSeed: number
+	redQuadrantOneSeed: number,
+	planningSeed: number
 ): StackJob[] {
 	const quadrantRange = quadrantCaseToRange(quadrantCaseType);
 
 	return [
 		{
 			id: 'midfield',
-			targetLength: getMidfieldTarget(midfieldCaseType),
+			targetLength: getMidfieldTarget(midfieldCaseType, planningSeed),
 			requiresYYBase: true,
 			allowedPinTypes: ALL_PIN_TYPES,
 			seed: midfieldSeed
@@ -204,16 +230,16 @@ function generateScenarioStacks(pool: FieldResourcePool, jobs: StackJob[]): Gene
 	return stacks;
 }
 
-function buildMidfieldStructure(stack: StackItem[], seed: number): MidfieldStructure {
+function buildMidfieldStructure(stack: StackItem[]): MidfieldStructure {
 	const caseType = classifyMidfieldCase(stack.length);
 
 	switch (caseType) {
 		case 'oneYY':
-			return new MidfieldStructure(new MidfieldOneYYPinCase(stack), seed);
+			return new MidfieldStructure(new MidfieldOneYYPinCase(stack));
 		case 'shortStack':
-			return new MidfieldStructure(new MidfieldShortStackPinCase(stack), seed);
+			return new MidfieldStructure(new MidfieldShortStackPinCase(stack));
 		case 'tallStack':
-			return new MidfieldStructure(new MidfieldTallStackPinCase(stack), seed);
+			return new MidfieldStructure(new MidfieldTallStackPinCase(stack));
 	}
 }
 
@@ -224,49 +250,69 @@ function buildRedQuadrantOneStructure(allianceStack: StackItem[], neutralStack: 
 
 	switch (caseType) {
 		case 'noPin':
-			return new QuadrantStructure(definition, new QuadrantNoPinCase(neutralStack, toggleColor), seed);
+			return new QuadrantStructure(definition, new QuadrantNoPinCase(neutralStack, toggleColor));
 		case 'shortStack':
-			return new QuadrantStructure(definition, new QuadrantShortStackCase(allianceStack, neutralStack, toggleColor), seed);
+			return new QuadrantStructure(definition, new QuadrantShortStackCase(allianceStack, neutralStack, toggleColor));
 		case 'mediumStack':
-			return new QuadrantStructure(definition, new QuadrantMediumStackCase(allianceStack, neutralStack, toggleColor), seed);
+			return new QuadrantStructure(definition, new QuadrantMediumStackCase(allianceStack, neutralStack, toggleColor));
 		case 'hardStack':
-			return new QuadrantStructure(definition, new QuadrantHardStackCase(allianceStack, neutralStack, toggleColor), seed);
+			return new QuadrantStructure(definition, new QuadrantHardStackCase(allianceStack, neutralStack, toggleColor));
 	}
 }
 
-export function generateScenario(difficulty: Level, masterSeed?: number): Scenario {
-	const seed = masterSeed ?? Math.floor(Math.random() * 1e9);
-	const { robotsSeed, midfieldSeed, redQuadrantOneSeed, stackShuffleSeed } = deriveSeeds(seed);
+export function generateScenario(options: GenerateScenarioOptions): Scenario {
+	const { difficulty, masterSeed } = options;
+	const generatorVersion = options.generatorVersion ?? GENERATOR_VERSION;
+
+	if (generatorVersion !== GENERATOR_VERSION) {
+		throw new GeneratorVersionMismatchError(GENERATOR_VERSION, generatorVersion);
+	}
+
+	const { robotsSeed, midfieldSeed, redQuadrantOneSeed, stackShuffleSeed, planningSeed } = deriveSeeds(masterSeed);
 	const pool = FieldResourcePool.create();
 
 	const robotsCaseType = pickRobotsCaseType(difficulty);
-	const midfieldCaseType = pickMidfieldCaseType(difficulty);
+	const midfieldCaseType = pickMidfieldCaseTypeSeeded(difficulty, planningSeed);
 	const quadrantCaseType = pickQuadrantCaseType(difficulty);
 
-	const jobs = shuffleSeeded(buildStackJobs(midfieldCaseType, quadrantCaseType, midfieldSeed, redQuadrantOneSeed), stackShuffleSeed);
+	const jobs = shuffleSeeded(
+		buildStackJobs(midfieldCaseType, quadrantCaseType, midfieldSeed, redQuadrantOneSeed, planningSeed),
+		stackShuffleSeed
+	);
 	const stacks = generateScenarioStacks(pool, jobs);
 
 	const robots = buildRobotsStructure(robotsCaseType, robotsSeed);
-	const midfield = buildMidfieldStructure(stacks.midfield, midfieldSeed);
+	const midfield = buildMidfieldStructure(stacks.midfield);
 	const redQuadrantOne = buildRedQuadrantOneStructure(stacks.redQuadrantOneAlliance, stacks.redQuadrantOneNeutral, redQuadrantOneSeed);
 
-	return new Scenario(robots, midfield, redQuadrantOne, seed);
+	return new Scenario(robots, midfield, redQuadrantOne, {
+		generatorVersion: GENERATOR_VERSION,
+		masterSeed,
+		robotsSeed,
+		midfieldSeed,
+		redQuadrantOneSeed
+	});
 }
 
+/** Wire payload for cross-device sync — explicit field state only. */
 export function scenarioToSnapshot(scenario: Scenario, difficulty: Level): ScenarioSnapshot {
 	return {
-		version: 2,
+		version: 3,
 		difficulty,
-		masterSeed: scenario.masterSeed,
 		robots: scenario.robots.toSnapshot(),
 		midfield: scenario.midfield.toSnapshot(),
 		redQuadrantOne: scenario.redQuadrantOne.toSnapshot()
 	};
 }
 
-export function scenarioFromSnapshot(snapshot: ScenarioSnapshot): Scenario {
+/** Generation metadata for debug, export, or seed-based replay — not required for sync. */
+export function scenarioToProvenance(scenario: Scenario): ScenarioProvenance | null {
+	return scenario.provenance;
+}
+
+export function scenarioFromSnapshot(snapshot: ScenarioSnapshot, provenance?: ScenarioProvenance): Scenario {
 	const robots = RobotsStructure.fromSnapshot(snapshot.robots);
 	const midfield = MidfieldStructure.fromSnapshot(snapshot.midfield);
 	const redQuadrantOne = QuadrantStructure.fromSnapshot(snapshot.redQuadrantOne);
-	return new Scenario(robots, midfield, redQuadrantOne, snapshot.masterSeed);
+	return new Scenario(robots, midfield, redQuadrantOne, provenance ?? null);
 }
