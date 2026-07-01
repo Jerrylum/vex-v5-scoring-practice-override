@@ -1,14 +1,37 @@
 import * as THREE from 'three';
 import { ModelLoader } from './ModelLoader';
-import { Field, GameObject, ScoringElementObject } from './GameObject';
+import {
+	Field,
+	GameObject,
+	PinObject,
+	CupObject,
+	ToggleObject,
+	pinDisplayName,
+	pinModelPath,
+	CUP_MODEL,
+	TOGGLE_MODEL,
+	type PinType
+} from './GameObject';
 import { Renderer } from './Renderer';
+import { FT } from './utils';
 
 export class Scene {
 	private renderer: Renderer;
 	private modelLoader: ModelLoader;
 	private field: Field | null = null;
+	private northToggle: ToggleObject | null = null;
+	private eastToggle: ToggleObject | null = null;
+	private southToggle: ToggleObject | null = null;
+	private westToggle: ToggleObject | null = null;
+	private toggleCounter = 0;
 	private scoringObjects: GameObject[] = [];
-	private scoringObjectCounter = 0;
+	private pinCounters: Record<PinType, number> = {
+		redBlue: 0,
+		redYellow: 0,
+		blueYellow: 0,
+		yellowYellow: 0
+	};
+	private cupCounter = 0;
 
 	constructor(containerId: string) {
 		this.renderer = new Renderer(containerId);
@@ -33,6 +56,18 @@ export class Scene {
 
 	private async loadField(): Promise<void> {
 		this.field = await this.addField();
+		this.northToggle = await this.addToggle('blue', new THREE.Vector3(0, 353, FT * -6 + 14));
+		this.eastToggle = await this.addToggle('blue', new THREE.Vector3(FT * 6 - 14, 353, 0), new THREE.Euler(0, -Math.PI / 2, 0));
+		this.southToggle = await this.addToggle('red', new THREE.Vector3(0, 353, FT * 6 - 14), new THREE.Euler(0, Math.PI, 0));
+		this.westToggle = await this.addToggle('red', new THREE.Vector3(FT * -6 + 14, 353, 0), new THREE.Euler(0, Math.PI / 2, 0));
+
+		await Promise.all([
+			this.addRedBluePin(new THREE.Vector3(FT, 0, FT)),
+			this.addRedYellowPin(new THREE.Vector3(FT, 0, -FT)),
+			this.addBlueYellowPin(new THREE.Vector3(-FT, 0, FT)),
+			this.addYellowYellowPin(new THREE.Vector3(-FT, 0, -FT)),
+			this.addCup(new THREE.Vector3(2 * FT, 0, 2 * FT))
+		]);
 
 		const maxDim = 1600;
 
@@ -46,8 +81,14 @@ export class Scene {
 	}
 
 	private async preloadGameObjects(): Promise<void> {
-		// Scoring object and field element models will be preloaded here when available
-		console.log('Game object preload ready');
+		await Promise.all([
+			this.modelLoader.loadModel('/V5RC-Override-H2H-_-FieldElements.glb', 'Field'),
+			this.modelLoader.loadModel(TOGGLE_MODEL, 'Toggle'),
+			this.modelLoader.loadModel(CUP_MODEL, 'Cup'),
+			...Object.entries(pinModelPath).map(([pinType, path]) => this.modelLoader.loadModel(path, pinDisplayName(pinType as PinType)))
+		]);
+
+		console.log('All game object models preloaded');
 	}
 
 	public async addField(position: THREE.Vector3 = new THREE.Vector3(0, 0, 0)): Promise<Field> {
@@ -62,24 +103,99 @@ export class Scene {
 		return field;
 	}
 
-	public async addScoringObject(
-		modelPath: string,
-		name: string,
+	private async addPin(
+		pinType: PinType,
+		position: THREE.Vector3,
+		isFlipped = false,
+		rotation: THREE.Euler = new THREE.Euler(0, 0, 0)
+	): Promise<PinObject> {
+		const model = await this.modelLoader.loadModel(pinModelPath[pinType], pinDisplayName(pinType));
+
+		const instanceId = this.pinCounters[pinType]++;
+		const pin = new PinObject(model, pinType, instanceId, isFlipped);
+		pin.setPosition(position);
+		pin.setRotation(rotation);
+
+		this.renderer.scene.add(pin.getObject());
+		this.scoringObjects.push(pin);
+
+		console.log(`Added ${pinDisplayName(pinType)} at`, position);
+		return pin;
+	}
+
+	public addRedBluePin(position: THREE.Vector3, isFlipped = false, rotation: THREE.Euler = new THREE.Euler(0, 0, 0)): Promise<PinObject> {
+		return this.addPin('redBlue', position, isFlipped, rotation);
+	}
+
+	public addRedYellowPin(position: THREE.Vector3, isFlipped = false, rotation: THREE.Euler = new THREE.Euler(0, 0, 0)): Promise<PinObject> {
+		return this.addPin('redYellow', position, isFlipped, rotation);
+	}
+
+	public addBlueYellowPin(
+		position: THREE.Vector3,
+		isFlipped = false,
+		rotation: THREE.Euler = new THREE.Euler(0, 0, 0)
+	): Promise<PinObject> {
+		return this.addPin('blueYellow', position, isFlipped, rotation);
+	}
+
+	public addYellowYellowPin(
+		position: THREE.Vector3,
+		isFlipped = false,
+		rotation: THREE.Euler = new THREE.Euler(0, 0, 0)
+	): Promise<PinObject> {
+		return this.addPin('yellowYellow', position, isFlipped, rotation);
+	}
+
+	public async addCup(position: THREE.Vector3, rotation: THREE.Euler = new THREE.Euler(0, 0, 0)): Promise<CupObject> {
+		const model = await this.modelLoader.loadModel(CUP_MODEL, 'Cup');
+
+		const instanceId = this.cupCounter++;
+		const cup = new CupObject(model, instanceId);
+		cup.setPosition(position);
+		cup.setRotation(rotation);
+
+		this.renderer.scene.add(cup.getObject());
+		this.scoringObjects.push(cup);
+
+		console.log('Added Cup at', position);
+		return cup;
+	}
+
+	private async addToggle(
+		alliance: 'red' | 'blue',
 		position: THREE.Vector3,
 		rotation: THREE.Euler = new THREE.Euler(0, 0, 0)
-	): Promise<ScoringElementObject> {
-		const model = await this.modelLoader.loadModel(modelPath, name);
+	): Promise<ToggleObject> {
+		const model = await this.modelLoader.loadModel(TOGGLE_MODEL, 'Toggle');
 
-		const instanceId = this.scoringObjectCounter++;
-		const scoringObject = new ScoringElementObject(model, `${name}_${instanceId}`);
-		scoringObject.setPosition(position);
-		scoringObject.setRotation(rotation);
+		const instanceId = this.toggleCounter++;
+		const toggle = new ToggleObject(model, alliance, instanceId);
+		toggle.setPosition(position);
+		toggle.setRotation(rotation);
+		toggle.setColor('yellow'); // default is yellow
 
-		this.renderer.scene.add(scoringObject.getObject());
-		this.scoringObjects.push(scoringObject);
+		this.renderer.scene.add(toggle.getObject());
+		this.scoringObjects.push(toggle);
 
-		console.log(`Added ${name} at`, position);
-		return scoringObject;
+		console.log('Added Toggle at', position);
+		return toggle;
+	}
+
+	public getNorthToggle(): ToggleObject | null {
+		return this.northToggle;
+	}
+
+	public getEastToggle(): ToggleObject | null {
+		return this.eastToggle;
+	}
+
+	public getSouthToggle(): ToggleObject | null {
+		return this.southToggle;
+	}
+
+	public getWestToggle(): ToggleObject | null {
+		return this.westToggle;
 	}
 
 	public removeScoringObject(gameObject: GameObject): void {
@@ -95,7 +211,13 @@ export class Scene {
 			this.renderer.scene.remove(obj.getObject());
 		});
 		this.scoringObjects = [];
-		this.scoringObjectCounter = 0;
+		this.pinCounters = {
+			redBlue: 0,
+			redYellow: 0,
+			blueYellow: 0,
+			yellowYellow: 0
+		};
+		this.cupCounter = 0;
 	}
 
 	public getScoringObjects(): GameObject[] {

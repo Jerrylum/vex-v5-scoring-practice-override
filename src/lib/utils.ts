@@ -1,3 +1,6 @@
+/** One foot in scene units (millimeters). */
+export const FT = 12 * 25.4;
+
 export function mulberry32(seed: number) {
 	return function () {
 		// debugger;

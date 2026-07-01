@@ -30,7 +30,7 @@ export class ModelLoader {
 			metalness: 0,
 			roughness: 0.05,
 			transmission: 0.85,
-			thickness: 2,
+			thickness: 0,
 			transparent: true,
 			opacity: 1,
 			side: THREE.DoubleSide,
