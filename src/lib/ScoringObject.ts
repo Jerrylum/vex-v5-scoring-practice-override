@@ -1,5 +1,6 @@
 import type { Scene } from './Scene';
 import type { PinType } from './GameObject';
+import type { ScenarioContext, StructureScoring } from './Scoring';
 
 export abstract class ScoringObject {
 	public robot1Contacted = false;
@@ -17,9 +18,29 @@ export class Pin extends ScoringObject {
 	}
 }
 
-export class Cup extends ScoringObject {}
+export class Cup extends ScoringObject {
+	public readonly isFlipped: boolean;
+
+	constructor(isFlipped = false) {
+		super();
+		this.isFlipped = isFlipped;
+	}
+}
+
+export class Robot extends ScoringObject {
+	constructor(
+		public readonly alliance: 'red' | 'blue',
+		public readonly slot: 0 | 1,
+		public readonly x: number,
+		public readonly z: number,
+		public readonly rotationY: number
+	) {
+		super();
+	}
+}
 
 export abstract class Structure {
 	public abstract getElements(): ScoringObject[];
 	public abstract visualize(scene: Scene): Promise<void>;
+	public abstract getScoring(context?: ScenarioContext): StructureScoring;
 }

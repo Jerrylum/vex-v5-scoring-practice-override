@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { ROBOT_FLOOR_Y } from './fieldConstants';
+import { ROBOT_MAX_SIZE } from './utils';
 
 export type PinType = 'redBlue' | 'redYellow' | 'blueYellow' | 'yellowYellow';
 
@@ -84,14 +86,49 @@ export class PinObject extends GameObject {
 }
 
 export class CupObject extends GameObject {
-	constructor(model: THREE.Group, instanceId: number) {
+	public readonly isFlipped: boolean;
+
+	constructor(model: THREE.Group, instanceId: number, isFlipped = false) {
 		super(model, `Cup_${instanceId}`);
+		this.isFlipped = isFlipped;
 		this.prepareModel();
 	}
 
 	protected override prepareModel(): void {
 		this.model.position.y = -17.7;
+		this.model.rotation.x = this.isFlipped ? Math.PI : 0;
 		super.prepareModel();
+	}
+}
+
+export class RobotObject extends GameObject {
+	public readonly alliance: 'red' | 'blue';
+
+	constructor(alliance: 'red' | 'blue', instanceId: number) {
+		const size = ROBOT_MAX_SIZE;
+		const color = alliance === 'red' ? 0xcc3333 : 0x3333cc;
+		const geometry = new THREE.BoxGeometry(size, size, size);
+		const material = new THREE.MeshStandardMaterial({
+			color,
+			transparent: true,
+			opacity: 0.35,
+			depthWrite: false
+		});
+		const mesh = new THREE.Mesh(geometry, material);
+		mesh.position.y = ROBOT_FLOOR_Y + size / 2;
+
+		const edges = new THREE.EdgesGeometry(geometry);
+		const outline = new THREE.LineSegments(
+			edges,
+			new THREE.LineBasicMaterial({ color: alliance === 'red' ? 0x991111 : 0x111199 })
+		);
+		outline.position.copy(mesh.position);
+
+		const group = new THREE.Group();
+		group.add(mesh, outline);
+
+		super(group, `Robot_${alliance}_${instanceId}`);
+		this.alliance = alliance;
 	}
 }
 

@@ -5,6 +5,7 @@ import {
 	GameObject,
 	PinObject,
 	CupObject,
+	RobotObject,
 	ToggleObject,
 	pinDisplayName,
 	pinModelPath,
@@ -23,7 +24,7 @@ export class Scene {
 	private eastToggle: ToggleObject | null = null;
 	private southToggle: ToggleObject | null = null;
 	private westToggle: ToggleObject | null = null;
-	private toggleCounter = 0;
+	private fieldElements: GameObject[] = [];
 	private scoringObjects: GameObject[] = [];
 	private pinCounters: Record<PinType, number> = {
 		redBlue: 0,
@@ -32,6 +33,7 @@ export class Scene {
 		yellowYellow: 0
 	};
 	private cupCounter = 0;
+	private robotCounter = 0;
 
 	constructor(containerId: string) {
 		this.renderer = new Renderer(containerId);
@@ -60,14 +62,6 @@ export class Scene {
 		this.eastToggle = await this.addToggle('blue', new THREE.Vector3(FT * 6 - 14, 353, 0), new THREE.Euler(0, -Math.PI / 2, 0));
 		this.southToggle = await this.addToggle('red', new THREE.Vector3(0, 353, FT * 6 - 14), new THREE.Euler(0, Math.PI, 0));
 		this.westToggle = await this.addToggle('red', new THREE.Vector3(FT * -6 + 14, 353, 0), new THREE.Euler(0, Math.PI / 2, 0));
-
-		await Promise.all([
-			this.addRedBluePin(new THREE.Vector3(FT, 0, FT)),
-			this.addRedYellowPin(new THREE.Vector3(FT, 0, -FT)),
-			this.addBlueYellowPin(new THREE.Vector3(-FT, 0, FT)),
-			this.addYellowYellowPin(new THREE.Vector3(-FT, 0, -FT)),
-			this.addCup(new THREE.Vector3(2 * FT, 0, 2 * FT))
-		]);
 
 		const maxDim = 1600;
 
@@ -147,11 +141,15 @@ export class Scene {
 		return this.addPin('yellowYellow', position, isFlipped, rotation);
 	}
 
-	public async addCup(position: THREE.Vector3, rotation: THREE.Euler = new THREE.Euler(0, 0, 0)): Promise<CupObject> {
+	public async addCup(
+		position: THREE.Vector3,
+		isFlipped = false,
+		rotation: THREE.Euler = new THREE.Euler(0, 0, 0)
+	): Promise<CupObject> {
 		const model = await this.modelLoader.loadModel(CUP_MODEL, 'Cup');
 
 		const instanceId = this.cupCounter++;
-		const cup = new CupObject(model, instanceId);
+		const cup = new CupObject(model, instanceId, isFlipped);
 		cup.setPosition(position);
 		cup.setRotation(rotation);
 
@@ -162,6 +160,19 @@ export class Scene {
 		return cup;
 	}
 
+	public addRobot(alliance: 'red' | 'blue', position: THREE.Vector3, rotationY: number): RobotObject {
+		const instanceId = this.robotCounter++;
+		const robot = new RobotObject(alliance, instanceId);
+		robot.setPosition(position);
+		robot.setRotation(new THREE.Euler(0, rotationY, 0));
+
+		this.renderer.scene.add(robot.getObject());
+		this.scoringObjects.push(robot);
+
+		console.log(`Added ${alliance} robot at`, position);
+		return robot;
+	}
+
 	private async addToggle(
 		alliance: 'red' | 'blue',
 		position: THREE.Vector3,
@@ -169,14 +180,14 @@ export class Scene {
 	): Promise<ToggleObject> {
 		const model = await this.modelLoader.loadModel(TOGGLE_MODEL, 'Toggle');
 
-		const instanceId = this.toggleCounter++;
+		const instanceId = this.fieldElements.length;
 		const toggle = new ToggleObject(model, alliance, instanceId);
 		toggle.setPosition(position);
 		toggle.setRotation(rotation);
-		toggle.setColor('yellow'); // default is yellow
+		toggle.setColor('yellow');
 
 		this.renderer.scene.add(toggle.getObject());
-		this.scoringObjects.push(toggle);
+		this.fieldElements.push(toggle);
 
 		console.log('Added Toggle at', position);
 		return toggle;
@@ -218,6 +229,7 @@ export class Scene {
 			yellowYellow: 0
 		};
 		this.cupCounter = 0;
+		this.robotCounter = 0;
 	}
 
 	public getScoringObjects(): GameObject[] {
