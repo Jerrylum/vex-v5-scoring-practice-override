@@ -14,6 +14,7 @@ import type { ToggleColor } from './Scoring';
 import { ALL_PIN_TYPES, generateGoalStack, pickStackLengthSeeded, shuffleSeeded, type StackLengthRange } from './stackGeneration';
 import { mulberry32 } from './utils';
 import {
+	ALL_QUADRANTS,
 	generateRobotPlacements,
 	MidfieldOneYYPinCase,
 	MidfieldShortStackPinCase,
@@ -25,11 +26,10 @@ import {
 	QuadrantNoPinCase,
 	QuadrantShortStackCase,
 	QuadrantStructure,
-	RED_QUADRANT_ONE,
 	RobotsOnFieldCase,
 	RobotsStructure
 } from './structure';
-import { ALL_QUADRANT_PIN_TYPES } from './structure/QuadrantDefinition';
+import { ALL_QUADRANT_PIN_TYPES, type QuadrantDefinition, type QuadrantId } from './structure/QuadrantDefinition';
 import type { PinType } from './GameObject';
 import type { StackItem } from './ScenarioSnapshot';
 
@@ -53,7 +53,7 @@ export class GeneratorVersionMismatchError extends Error {
 
 const MAX_ROBOT_ATTEMPTS = 10;
 
-type StackJobId = 'midfield' | 'redQuadrantOneAlliance' | 'redQuadrantOneNeutral';
+type StackJobId = 'midfield' | `${QuadrantId}Alliance` | `${QuadrantId}Neutral`;
 
 interface StackJob {
 	id: StackJobId;
@@ -63,27 +63,56 @@ interface StackJob {
 	seed: number;
 }
 
+interface QuadrantStacks {
+	alliance: StackItem[];
+	neutral: StackItem[];
+}
+
 interface GeneratedStacks {
 	midfield: StackItem[];
-	redQuadrantOneAlliance: StackItem[];
-	redQuadrantOneNeutral: StackItem[];
+	quadrants: Record<QuadrantId, QuadrantStacks>;
+}
+
+interface QuadrantSeeds {
+	redQuadrantOneSeed: number;
+	redQuadrantTwoSeed: number;
+	blueQuadrantOneSeed: number;
+	blueQuadrantTwoSeed: number;
 }
 
 function deriveSeeds(masterSeed: number): {
 	robotsSeed: number;
 	midfieldSeed: number;
-	redQuadrantOneSeed: number;
 	stackShuffleSeed: number;
 	planningSeed: number;
+	quadrantSeeds: QuadrantSeeds;
 } {
 	const random = mulberry32(masterSeed);
+	const robotsSeed = Math.floor(random() * 1e9);
+	const midfieldSeed = Math.floor(random() * 1e9);
+	const redQuadrantOneSeed = Math.floor(random() * 1e9);
+	const stackShuffleSeed = Math.floor(random() * 1e9);
+	const planningSeed = Math.floor(random() * 1e9);
+	const redQuadrantTwoSeed = Math.floor(random() * 1e9);
+	const blueQuadrantOneSeed = Math.floor(random() * 1e9);
+	const blueQuadrantTwoSeed = Math.floor(random() * 1e9);
+
 	return {
-		robotsSeed: Math.floor(random() * 1e9),
-		midfieldSeed: Math.floor(random() * 1e9),
-		redQuadrantOneSeed: Math.floor(random() * 1e9),
-		stackShuffleSeed: Math.floor(random() * 1e9),
-		planningSeed: Math.floor(random() * 1e9)
+		robotsSeed,
+		midfieldSeed,
+		stackShuffleSeed,
+		planningSeed,
+		quadrantSeeds: {
+			redQuadrantOneSeed,
+			redQuadrantTwoSeed,
+			blueQuadrantOneSeed,
+			blueQuadrantTwoSeed
+		}
 	};
+}
+
+function getQuadrantSeed(seeds: QuadrantSeeds, id: QuadrantId): number {
+	return seeds[`${id}Seed`];
 }
 
 function pickToggleColor(seed: number): ToggleColor {
@@ -163,45 +192,64 @@ function classifyQuadrantCase(allianceLen: number, neutralLen: number): Quadrant
 	return 'hardStack';
 }
 
+function buildQuadrantStackJobs(definition: QuadrantDefinition, quadrantCaseType: QuadrantCaseType, seed: number): StackJob[] {
+	const quadrantRange = quadrantCaseToRange(quadrantCaseType);
+
+	return [
+		{
+			id: `${definition.id}Alliance`,
+			targetLength: pickStackLengthSeeded(quadrantRange, seed + 1),
+			requiresYYBase: false,
+			allowedPinTypes: definition.allianceAllowedPinTypes,
+			seed: seed + 3
+		},
+		{
+			id: `${definition.id}Neutral`,
+			targetLength: pickStackLengthSeeded(quadrantRange, seed + 2),
+			requiresYYBase: true,
+			allowedPinTypes: ALL_QUADRANT_PIN_TYPES,
+			seed: seed + 4
+		}
+	];
+}
+
 function buildStackJobs(
 	midfieldCaseType: MidfieldCaseType,
 	quadrantCaseType: QuadrantCaseType,
 	midfieldSeed: number,
-	redQuadrantOneSeed: number,
+	quadrantSeeds: QuadrantSeeds,
 	planningSeed: number
 ): StackJob[] {
-	const quadrantRange = quadrantCaseToRange(quadrantCaseType);
-
-	return [
+	const jobs: StackJob[] = [
 		{
 			id: 'midfield',
 			targetLength: getMidfieldTarget(midfieldCaseType, planningSeed),
 			requiresYYBase: true,
 			allowedPinTypes: ALL_PIN_TYPES,
 			seed: midfieldSeed
-		},
-		{
-			id: 'redQuadrantOneAlliance',
-			targetLength: pickStackLengthSeeded(quadrantRange, redQuadrantOneSeed + 1),
-			requiresYYBase: false,
-			allowedPinTypes: RED_QUADRANT_ONE.allianceAllowedPinTypes,
-			seed: redQuadrantOneSeed + 3
-		},
-		{
-			id: 'redQuadrantOneNeutral',
-			targetLength: pickStackLengthSeeded(quadrantRange, redQuadrantOneSeed + 2),
-			requiresYYBase: true,
-			allowedPinTypes: ALL_QUADRANT_PIN_TYPES,
-			seed: redQuadrantOneSeed + 4
 		}
 	];
+
+	for (const definition of ALL_QUADRANTS) {
+		jobs.push(...buildQuadrantStackJobs(definition, quadrantCaseType, getQuadrantSeed(quadrantSeeds, definition.id)));
+	}
+
+	return jobs;
+}
+
+function emptyQuadrantStacks(): Record<QuadrantId, QuadrantStacks> {
+	return {
+		redQuadrantOne: { alliance: [], neutral: [] },
+		redQuadrantTwo: { alliance: [], neutral: [] },
+		blueQuadrantOne: { alliance: [], neutral: [] },
+		blueQuadrantTwo: { alliance: [], neutral: [] }
+	};
 }
 
 function generateScenarioStacks(pool: FieldResourcePool, jobs: StackJob[]): GeneratedStacks {
 	const stacks: GeneratedStacks = {
 		midfield: [],
-		redQuadrantOneAlliance: [],
-		redQuadrantOneNeutral: []
+		quadrants: emptyQuadrantStacks()
 	};
 
 	for (const job of jobs) {
@@ -214,17 +262,19 @@ function generateScenarioStacks(pool: FieldResourcePool, jobs: StackJob[]): Gene
 			random
 		});
 
-		switch (job.id) {
-			case 'midfield':
-				stacks.midfield = stack;
-				break;
-			case 'redQuadrantOneAlliance':
-				stacks.redQuadrantOneAlliance = stack;
-				break;
-			case 'redQuadrantOneNeutral':
-				stacks.redQuadrantOneNeutral = stack;
-				break;
+		if (job.id === 'midfield') {
+			stacks.midfield = stack;
+			continue;
 		}
+
+		const match = job.id.match(/^(redQuadrantOne|redQuadrantTwo|blueQuadrantOne|blueQuadrantTwo)(Alliance|Neutral)$/);
+		if (!match) {
+			throw new Error(`Unknown stack job id: ${job.id}`);
+		}
+
+		const quadrantId = match[1] as QuadrantId;
+		const goal = match[2] === 'Alliance' ? 'alliance' : 'neutral';
+		stacks.quadrants[quadrantId][goal] = stack;
 	}
 
 	return stacks;
@@ -243,9 +293,13 @@ function buildMidfieldStructure(stack: StackItem[]): MidfieldStructure {
 	}
 }
 
-function buildRedQuadrantOneStructure(allianceStack: StackItem[], neutralStack: StackItem[], seed: number): QuadrantStructure {
+function buildQuadrantStructure(
+	definition: QuadrantDefinition,
+	allianceStack: StackItem[],
+	neutralStack: StackItem[],
+	seed: number
+): QuadrantStructure {
 	const toggleColor = pickToggleColor(seed);
-	const definition = RED_QUADRANT_ONE;
 	const caseType = classifyQuadrantCase(allianceStack.length, neutralStack.length);
 
 	switch (caseType) {
@@ -260,6 +314,22 @@ function buildRedQuadrantOneStructure(allianceStack: StackItem[], neutralStack: 
 	}
 }
 
+function buildQuadrantStructures(stacks: GeneratedStacks, quadrantSeeds: QuadrantSeeds): Record<QuadrantId, QuadrantStructure> {
+	const structures = {} as Record<QuadrantId, QuadrantStructure>;
+
+	for (const definition of ALL_QUADRANTS) {
+		const quadrantStacks = stacks.quadrants[definition.id];
+		structures[definition.id] = buildQuadrantStructure(
+			definition,
+			quadrantStacks.alliance,
+			quadrantStacks.neutral,
+			getQuadrantSeed(quadrantSeeds, definition.id)
+		);
+	}
+
+	return structures;
+}
+
 export function generateScenario(options: GenerateScenarioOptions): Scenario {
 	const { difficulty, masterSeed } = options;
 	const generatorVersion = options.generatorVersion ?? GENERATOR_VERSION;
@@ -268,7 +338,7 @@ export function generateScenario(options: GenerateScenarioOptions): Scenario {
 		throw new GeneratorVersionMismatchError(GENERATOR_VERSION, generatorVersion);
 	}
 
-	const { robotsSeed, midfieldSeed, redQuadrantOneSeed, stackShuffleSeed, planningSeed } = deriveSeeds(masterSeed);
+	const { robotsSeed, midfieldSeed, stackShuffleSeed, planningSeed, quadrantSeeds } = deriveSeeds(masterSeed);
 	const pool = FieldResourcePool.create();
 
 	const robotsCaseType = pickRobotsCaseType(difficulty);
@@ -276,32 +346,43 @@ export function generateScenario(options: GenerateScenarioOptions): Scenario {
 	const quadrantCaseType = pickQuadrantCaseType(difficulty);
 
 	const jobs = shuffleSeeded(
-		buildStackJobs(midfieldCaseType, quadrantCaseType, midfieldSeed, redQuadrantOneSeed, planningSeed),
+		buildStackJobs(midfieldCaseType, quadrantCaseType, midfieldSeed, quadrantSeeds, planningSeed),
 		stackShuffleSeed
 	);
 	const stacks = generateScenarioStacks(pool, jobs);
 
 	const robots = buildRobotsStructure(robotsCaseType, robotsSeed);
 	const midfield = buildMidfieldStructure(stacks.midfield);
-	const redQuadrantOne = buildRedQuadrantOneStructure(stacks.redQuadrantOneAlliance, stacks.redQuadrantOneNeutral, redQuadrantOneSeed);
+	const quadrants = buildQuadrantStructures(stacks, quadrantSeeds);
 
-	return new Scenario(robots, midfield, redQuadrantOne, {
-		generatorVersion: GENERATOR_VERSION,
-		masterSeed,
-		robotsSeed,
-		midfieldSeed,
-		redQuadrantOneSeed
-	});
+	return new Scenario(
+		robots,
+		midfield,
+		quadrants.redQuadrantOne,
+		quadrants.redQuadrantTwo,
+		quadrants.blueQuadrantOne,
+		quadrants.blueQuadrantTwo,
+		{
+			generatorVersion: GENERATOR_VERSION,
+			masterSeed,
+			robotsSeed,
+			midfieldSeed,
+			...quadrantSeeds
+		}
+	);
 }
 
 /** Wire payload for cross-device sync — explicit field state only. */
 export function scenarioToSnapshot(scenario: Scenario, difficulty: Level): ScenarioSnapshot {
 	return {
-		version: 3,
+		version: 4,
 		difficulty,
 		robots: scenario.robots.toSnapshot(),
 		midfield: scenario.midfield.toSnapshot(),
-		redQuadrantOne: scenario.redQuadrantOne.toSnapshot()
+		redQuadrantOne: scenario.redQuadrantOne.toSnapshot(),
+		redQuadrantTwo: scenario.redQuadrantTwo.toSnapshot(),
+		blueQuadrantOne: scenario.blueQuadrantOne.toSnapshot(),
+		blueQuadrantTwo: scenario.blueQuadrantTwo.toSnapshot()
 	};
 }
 
@@ -314,5 +395,8 @@ export function scenarioFromSnapshot(snapshot: ScenarioSnapshot, provenance?: Sc
 	const robots = RobotsStructure.fromSnapshot(snapshot.robots);
 	const midfield = MidfieldStructure.fromSnapshot(snapshot.midfield);
 	const redQuadrantOne = QuadrantStructure.fromSnapshot(snapshot.redQuadrantOne);
-	return new Scenario(robots, midfield, redQuadrantOne, provenance ?? null);
+	const redQuadrantTwo = QuadrantStructure.fromSnapshot(snapshot.redQuadrantTwo);
+	const blueQuadrantOne = QuadrantStructure.fromSnapshot(snapshot.blueQuadrantOne);
+	const blueQuadrantTwo = QuadrantStructure.fromSnapshot(snapshot.blueQuadrantTwo);
+	return new Scenario(robots, midfield, redQuadrantOne, redQuadrantTwo, blueQuadrantOne, blueQuadrantTwo, provenance ?? null);
 }

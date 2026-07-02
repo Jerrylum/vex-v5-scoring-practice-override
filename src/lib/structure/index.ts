@@ -22,6 +22,10 @@ export {
 
 export {
 	RED_QUADRANT_ONE,
+	RED_QUADRANT_TWO,
+	BLUE_QUADRANT_ONE,
+	BLUE_QUADRANT_TWO,
+	ALL_QUADRANTS,
 	ALL_QUADRANT_PIN_TYPES,
 	getQuadrantDefinition,
 	type QuadrantDefinition,

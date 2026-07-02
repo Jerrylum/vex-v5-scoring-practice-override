@@ -1,6 +1,9 @@
 import type { PinType } from './GameObject';
 import type { ToggleColor } from './Scoring';
 import type { Level } from './Generator';
+import type { QuadrantId } from './structure/QuadrantDefinition';
+
+export type { QuadrantId };
 
 export interface RobotPlacement {
 	alliance: 'red' | 'blue';
@@ -24,7 +27,7 @@ export interface MidfieldSnapshot {
 }
 
 export interface QuadrantSnapshot {
-	quadrantId: 'redQuadrantOne';
+	quadrantId: QuadrantId;
 	caseType: 'noPin' | 'shortStack' | 'mediumStack' | 'hardStack';
 	toggleColor: ToggleColor;
 	allianceStack: StackItem[];
@@ -32,11 +35,14 @@ export interface QuadrantSnapshot {
 }
 
 export interface ScenarioSnapshot {
-	version: 3;
+	version: 4;
 	difficulty: Level;
 	robots: RobotsSnapshot;
 	midfield: MidfieldSnapshot;
 	redQuadrantOne: QuadrantSnapshot;
+	redQuadrantTwo: QuadrantSnapshot;
+	blueQuadrantOne: QuadrantSnapshot;
+	blueQuadrantTwo: QuadrantSnapshot;
 }
 
 /** Optional generation metadata for debug, export, or seed-based replay — not sent for sync. */
@@ -46,4 +52,7 @@ export interface ScenarioProvenance {
 	robotsSeed: number;
 	midfieldSeed: number;
 	redQuadrantOneSeed: number;
+	redQuadrantTwoSeed: number;
+	blueQuadrantOneSeed: number;
+	blueQuadrantTwoSeed: number;
 }

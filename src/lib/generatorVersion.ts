@@ -1,2 +1,2 @@
 /** Increment when generation logic would change output for the same (seed, difficulty). */
-export const GENERATOR_VERSION = 1;
+export const GENERATOR_VERSION = 2;

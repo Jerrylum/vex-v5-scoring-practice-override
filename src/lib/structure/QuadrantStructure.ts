@@ -2,6 +2,7 @@ import { Structure, ScoringObject } from '../ScoringObject';
 import type { Scene } from '../Scene';
 import { type ScoringSlice } from '../Scoring';
 import type { QuadrantSnapshot, StackItem } from '../ScenarioSnapshot';
+import type { QuadrantId } from './QuadrantDefinition';
 import { scoreQuadrantGoal } from '../goalScoring';
 import type { ToggleColor } from '../Scoring';
 import { stackToElements } from '../stackGeneration';
@@ -61,7 +62,7 @@ export abstract class QuadrantCase {
 }
 
 function scoringFromStacks(
-	quadrantId: QuadrantSnapshot['quadrantId'],
+	quadrantId: QuadrantId,
 	allianceStack: StackItem[],
 	neutralStack: StackItem[],
 	toggleColor: ToggleColor
@@ -72,11 +73,7 @@ function scoringFromStacks(
 		toggleColor
 	};
 
-	if (quadrantId === 'redQuadrantOne') {
-		return { redQuadrantOne: quadrantScoring };
-	}
-
-	throw new Error(`Unknown quadrant id: ${quadrantId}`);
+	return { [quadrantId]: quadrantScoring };
 }
 
 function elementsFromStacks(allianceStack: StackItem[], neutralStack: StackItem[]): ScoringObject[] {

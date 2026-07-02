@@ -32,6 +32,9 @@ export interface QuadrantGoalPairScoring {
 export interface ScenarioScoring {
 	midfieldGoal: GoalScoring;
 	redQuadrantOne?: QuadrantGoalPairScoring;
+	redQuadrantTwo?: QuadrantGoalPairScoring;
+	blueQuadrantOne?: QuadrantGoalPairScoring;
+	blueQuadrantTwo?: QuadrantGoalPairScoring;
 }
 
 /** Partial scoring returned by a single structure. */
