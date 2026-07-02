@@ -43,7 +43,7 @@ export class Renderer {
 		this.controls.dampingFactor = 0.05;
 		this.controls.screenSpacePanning = false;
 		this.controls.minDistance = 10;
-		this.controls.maxDistance = 2000;
+		this.controls.maxDistance = 3600;
 		this.controls.maxPolarAngle = Math.PI;
 
 		this.setupEnvironment();

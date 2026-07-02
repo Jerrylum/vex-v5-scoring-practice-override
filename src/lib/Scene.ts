@@ -64,9 +64,9 @@ export class Scene {
 		this.southToggle = await this.addToggle('red', new THREE.Vector3(0, 353, FT * 6 - 14), new THREE.Euler(0, Math.PI, 0));
 		this.westToggle = await this.addToggle('red', new THREE.Vector3(FT * -6 + 14, 353, 0), new THREE.Euler(0, Math.PI / 2, 0));
 
-		const maxDim = 1600;
+		const maxDim = 3600;
 
-		this.renderer.setCameraView(new THREE.Vector3(0, 1600, 1600), new THREE.Vector3(0, 0, 0));
+		this.renderer.setCameraView(new THREE.Vector3(0, 1800, 3600), new THREE.Vector3(0, 0, 0));
 
 		this.renderer.camera.near = maxDim * 0.01;
 		this.renderer.camera.far = maxDim * 10;
