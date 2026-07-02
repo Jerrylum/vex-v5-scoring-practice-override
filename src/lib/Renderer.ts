@@ -15,7 +15,7 @@ export class Renderer {
 
 		// Initialize scene
 		this.scene = new THREE.Scene();
-		this.scene.background = new THREE.Color(0x2a2a2a);
+		this.scene.background = new THREE.Color(0x333333);
 
 		// Initialize camera
 		const width = this.container.clientWidth;
@@ -29,7 +29,7 @@ export class Renderer {
 		this.renderer.setSize(width, height);
 		this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 		this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-		this.renderer.toneMappingExposure = 0.2;
+		this.renderer.toneMappingExposure = 0.3;
 		this.renderer.shadowMap.enabled = false;
 		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 		this.container.appendChild(this.renderer.domElement);
