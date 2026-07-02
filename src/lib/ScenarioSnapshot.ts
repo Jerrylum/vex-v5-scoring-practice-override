@@ -17,7 +17,7 @@ export type StackItem = { kind: 'pin'; pinType: PinType; isFlipped: boolean } | 
 
 /** Wire format: explicit field state for cross-device sync. No seeds. */
 export interface RobotsSnapshot {
-	caseType: 'none' | 'allOnField';
+	caseType: 'none' | 'allOnField' | 'clawbotOnField';
 	placements?: RobotPlacement[];
 }
 

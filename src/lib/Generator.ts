@@ -2,7 +2,7 @@ import { mulberry32 } from './utils';
 
 export type Level = 'easy' | 'medium' | 'hard';
 
-export type RobotsCaseType = 'none' | 'allOnField';
+export type RobotsCaseType = 'none' | 'allOnField' | 'clawbotOnField';
 export type MidfieldCaseType = 'oneYY' | 'shortStack' | 'tallStack';
 export type QuadrantCaseType = 'noPin' | 'shortStack' | 'mediumStack' | 'hardStack';
 
@@ -10,7 +10,10 @@ export function pickRobotsCaseType(level: Level): RobotsCaseType {
 	if (level === 'easy') {
 		return 'none';
 	}
-	return 'allOnField';
+	if (level === 'medium') {
+		return 'allOnField';
+	}
+	return 'clawbotOnField';
 }
 
 export function pickMidfieldCaseTypeSeeded(level: Level, seed: number): MidfieldCaseType {

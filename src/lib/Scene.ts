@@ -6,11 +6,14 @@ import {
 	PinObject,
 	CupObject,
 	RobotObject,
+	ClawbotObject,
 	ToggleObject,
 	pinDisplayName,
 	pinModelPath,
 	CUP_MODEL,
 	TOGGLE_MODEL,
+	CLAWBOT_MODEL,
+	LICENSE_PLATE_MODEL,
 	type PinType
 } from './GameObject';
 import { Renderer } from './Renderer';
@@ -80,6 +83,8 @@ export class Scene {
 			this.modelLoader.loadModel('/V5RC-Override-H2H-_-FieldElements.glb', 'Field'),
 			this.modelLoader.loadModel(TOGGLE_MODEL, 'Toggle'),
 			this.modelLoader.loadModel(CUP_MODEL, 'Cup'),
+			this.modelLoader.loadModel(CLAWBOT_MODEL, 'Clawbot'),
+			this.modelLoader.loadModel(LICENSE_PLATE_MODEL, 'LicensePlate'),
 			...Object.entries(pinModelPath).map(([pinType, path]) => this.modelLoader.loadModel(path, pinDisplayName(pinType as PinType)))
 		]);
 
@@ -168,6 +173,24 @@ export class Scene {
 
 		console.log(`Added ${alliance} robot at`, position);
 		return robot;
+	}
+
+	public async addClawbot(alliance: 'red' | 'blue', position: THREE.Vector3, rotationY: number): Promise<ClawbotObject> {
+		const instanceId = this.robotCounter++;
+		const [clawbotModel, licensePlateFront, licensePlateBack] = await Promise.all([
+			this.modelLoader.loadModel(CLAWBOT_MODEL, 'Clawbot'),
+			this.modelLoader.loadModel(LICENSE_PLATE_MODEL, 'LicensePlate'),
+			this.modelLoader.loadModel(LICENSE_PLATE_MODEL, 'LicensePlate')
+		]);
+		const clawbot = new ClawbotObject(alliance, instanceId, clawbotModel, licensePlateFront, licensePlateBack);
+		clawbot.setPosition(position);
+		clawbot.setRotation(new THREE.Euler(0, rotationY, 0));
+
+		this.renderer.scene.add(clawbot.getObject());
+		this.scoringObjects.push(clawbot);
+
+		console.log(`Added ${alliance} clawbot at`, position);
+		return clawbot;
 	}
 
 	private async addToggle(

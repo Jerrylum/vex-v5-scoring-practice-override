@@ -21,6 +21,7 @@ import {
 	MidfieldStructure,
 	MidfieldTallStackPinCase,
 	NoRobotCase,
+	ClawbotOnFieldCase,
 	QuadrantHardStackCase,
 	QuadrantMediumStackCase,
 	QuadrantNoPinCase,
@@ -135,6 +136,9 @@ function buildRobotsStructure(caseType: ReturnType<typeof pickRobotsCaseType>, s
 	for (let attempt = 0; attempt < MAX_ROBOT_ATTEMPTS; attempt++) {
 		try {
 			const placements = generateRobotPlacements(seed + attempt);
+			if (caseType === 'clawbotOnField') {
+				return new RobotsStructure(new ClawbotOnFieldCase(placements));
+			}
 			return new RobotsStructure(new RobotsOnFieldCase(placements));
 		} catch {
 			// retry with offset seed

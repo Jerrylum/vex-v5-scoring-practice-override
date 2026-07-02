@@ -48,6 +48,9 @@ export class RobotsStructure extends Structure {
 		if (!snapshot.placements || snapshot.placements.length !== 4) {
 			throw new Error('RobotsOnFieldCase snapshot requires 4 placements');
 		}
+		if (snapshot.caseType === 'clawbotOnField') {
+			return new RobotsStructure(new ClawbotOnFieldCase(snapshot.placements));
+		}
 		return new RobotsStructure(new RobotsOnFieldCase(snapshot.placements));
 	}
 }
@@ -158,5 +161,17 @@ export class RobotsOnFieldCase extends RobotsCase {
 
 	public toSnapshot(): RobotsSnapshot {
 		return { caseType: 'allOnField', placements: this.placements };
+	}
+}
+
+export class ClawbotOnFieldCase extends RobotsOnFieldCase {
+	public override async visualize(scene: Scene): Promise<void> {
+		await Promise.all(
+			this.placements.map((p) => scene.addClawbot(p.alliance, new THREE.Vector3(p.x, 0, p.z), p.rotationY))
+		);
+	}
+
+	public override toSnapshot(): RobotsSnapshot {
+		return { caseType: 'clawbotOnField', placements: this.placements };
 	}
 }

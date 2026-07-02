@@ -24,6 +24,8 @@ export function pinDisplayName(pinType: PinType): string {
 
 export const CUP_MODEL = '/V5RC-Override-H2H-_-Cup.glb';
 export const TOGGLE_MODEL = '/V5RC-Override-H2H-_-Toggle.glb';
+export const CLAWBOT_MODEL = '/V5RC-Clawbot.glb';
+export const LICENSE_PLATE_MODEL = '/V5RC-LicensePlate.glb';
 
 export abstract class GameObject {
 	protected container: THREE.Group;
@@ -101,30 +103,123 @@ export class CupObject extends GameObject {
 	}
 }
 
+const ALLIANCE_COLORS = {
+	red: 0xd50032,
+	blue: 0x00a4e0
+} as const;
+
+function allianceColor(alliance: 'red' | 'blue'): number {
+	return ALLIANCE_COLORS[alliance];
+}
+
+function createRobotFootprintGroup(alliance: 'red' | 'blue'): THREE.Group {
+	const size = ROBOT_MAX_SIZE;
+	const color = allianceColor(alliance);
+	const geometry = new THREE.BoxGeometry(size, size, size);
+	const material = new THREE.MeshStandardMaterial({
+		color,
+		transparent: true,
+		opacity: 0.35,
+		depthWrite: false
+	});
+	const mesh = new THREE.Mesh(geometry, material);
+	mesh.position.y = ROBOT_FLOOR_Y + size / 2;
+
+	const edges = new THREE.EdgesGeometry(geometry);
+	const outline = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color }));
+	outline.position.copy(mesh.position);
+
+	const group = new THREE.Group();
+	group.add(mesh, outline);
+	return group;
+}
+
+function prepareClawbotModel(model: THREE.Group): void {
+	const box = new THREE.Box3().setFromObject(model);
+	const size = new THREE.Vector3();
+	box.getSize(size);
+	const maxXZ = Math.max(size.x, size.z);
+	if (maxXZ > ROBOT_MAX_SIZE) {
+		model.scale.multiplyScalar(ROBOT_MAX_SIZE / maxXZ);
+	}
+
+	box.setFromObject(model);
+	const center = new THREE.Vector3();
+	box.getCenter(center);
+	model.position.set(-center.x, ROBOT_FLOOR_Y - box.min.y, -center.z);
+}
+
+export function applyLicensePlateAllianceColor(model: THREE.Group, alliance: 'red' | 'blue'): void {
+	const color = allianceColor(alliance);
+	model.traverse((child) => {
+		if (child instanceof THREE.Mesh) {
+			const materials = Array.isArray(child.material) ? child.material : [child.material];
+			const updated = materials.map((material) => {
+				if (material.name === 'AnyColor' && material instanceof THREE.MeshStandardMaterial) {
+					const copy = material.clone();
+					copy.color.setHex(color);
+					return copy;
+				}
+				return material;
+			});
+			child.material = Array.isArray(child.material) ? updated : updated[0]!;
+		}
+	});
+}
+
+function attachLicensePlate(
+	footprintGroup: THREE.Group,
+	clawbotModel: THREE.Group,
+	licensePlateFront: THREE.Group,
+	licensePlateBack: THREE.Group,
+	alliance: 'red' | 'blue'
+): void {
+	applyLicensePlateAllianceColor(licensePlateFront, alliance);
+	applyLicensePlateAllianceColor(licensePlateBack, alliance);
+	footprintGroup.add(clawbotModel);
+
+	const box = new THREE.Box3().setFromObject(clawbotModel);
+	const center = new THREE.Vector3();
+	box.getCenter(center);
+
+	licensePlateFront.position.set(center.x - 13, center.y + 30, center.z - 60);
+	licensePlateFront.rotation.x = Math.PI / 17;
+	licensePlateFront.rotation.y = -Math.PI / 2;
+	licensePlateFront.rotation.z = Math.PI / 2;
+
+	licensePlateBack.position.set(center.x + 17, center.y + 30, center.z - 60);
+	licensePlateBack.rotation.x = Math.PI / 17;
+	licensePlateBack.rotation.y = Math.PI / 2;
+	licensePlateBack.rotation.z = Math.PI / 2;
+
+	footprintGroup.add(licensePlateFront);
+	footprintGroup.add(licensePlateBack);
+}
+
 export class RobotObject extends GameObject {
 	public readonly alliance: 'red' | 'blue';
 
 	constructor(alliance: 'red' | 'blue', instanceId: number) {
-		const size = ROBOT_MAX_SIZE;
-		const color = alliance === 'red' ? 0xcc3333 : 0x3333cc;
-		const geometry = new THREE.BoxGeometry(size, size, size);
-		const material = new THREE.MeshStandardMaterial({
-			color,
-			transparent: true,
-			opacity: 0.35,
-			depthWrite: false
-		});
-		const mesh = new THREE.Mesh(geometry, material);
-		mesh.position.y = ROBOT_FLOOR_Y + size / 2;
+		super(createRobotFootprintGroup(alliance), `Robot_${alliance}_${instanceId}`);
+		this.alliance = alliance;
+	}
+}
 
-		const edges = new THREE.EdgesGeometry(geometry);
-		const outline = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: alliance === 'red' ? 0x991111 : 0x111199 }));
-		outline.position.copy(mesh.position);
+export class ClawbotObject extends GameObject {
+	public readonly alliance: 'red' | 'blue';
 
-		const group = new THREE.Group();
-		group.add(mesh, outline);
+	constructor(
+		alliance: 'red' | 'blue',
+		instanceId: number,
+		clawbotModel: THREE.Group,
+		licensePlateFront: THREE.Group,
+		licensePlateBack: THREE.Group
+	) {
+		const group = createRobotFootprintGroup(alliance);
+		prepareClawbotModel(clawbotModel);
+		attachLicensePlate(group, clawbotModel, licensePlateFront, licensePlateBack, alliance);
 
-		super(group, `Robot_${alliance}_${instanceId}`);
+		super(group, `Clawbot_${alliance}_${instanceId}`);
 		this.alliance = alliance;
 	}
 }
