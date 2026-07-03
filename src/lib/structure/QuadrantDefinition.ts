@@ -50,12 +50,7 @@ export const BLUE_QUADRANT_TWO: QuadrantDefinition = {
 	allianceAllowedPinTypes: ['blueYellow', 'redBlue']
 };
 
-export const ALL_QUADRANTS: readonly QuadrantDefinition[] = [
-	RED_QUADRANT_ONE,
-	RED_QUADRANT_TWO,
-	BLUE_QUADRANT_ONE,
-	BLUE_QUADRANT_TWO
-];
+export const ALL_QUADRANTS: readonly QuadrantDefinition[] = [RED_QUADRANT_ONE, RED_QUADRANT_TWO, BLUE_QUADRANT_ONE, BLUE_QUADRANT_TWO];
 
 export const ALL_QUADRANT_PIN_TYPES: PinType[] = ['redBlue', 'redYellow', 'blueYellow', 'yellowYellow'];
 

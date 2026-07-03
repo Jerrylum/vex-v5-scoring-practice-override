@@ -43,10 +43,10 @@ export {
 export { visualizeQuadrantGoals } from './QuadrantStackVisualization';
 
 export {
-	RemainingPinsStructure,
-	collectRemainingPinItems,
-	generateScatteredPinPlacements,
-	type ScatteredPinPlacement
-} from './RemainingPinsStructure';
+	RemainingItemsStructure,
+	collectRemainingItems,
+	generateScatteredPlacements,
+	type ScatteredPlacement
+} from './RemainingItemsStructure';
 
 export { generateGoalStack, shuffleSeeded, ALL_PIN_TYPES } from '../stackGeneration';

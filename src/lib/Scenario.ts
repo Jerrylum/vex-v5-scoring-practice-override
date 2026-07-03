@@ -2,7 +2,7 @@ import { mergeScoringSlices, type ScenarioScoring } from './Scoring';
 import type { ScenarioProvenance } from './ScenarioSnapshot';
 import type { MidfieldStructure } from './structure/MidfieldStructure';
 import type { QuadrantStructure } from './structure/QuadrantStructure';
-import type { RemainingPinsStructure } from './structure/RemainingPinsStructure';
+import type { RemainingItemsStructure } from './structure/RemainingItemsStructure';
 import type { RobotsStructure } from './structure/RobotsStructure';
 
 export class Scenario {
@@ -13,7 +13,7 @@ export class Scenario {
 		public readonly redQuadrantTwo: QuadrantStructure,
 		public readonly blueQuadrantOne: QuadrantStructure,
 		public readonly blueQuadrantTwo: QuadrantStructure,
-		public readonly remainingPins: RemainingPinsStructure,
+		public readonly remainingItems: RemainingItemsStructure,
 		public readonly provenance: ScenarioProvenance | null = null
 	) {}
 
@@ -25,7 +25,7 @@ export class Scenario {
 			this.redQuadrantTwo,
 			this.blueQuadrantOne,
 			this.blueQuadrantTwo,
-			this.remainingPins
+			this.remainingItems
 		];
 	}
 

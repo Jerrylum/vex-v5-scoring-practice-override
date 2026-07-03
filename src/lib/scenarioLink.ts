@@ -72,7 +72,11 @@ export function encodeScenarioToken(params: ScenarioLinkParams): string {
 	bytes[5] = DIFFICULTY_TO_BYTE[params.difficulty];
 
 	const token = bytesToBase64Url(bytes);
-	console.log('[scenarioLink]', { generatorVersion: params.generatorVersion, masterSeed: params.masterSeed, difficulty: params.difficulty });
+	console.log('[scenarioLink]', {
+		generatorVersion: params.generatorVersion,
+		masterSeed: params.masterSeed,
+		difficulty: params.difficulty
+	});
 	return token;
 }
 

@@ -28,8 +28,12 @@ export const EXCLUSION_BUFFER = 200;
 export const PIN_DIAMETER_MM = 80;
 export const PIN_LENGTH_MM = 164.5;
 
-/** Horizontal keep-away radius for a pin lying on its side (rotation.x = 90°). */
-export const PIN_PLACEMENT_RADIUS = PIN_LENGTH_MM / 2 + 10;
+/** Shared dimensions for scattered pins and cups lying on the field (~6.5" × 3.15"). */
+export const SCATTERED_OBJECT_DIAMETER_MM = PIN_DIAMETER_MM;
+export const SCATTERED_OBJECT_LENGTH_MM = PIN_LENGTH_MM;
+
+/** Circle collision radius for scattered pins/cups lying on their side (rotation.x = 90°). */
+export const SCATTERED_PLACEMENT_RADIUS = SCATTERED_OBJECT_LENGTH_MM / 2 + 10;
 
 /** Base position of the first YY pin in the midfield goal stack. */
 export const MIDFIELD_GOAL_BASE = new THREE.Vector3(0, 145, 0);
@@ -308,66 +312,57 @@ export function isRobotInMidfield(x: number, z: number, size: number, rotationY:
 	return robotFootprintOverlapsMidfield(x, z, size, rotationY, corners);
 }
 
-/** True when a lying pin's circular footprint fits fully inside the field perimeter. */
-export function isPinWithinField(x: number, z: number, pinRadius = PIN_PLACEMENT_RADIUS): boolean {
-	return (
-		x - pinRadius >= -FIELD_HALF &&
-		x + pinRadius <= FIELD_HALF &&
-		z - pinRadius >= -FIELD_HALF &&
-		z + pinRadius <= FIELD_HALF
-	);
+/** True when a scattered pin/cup circular footprint fits fully inside the field perimeter. */
+export function isScatteredObjectWithinField(x: number, z: number, radius = SCATTERED_PLACEMENT_RADIUS): boolean {
+	return x - radius >= -FIELD_HALF && x + radius <= FIELD_HALF && z - radius >= -FIELD_HALF && z + radius <= FIELD_HALF;
 }
 
-/** True when a lying pin overlaps any exclusion zone (conservative AABB test). */
-export function isPinInExclusionZone(x: number, z: number, pinRadius = PIN_PLACEMENT_RADIUS): boolean {
+/** True when a scattered pin/cup overlaps any exclusion zone (conservative AABB test). */
+export function isScatteredObjectInExclusionZone(x: number, z: number, radius = SCATTERED_PLACEMENT_RADIUS): boolean {
 	for (const zone of EXCLUSION_ZONES) {
-		if (Math.abs(x - zone.x) < EXCLUSION_BUFFER + pinRadius && Math.abs(z - zone.z) < EXCLUSION_BUFFER + pinRadius) {
+		if (Math.abs(x - zone.x) < EXCLUSION_BUFFER + radius && Math.abs(z - zone.z) < EXCLUSION_BUFFER + radius) {
 			return true;
 		}
 	}
 	return false;
 }
 
-/** Max |x| or |z| for pin center so the lying-pin footprint stays inside the field at any rotationZ. */
-export function maxPinCenterOffset(pinDiameter = PIN_PLACEMENT_RADIUS * 2): number {
-	return maxRobotCenterOffset(pinDiameter);
+/** Max |x| or |z| for object center so the lying footprint stays inside the field at any rotationZ. */
+export function maxScatteredCenterOffset(objectDiameter = SCATTERED_PLACEMENT_RADIUS * 2): number {
+	return maxRobotCenterOffset(objectDiameter);
 }
 
 /**
- * Convert a lying pin's field center (x, z) to container position.
- * PinObject anchors the vertical pin bottom at container origin; scattered pins rotate
+ * Convert a lying pin/cup field center (x, z) to container position.
+ * PinObject/CupObject anchor the vertical bottom at container origin; scattered objects rotate
  * rotation.x = 90° so that anchor becomes one end, not the geometric center.
  */
-export function scatteredPinContainerPosition(centerX: number, centerZ: number, rotationZ: number): THREE.Vector3 {
-	const centerOffset = new THREE.Vector3(0, PIN_LENGTH_MM / 2, 0);
+export function scatteredObjectContainerPosition(centerX: number, centerZ: number, rotationZ: number): THREE.Vector3 {
+	const centerOffset = new THREE.Vector3(0, SCATTERED_OBJECT_LENGTH_MM / 2, 0);
 	centerOffset.applyEuler(new THREE.Euler(Math.PI / 2, 0, rotationZ, 'XYZ'));
-	return new THREE.Vector3(
-		centerX - centerOffset.x,
-		ROBOT_FLOOR_Y + PIN_DIAMETER_MM / 2,
-		centerZ - centerOffset.z
-	);
+	return new THREE.Vector3(centerX - centerOffset.x, ROBOT_FLOOR_Y + SCATTERED_OBJECT_DIAMETER_MM / 2, centerZ - centerOffset.z);
 }
 
-export function scatteredPinContainerRotation(rotationZ: number): THREE.Euler {
+export function scatteredObjectContainerRotation(rotationZ: number): THREE.Euler {
 	return new THREE.Euler(Math.PI / 2, 0, rotationZ, 'XYZ');
 }
 
-/** True when two lying-pin footprints overlap. */
-export function scatteredPinsOverlap(x1: number, z1: number, x2: number, z2: number, radius = PIN_PLACEMENT_RADIUS): boolean {
+/** True when two scattered pin/cup footprints overlap. */
+export function scatteredObjectsOverlap(x1: number, z1: number, x2: number, z2: number, radius = SCATTERED_PLACEMENT_RADIUS): boolean {
 	const dx = x1 - x2;
 	const dz = z1 - z2;
 	const minDistance = radius * 2;
 	return dx * dx + dz * dz < minDistance * minDistance;
 }
 
-/** True when a lying pin overlaps any robot footprint. */
-export function pinOverlapsAnyRobot(
+/** True when a scattered pin/cup overlaps any robot footprint. */
+export function scatteredObjectOverlapsAnyRobot(
 	x: number,
 	z: number,
 	robots: ReadonlyArray<{ x: number; z: number; rotationY: number }>,
-	pinSize = PIN_PLACEMENT_RADIUS * 2
+	objectSize = SCATTERED_PLACEMENT_RADIUS * 2
 ): boolean {
-	return robots.some((robot) => robotsOverlap(x, z, robot.x, robot.z, pinSize, 0, robot.rotationY));
+	return robots.some((robot) => robotsOverlap(x, z, robot.x, robot.z, objectSize, 0, robot.rotationY));
 }
 
 /** Broad-phase overlap of two robot footprints (axis-aligned bounds of oriented squares). */

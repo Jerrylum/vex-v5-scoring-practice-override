@@ -1,16 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Level } from './Generator';
-import {
-	generateScenario,
-	GeneratorVersionMismatchError,
-	scenarioToSnapshot
-} from './ScenarioGenerator';
-import {
-	buildScenarioShareUrl,
-	decodeScenarioToken,
-	encodeScenarioToken,
-	parseScenarioLink
-} from './scenarioLink';
+import { generateScenario, GeneratorVersionMismatchError, scenarioToSnapshot } from './ScenarioGenerator';
+import { buildScenarioShareUrl, decodeScenarioToken, encodeScenarioToken, parseScenarioLink } from './scenarioLink';
 import { GENERATOR_VERSION } from './generatorVersion';
 
 const LEVELS: Level[] = ['easy', 'medium', 'hard'];
@@ -35,11 +26,11 @@ describe('generateScenario determinism', () => {
 		expect(snapshot.robots.caseType).toBe('clawbotOnField');
 	});
 
-	it('includes remaining pins only for medium and hard', () => {
+	it('includes remaining items only for medium and hard', () => {
 		const easy = scenarioToSnapshot(generateScenario({ difficulty: 'easy', masterSeed: 482910374 }), 'easy');
 		const medium = scenarioToSnapshot(generateScenario({ difficulty: 'medium', masterSeed: 482910374 }), 'medium');
-		expect(easy.remainingPins.pins).toHaveLength(0);
-		expect(medium.remainingPins.pins.length).toBeGreaterThan(0);
+		expect(easy.remainingItems.items).toHaveLength(0);
+		expect(medium.remainingItems.items.length).toBeGreaterThan(0);
 	});
 
 	it('produces different snapshots for different seeds', () => {
@@ -50,9 +41,7 @@ describe('generateScenario determinism', () => {
 	});
 
 	it('throws on generator version mismatch', () => {
-		expect(() => generateScenario({ difficulty: 'medium', masterSeed: 1, generatorVersion: 0 })).toThrow(
-			GeneratorVersionMismatchError
-		);
+		expect(() => generateScenario({ difficulty: 'medium', masterSeed: 1, generatorVersion: 0 })).toThrow(GeneratorVersionMismatchError);
 	});
 });
 

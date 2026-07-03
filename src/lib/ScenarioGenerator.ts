@@ -5,7 +5,7 @@ import {
 	pickRobotsCaseType,
 	pickShortStackLengthSeeded,
 	pickTallStackLengthSeeded,
-	shouldScatterRemainingPins
+	shouldScatterRemainingItems
 } from './Generator';
 import { FieldResourcePool } from './FieldResources';
 import { GENERATOR_VERSION } from './generatorVersion';
@@ -28,11 +28,11 @@ import {
 	QuadrantNoPinCase,
 	QuadrantShortStackCase,
 	QuadrantStructure,
-	RemainingPinsStructure,
+	RemainingItemsStructure,
 	RobotsOnFieldCase,
 	RobotsStructure,
-	collectRemainingPinItems,
-	generateScatteredPinPlacements
+	collectRemainingItems,
+	generateScatteredPlacements
 } from './structure';
 import { ALL_QUADRANT_PIN_TYPES, type QuadrantDefinition, type QuadrantId } from './structure/QuadrantDefinition';
 import type { PinType } from './GameObject';
@@ -90,7 +90,7 @@ function deriveSeeds(masterSeed: number): {
 	midfieldSeed: number;
 	stackShuffleSeed: number;
 	planningSeed: number;
-	remainingPinsSeed: number;
+	remainingItemsSeed: number;
 	quadrantSeeds: QuadrantSeeds;
 } {
 	const random = mulberry32(masterSeed);
@@ -102,14 +102,14 @@ function deriveSeeds(masterSeed: number): {
 	const redQuadrantTwoSeed = Math.floor(random() * 1e9);
 	const blueQuadrantOneSeed = Math.floor(random() * 1e9);
 	const blueQuadrantTwoSeed = Math.floor(random() * 1e9);
-	const remainingPinsSeed = Math.floor(random() * 1e9);
+	const remainingItemsSeed = Math.floor(random() * 1e9);
 
 	return {
 		robotsSeed,
 		midfieldSeed,
 		stackShuffleSeed,
 		planningSeed,
-		remainingPinsSeed,
+		remainingItemsSeed,
 		quadrantSeeds: {
 			redQuadrantOneSeed,
 			redQuadrantTwoSeed,
@@ -345,19 +345,19 @@ function getRobotPlacements(robots: RobotsStructure): RobotPlacement[] {
 	return robots.toSnapshot().placements ?? [];
 }
 
-function buildRemainingPinsStructure(
+function buildRemainingItemsStructure(
 	pool: FieldResourcePool,
 	difficulty: Level,
 	robots: RobotsStructure,
-	remainingPinsSeed: number
-): RemainingPinsStructure {
-	if (!shouldScatterRemainingPins(difficulty)) {
-		return RemainingPinsStructure.empty();
+	remainingItemsSeed: number
+): RemainingItemsStructure {
+	if (!shouldScatterRemainingItems(difficulty)) {
+		return RemainingItemsStructure.empty();
 	}
 
-	const pinItems = collectRemainingPinItems(pool.getRemainingPins());
-	const placements = generateScatteredPinPlacements(pinItems, getRobotPlacements(robots), remainingPinsSeed);
-	return new RemainingPinsStructure(placements);
+	const items = collectRemainingItems(pool.getRemainingPins(), pool.getRemainingCups());
+	const placements = generateScatteredPlacements(items, getRobotPlacements(robots), remainingItemsSeed);
+	return new RemainingItemsStructure(placements);
 }
 
 export function generateScenario(options: GenerateScenarioOptions): Scenario {
@@ -368,7 +368,7 @@ export function generateScenario(options: GenerateScenarioOptions): Scenario {
 		throw new GeneratorVersionMismatchError(GENERATOR_VERSION, generatorVersion);
 	}
 
-	const { robotsSeed, midfieldSeed, stackShuffleSeed, planningSeed, remainingPinsSeed, quadrantSeeds } = deriveSeeds(masterSeed);
+	const { robotsSeed, midfieldSeed, stackShuffleSeed, planningSeed, remainingItemsSeed, quadrantSeeds } = deriveSeeds(masterSeed);
 	const pool = FieldResourcePool.create();
 
 	const robotsCaseType = pickRobotsCaseType(difficulty);
@@ -382,7 +382,7 @@ export function generateScenario(options: GenerateScenarioOptions): Scenario {
 	const stacks = generateScenarioStacks(pool, jobs);
 
 	const robots = buildRobotsStructure(robotsCaseType, robotsSeed);
-	const remainingPins = buildRemainingPinsStructure(pool, difficulty, robots, remainingPinsSeed);
+	const remainingItems = buildRemainingItemsStructure(pool, difficulty, robots, remainingItemsSeed);
 	const midfield = buildMidfieldStructure(stacks.midfield);
 	const quadrants = buildQuadrantStructures(stacks, quadrantSeeds);
 
@@ -393,13 +393,13 @@ export function generateScenario(options: GenerateScenarioOptions): Scenario {
 		quadrants.redQuadrantTwo,
 		quadrants.blueQuadrantOne,
 		quadrants.blueQuadrantTwo,
-		remainingPins,
+		remainingItems,
 		{
 			generatorVersion: GENERATOR_VERSION,
 			masterSeed,
 			robotsSeed,
 			midfieldSeed,
-			remainingPinsSeed,
+			remainingItemsSeed,
 			...quadrantSeeds
 		}
 	);
@@ -408,7 +408,7 @@ export function generateScenario(options: GenerateScenarioOptions): Scenario {
 /** Wire payload for cross-device sync — explicit field state only. */
 export function scenarioToSnapshot(scenario: Scenario, difficulty: Level): ScenarioSnapshot {
 	return {
-		version: 5,
+		version: 6,
 		difficulty,
 		robots: scenario.robots.toSnapshot(),
 		midfield: scenario.midfield.toSnapshot(),
@@ -416,7 +416,7 @@ export function scenarioToSnapshot(scenario: Scenario, difficulty: Level): Scena
 		redQuadrantTwo: scenario.redQuadrantTwo.toSnapshot(),
 		blueQuadrantOne: scenario.blueQuadrantOne.toSnapshot(),
 		blueQuadrantTwo: scenario.blueQuadrantTwo.toSnapshot(),
-		remainingPins: scenario.remainingPins.toSnapshot()
+		remainingItems: scenario.remainingItems.toSnapshot()
 	};
 }
 
@@ -432,7 +432,7 @@ export function scenarioFromSnapshot(snapshot: ScenarioSnapshot, provenance?: Sc
 	const redQuadrantTwo = QuadrantStructure.fromSnapshot(snapshot.redQuadrantTwo);
 	const blueQuadrantOne = QuadrantStructure.fromSnapshot(snapshot.blueQuadrantOne);
 	const blueQuadrantTwo = QuadrantStructure.fromSnapshot(snapshot.blueQuadrantTwo);
-	const remainingPins = RemainingPinsStructure.fromSnapshot(snapshot.remainingPins);
+	const remainingItems = RemainingItemsStructure.fromSnapshot(snapshot.remainingItems);
 	return new Scenario(
 		robots,
 		midfield,
@@ -440,7 +440,7 @@ export function scenarioFromSnapshot(snapshot: ScenarioSnapshot, provenance?: Sc
 		redQuadrantTwo,
 		blueQuadrantOne,
 		blueQuadrantTwo,
-		remainingPins,
+		remainingItems,
 		provenance ?? null
 	);
 }

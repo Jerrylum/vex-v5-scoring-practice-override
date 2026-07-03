@@ -20,32 +20,12 @@
 	const strokeWidth = $derived(filled ? 0 : 2);
 </script>
 
-<svg
-	width={size}
-	height={size}
-	viewBox="0 0 24 24"
-	aria-hidden="true"
-	class="inline-block shrink-0"
->
+<svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" class="inline-block shrink-0">
 	{#if color === 'red'}
 		<circle cx="12" cy="12" r="9" fill={fillValue} stroke={strokeColor} stroke-width={strokeWidth} />
 	{:else if color === 'blue'}
-		<rect
-			x="4"
-			y="4"
-			width="16"
-			height="16"
-			rx="3"
-			fill={fillValue}
-			stroke={strokeColor}
-			stroke-width={strokeWidth}
-		/>
+		<rect x="4" y="4" width="16" height="16" rx="3" fill={fillValue} stroke={strokeColor} stroke-width={strokeWidth} />
 	{:else}
-		<polygon
-			points="12,3 21,12 12,21 3,12"
-			fill={fillValue}
-			stroke={strokeColor}
-			stroke-width={strokeWidth}
-		/>
+		<polygon points="12,3 21,12 12,21 3,12" fill={fillValue} stroke={strokeColor} stroke-width={strokeWidth} />
 	{/if}
 </svg>
