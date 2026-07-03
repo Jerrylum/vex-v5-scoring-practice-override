@@ -1,6 +1,6 @@
 # Section 2 — The Game
 
-*Source: VEX V5 Robotics Competition Override — Game Manual, Version 0.2 (Released June 4, 2026)*
+*Source: VEX V5 Robotics Competition Override — Game Manual, Version 1.0 (Released July 2, 2026)*
 
 ---
 
@@ -79,6 +79,13 @@ The V5RC Override Field consists of the following:
 
 ## Scoring
 
+| | Points |
+| --- | --- |
+| Autonomous Bonus | 12 |
+| Each Scored Alliance-colored Pin | 5 |
+| Each Scored yellow Pin | 10 |
+| Each Robot in the Midfield | 8 |
+
 ## <SC1>
 
 **All scoring statuses are evaluated after the Match ends.** Scores are calculated five seconds after the *Match* ends, or once all *Scoring Objects*, *Field Elements*, and *Robots* on the *Field* come to rest, whichever comes first. 
@@ -138,11 +145,11 @@ Each *Pin* consists of two halves. **Each Placed Pin can have zero, one or two S
 
 ## <SC4>
 
-**A Toggle is considered set to a color** when it meets all of the following criteria at the end of the *Match*: 
+**A Toggle is considered set to a color** when it meets all of the following criteria: 
 
 - The *Toggle* must be fully seated, such that there is a face of the *Toggle* in contact and parallel with its mounts on the *Field Perimeter* at rest. (see Figure SC5-1) 
 
-- The *Toggle* is not in contact with a *Robot* from either *Alliance*. If a *Toggle* is not considered set to a color, it is considered a neutral (yellow) *Toggle* by default, and neither *Alliance* receives *Ownership* of the yellow *Pins* *Placed* in that *Quadrant*. While the *Toggle* has infinite potential orientations, only three discrete orientations are considered *Scored* states.
+- The *Toggle* is not in contact with a *Robot* from either *Alliance*. If a *Toggle* is not considered set to a color, it is considered a neutral (yellow) *Toggle* by default, and neither *Alliance* receives *Ownership* of the yellow *Pins* *Placed* in that *Quadrant*. While the *Toggle* has infinite potential orientations, only three discrete orientations are considered “set” states.
 
 
 ---
@@ -242,10 +249,11 @@ Figure SG-1: An overhead view of the Field, with four Robots in legal starting p
 
 **Horizontal expansion is limited.** Once the *Match* begins, *Robots* may expand horizontally beyond the starting size limit within the following criteria: 
 
-- The *Robot* can never be larger than 24” wide or 24” long (must always be able to fit within a 24”x24” square horizontal footprint). 
+- The *Robot* can never be larger than 24” wide or 24” long at any point during the *Match* (must fit within a 24” x 24” square horizontal footprint). 
 
-> *Teams* should be aware that *Robots* may incidentally expand horizontally while extending vertically (e.g., mechanisms that arc, swing, or deploy upward). Upon request, *Teams* must be prepared to demonstrate that their *Robot* does not exceed the maximum size constraint of 24” x 24” at any point, including while any vertical expansion mechanisms are in use.
- This rule has additional *Violation* notes. See Appendix C.
+> *Teams* should be aware that *Robots* may incidentally expand horizontally while extending vertically (e.g., mechanisms that arc, swing, or deploy upward). *Teams* must be prepared to demonstrate that their *Robot* does not exceed the maximum size constraint of 24” x 24” at any point during a *Match* due to either physical or programmed limitations, including while any vertical expansion mechanisms are in use.
+
+This rule has additional *Violation* notes. See Appendix C.
 
 ![Figure](https://events.vex.com/storage/game_manual/VEX_V5_Robotics_Competition_2026-2027_Override/images/SG2.png)
 
@@ -258,18 +266,16 @@ Figure SG2: A demonstration of how the size of the Robot may change horizontally
 
 ## <SG3>
 
-**Vertical expansion is limited.** Once the *Match* begins and until the *Endgame* period begins, *Robots* may expand vertically beyond the starting size limit, but no part of the *Robot* may exceed an overall height of 50” at any point during the *Match* (must always be able to fit within a hypothetical 50” vertical sizing box).
+**Vertical expansion is limited.** Once the *Match* begins, *Robots* may expand vertically beyond the starting size limit, but no part of the *Robot* may exceed an overall height of 50” at any point during the *Match* (must always be able to fit within a hypothetical 50” vertical sizing box). For exceptions to this rule involving *Robots* in the *Midfield* during the *Endgame* period, see <SG12>.
 
 
 ---
 
 ## <SG4>
 
-**Keep Scoring Objects in the Field.** *Teams* may not remove *Scoring Objects* from the *Field*. A *Scoring Object* that leaves the *Field* during *Match* play, intentionally or unintentionally, will be returned to the *Field* in a location near where it left, in contact with the *Field* tiles and the *Field Perimeter* but no other *Field* or *Scoring Objects* and no *Robots*. Volunteers should return *Scoring Objects* as quickly as possible, but this time will vary between Events and *Matches*, and any delay in returning an object should not be considered Match Affecting or cause for a replay. 
+**Keep Scoring Objects in the Field.** *Teams* may not intentionally remove *Scoring Objects* from the *Field*. A *Scoring Object* that leaves the *Field* during *Match* play will be returned to the *Field* in a location near where it left, in contact with the *Field* tiles and the *Field Perimeter* but no other *Field Elements* or *Scoring Objects* and no *Robots*. Volunteers should return *Scoring Objects* to the *Field* as quickly as possible, and any delay in returning a *Scoring Object* should not be considered Match Affecting or cause for a replay. 
 
-- If a *Scoring Object* is leaving the *Field* (as determined by the *Head Referee*), but is deflected back into the *Field* by a *Drive Team Member*, field monitor, ceiling/wall, or other external factor, it should still be considered “out of the *Field*” and removed by a *Scorekeeper Referee* or *Head Referee*. If the redirection occurred due to contact with a *Drive Team Member*, it will be at the *Head Referee’s* discretion whether or not <GG4> (hands out of the *Field*) should apply. 
-
-- A *Scoring Object* that comes to rest on top of the *Field Perimeter* is still considered to be inside the *Field* unless it contacts something outside of the *Field* (e.g., volunteer, *Drive Team Member*, field monitor, etc.), and cannot be retrieved by a *Drive Team Member* or volunteer. This rule has additional *Violation* notes. See Appendix C.
+- A *Scoring Object* that comes to rest on top of the *Field Perimeter* is considered to have left the *Field*. This rule has additional *Violation* notes. See Appendix C.
 
 
 ---
@@ -341,14 +347,24 @@ Figure SG-7: These Scoring Objects (circled in red) would be considered to be on
 
 ## <SG9>
 
-**Alliance Goals are protected.** *Robots* may not directly or indirectly interact with the opposing *Alliance*-colored *Goals*. This includes both *Placing* *Scoring Objects* and removing *Placed* *Scoring Objects*. This rule has additional *Violation* notes. See Appendix C.
+**Alliance Goals are protected.** *Robots* may not directly or indirectly interact with opposing *Alliance*-colored *Goals*. Examples of interactions include, but are not limited to: 
+
+- Making contact with the *Goal* 
+
+- Making contact with *Scoring Objects* stacked on the *Goal* 
+
+- Adding or removing *Scoring Objects* (*Placed* or otherwise) 
+
+- Strategically covering the *Goal* in a manner that prevents additional *Scoring Objects* from being *Placed* 
+
+This rule has additional *Violation* notes. See Appendix C.
 
 
 ---
 
 ## <SG10>
 
-**Placed Scoring Objects cannot be removed from neutral or opposing Alliance-colored Goals.** *Robots* may only remove *Placed* *Scoring Objects* from a *Goal* if that *Goal* matches their *Alliance* color. This rule has additional *Violation* notes. See Appendix C.
+**Placed Scoring Objects cannot be removed from neutral Goals.** This rule has additional *Violation* notes. See Appendix C.
 
 
 ---
@@ -381,16 +397,41 @@ Figure SG11-2: Scoring Objects may also be introduced through the back of the Lo
 
 ## <SG12>
 
-**Some rules change during the Endgame period.** Vertical expansion is limited to 18” for any *Robot* that is partially or entirely within the infinite 3D vertical projection of the *Midfield*. *Robots* that attempt to end the *Match* in the *Midfield* should expect vigorous interactions from opponent *Robots*. When a *Robot* is contacting or engaging with the *Midfield*, or is in proximity to the *Midfield*, incidental damage that is caused by opponent *Robots* pushing, tipping, or becoming *Entangled* with them would not be considered a *Violation* of <GG14>. Intentional damage or dangerous mechanisms may still be considered a *Violation* of <S1>, or <G1> at the *Head Referee’s* discretion. This rule is applied differently for VEX U. See Rule <VUG7>
+**Some rules change during the Endgame period.** 
+
+1. *Robots* that are partially or entirely within the infinite 3D vertical projection of the *Midfield* must make an effort to limit vertical expansion to the approximate starting height of the *Robot*. If a *Head Referee* sees a *Robot* within the *Midfield* that is clearly expanded past its approximate starting height, that *Robot* should receive a verbal warning and must either return to approximate starting height or exit the *Midfield*. 
+
+   - A *Robot* should receive a *Violation* if it takes no action to either return to approximate starting height or exit the *Midfield* after a brief period of time. The length of this period of time is subject to *Head Referee* judgement within the context of the *Match* and the warned *Robot’s* actions (or lack thereof). 
+
+2. *Robots* that attempt to end the *Match* in the *Midfield* should expect vigorous interactions from opposing *Robots*. When a *Robot* is contacting or engaging with the *Midfield*, or is in proximity to the *Midfield*, incidental damage that is caused by opposing *Robots* pushing, tipping, or becoming *Entangled* with them would not be considered a *Violation* of <GG14>. Intentional damage or dangerous mechanisms may still be considered a *Violation* of <S1> or <G1> at the *Head Referee’s* discretion. 
+
+> The intent behind the *Endgame* vertical expansion limit is to reduce the likelihood of tipped *Robots* due to expected *Endgame* interactions. Vigorous interactions involving taller *Robots* are much more likely to result in tipping compared to those involving shorter *Robots*. Enforcement of this rule should focus on vertically expanded *Robot* lifts, rather than small pop-up mechanisms that are typically set to expand at the start of the *Match*.
 
 
-*Rules SC1–SG12 sourced from the [online game manual](https://events.vex.com/storage/game_manual/VEX_V5_Robotics_Competition_2026-2027_Override/rules/).*
+---
+
+## <SG13>
+
+**Load Zones are protected during the Driver Controlled Period of the Match.** 
+
+- A *Robot* is protected while it is at least partially within one of its *Alliance Load Zones*. *Robots* may not directly or indirectly contact a protected opposing *Alliance Robot*. 
+
+- *Robots* may only enter an opposing *Alliance Load Zone* momentarily (e.g., while passing through or to retrieve a *Scoring Object*); *Robots* may not remain within an opposing *Alliance Load Zone*. 
+
+- *Robots* may not cause *Scoring Objects* to accumulate within an opposing *Alliance Load Zone*. 
+
+> The intent of this rule is to protect *Load Zones* from intentional interference by the opposing *Alliance* (i.e., obstructing the *Load Zone* in an effort to inhibit *Loader* access). This rule does not apply during the *Autonomous Period*. 
+
+This rule is applied differently for VEX U. See Rule <VUG7>.
+
+
+*Rules SC1–SG13 sourced from the [online game manual](https://events.vex.com/storage/game_manual/VEX_V5_Robotics_Competition_2026-2027_Override/rules/).*
 
 ---
 
 ## Glossary of Terms
 
-*Source: VEX V5 Robotics Competition Override — Game Manual, Version 0.2 (Released June 4, 2026), Appendix B*
+*Source: VEX V5 Robotics Competition Override — Game Manual, Version 1.0 (Released July 2, 2026), Appendix B*
 
 ### Adult
 
@@ -610,6 +651,11 @@ Lifting or Trapping.
 
 One of the four designated locations (two per Alliance) around the Field where Drive Team Members
 can introduce Match Load Pins and Cups. See rule <SG11>.
+
+### Load Zone
+
+An infinitely tall three-dimensional volume bounded by the inner edges of the Field Perimeter
+and the outer edges of the red or blue tape lines surrounding each Loader.
 
 ### Match
 

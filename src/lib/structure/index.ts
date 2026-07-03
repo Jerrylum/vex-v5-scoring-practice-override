@@ -1,4 +1,11 @@
-export { RobotsStructure, RobotsCase, NoRobotCase, RobotsOnFieldCase, ClawbotOnFieldCase, generateRobotPlacements } from './RobotsStructure';
+export {
+	RobotsStructure,
+	RobotsCase,
+	NoRobotCase,
+	RobotsOnFieldCase,
+	ClawbotOnFieldCase,
+	generateRobotPlacements
+} from './RobotsStructure';
 
 export {
 	MidfieldStructure,
@@ -34,5 +41,12 @@ export {
 } from './QuadrantDefinition';
 
 export { visualizeQuadrantGoals } from './QuadrantStackVisualization';
+
+export {
+	RemainingPinsStructure,
+	collectRemainingPinItems,
+	generateScatteredPinPlacements,
+	type ScatteredPinPlacement
+} from './RemainingPinsStructure';
 
 export { generateGoalStack, shuffleSeeded, ALL_PIN_TYPES } from '../stackGeneration';

@@ -2,6 +2,7 @@ import { mergeScoringSlices, type ScenarioScoring } from './Scoring';
 import type { ScenarioProvenance } from './ScenarioSnapshot';
 import type { MidfieldStructure } from './structure/MidfieldStructure';
 import type { QuadrantStructure } from './structure/QuadrantStructure';
+import type { RemainingPinsStructure } from './structure/RemainingPinsStructure';
 import type { RobotsStructure } from './structure/RobotsStructure';
 
 export class Scenario {
@@ -12,11 +13,20 @@ export class Scenario {
 		public readonly redQuadrantTwo: QuadrantStructure,
 		public readonly blueQuadrantOne: QuadrantStructure,
 		public readonly blueQuadrantTwo: QuadrantStructure,
+		public readonly remainingPins: RemainingPinsStructure,
 		public readonly provenance: ScenarioProvenance | null = null
 	) {}
 
 	get structures() {
-		return [this.robots, this.midfield, this.redQuadrantOne, this.redQuadrantTwo, this.blueQuadrantOne, this.blueQuadrantTwo];
+		return [
+			this.robots,
+			this.midfield,
+			this.redQuadrantOne,
+			this.redQuadrantTwo,
+			this.blueQuadrantOne,
+			this.blueQuadrantTwo,
+			this.remainingPins
+		];
 	}
 
 	calculateScoring(): ScenarioScoring {

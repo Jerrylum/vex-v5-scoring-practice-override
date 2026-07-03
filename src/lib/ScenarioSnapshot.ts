@@ -15,7 +15,6 @@ export interface RobotPlacement {
 
 export type StackItem = { kind: 'pin'; pinType: PinType; isFlipped: boolean } | { kind: 'cup'; isFlipped: boolean };
 
-/** Wire format: explicit field state for cross-device sync. No seeds. */
 export interface RobotsSnapshot {
 	caseType: 'none' | 'allOnField' | 'clawbotOnField';
 	placements?: RobotPlacement[];
@@ -34,8 +33,20 @@ export interface QuadrantSnapshot {
 	neutralStack: StackItem[];
 }
 
+export interface ScatteredPinPlacement {
+	pinType: PinType;
+	isFlipped: boolean;
+	x: number;
+	z: number;
+	rotationZ: number;
+}
+
+export interface RemainingPinsSnapshot {
+	pins: ScatteredPinPlacement[];
+}
+
 export interface ScenarioSnapshot {
-	version: 4;
+	version: 5;
 	difficulty: Level;
 	robots: RobotsSnapshot;
 	midfield: MidfieldSnapshot;
@@ -43,6 +54,7 @@ export interface ScenarioSnapshot {
 	redQuadrantTwo: QuadrantSnapshot;
 	blueQuadrantOne: QuadrantSnapshot;
 	blueQuadrantTwo: QuadrantSnapshot;
+	remainingPins: RemainingPinsSnapshot;
 }
 
 /** Optional generation metadata for debug, export, or seed-based replay — not sent for sync. */
@@ -55,4 +67,5 @@ export interface ScenarioProvenance {
 	redQuadrantTwoSeed: number;
 	blueQuadrantOneSeed: number;
 	blueQuadrantTwoSeed: number;
+	remainingPinsSeed: number;
 }

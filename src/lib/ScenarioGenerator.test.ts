@@ -35,6 +35,13 @@ describe('generateScenario determinism', () => {
 		expect(snapshot.robots.caseType).toBe('clawbotOnField');
 	});
 
+	it('includes remaining pins only for medium and hard', () => {
+		const easy = scenarioToSnapshot(generateScenario({ difficulty: 'easy', masterSeed: 482910374 }), 'easy');
+		const medium = scenarioToSnapshot(generateScenario({ difficulty: 'medium', masterSeed: 482910374 }), 'medium');
+		expect(easy.remainingPins.pins).toHaveLength(0);
+		expect(medium.remainingPins.pins.length).toBeGreaterThan(0);
+	});
+
 	it('produces different snapshots for different seeds', () => {
 		const difficulty = 'medium';
 		const a = scenarioToSnapshot(generateScenario({ difficulty, masterSeed: 111 }), difficulty);

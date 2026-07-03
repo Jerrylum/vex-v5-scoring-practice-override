@@ -44,3 +44,8 @@ export function pickShortStackLengthSeeded(seed: number): number {
 export function pickTallStackLengthSeeded(seed: number): number {
 	return 8 + Math.floor(mulberry32(seed)() * 6);
 }
+
+/** Easy: 0%; medium and hard: 100% of remaining pool pins scattered on the field. */
+export function shouldScatterRemainingPins(level: Level): boolean {
+	return level !== 'easy';
+}

@@ -51,8 +51,8 @@ describe('clawbot collision footprint', () => {
 	});
 
 	it('counts overlap from the generated footprint where the generic square misses midfield', () => {
-		const x = -12;
-		const z = -845;
+		const x = 10;
+		const z = -840;
 		const rotationY = 0;
 
 		expect(isRobotInMidfield(x, z, ROBOT_SIZE, rotationY)).toBe(false);
@@ -70,7 +70,7 @@ describe('ClawbotOnFieldCase.getMidfieldCounts', () => {
 		const placements: RobotPlacement[] = [
 			{ alliance: 'red', slot: 0, x: 0, z: 0, rotationY: 0 },
 			{ alliance: 'red', slot: 1, x: 0, z: 1200, rotationY: 0 },
-			{ alliance: 'blue', slot: 0, x: -12, z: -845, rotationY: 0 },
+			{ alliance: 'blue', slot: 0, x: 10, z: -840, rotationY: 0 },
 			{ alliance: 'blue', slot: 1, x: 1400, z: 1400, rotationY: Math.PI / 2 }
 		];
 
