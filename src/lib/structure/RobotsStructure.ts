@@ -11,6 +11,7 @@ import {
 	ROBOT_SIZE,
 	robotsOverlap
 } from '../fieldConstants';
+import { clawbotOverlapsMidfield } from '../clawbotCollision';
 import { mulberry32 } from '../utils';
 
 export class RobotsStructure extends Structure {
@@ -165,10 +166,18 @@ export class RobotsOnFieldCase extends RobotsCase {
 }
 
 export class ClawbotOnFieldCase extends RobotsOnFieldCase {
+	public override getMidfieldCounts(): MidfieldCounts {
+		const counts: MidfieldCounts = { red: 0, blue: 0 };
+		for (const p of this.placements) {
+			if (clawbotOverlapsMidfield(p.x, p.z, p.rotationY)) {
+				counts[p.alliance]++;
+			}
+		}
+		return counts;
+	}
+
 	public override async visualize(scene: Scene): Promise<void> {
-		await Promise.all(
-			this.placements.map((p) => scene.addClawbot(p.alliance, new THREE.Vector3(p.x, 0, p.z), p.rotationY))
-		);
+		await Promise.all(this.placements.map((p) => scene.addClawbot(p.alliance, new THREE.Vector3(p.x, 0, p.z), p.rotationY)));
 	}
 
 	public override toSnapshot(): RobotsSnapshot {

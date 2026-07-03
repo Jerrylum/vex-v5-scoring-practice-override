@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { ROBOT_FLOOR_Y } from './fieldConstants';
+import { CLAWBOT_LOCAL_FOOTPRINT } from './generated/clawbotFootprint';
 import { ROBOT_MAX_SIZE } from './utils';
 
 export type PinType = 'redBlue' | 'redYellow' | 'blueYellow' | 'yellowYellow';
@@ -134,6 +135,74 @@ function createRobotFootprintGroup(alliance: 'red' | 'blue'): THREE.Group {
 	return group;
 }
 
+type FootprintRing = ReadonlyArray<readonly [x: number, z: number]>;
+
+function drawFootprintRingPath(path: THREE.Path, ring: FootprintRing): void {
+	const first = ring[0];
+	if (!first) {
+		return;
+	}
+
+	path.moveTo(first[0], -first[1]);
+	for (let i = 1; i < ring.length; i++) {
+		const point = ring[i]!;
+		path.lineTo(point[0], -point[1]);
+	}
+	path.closePath();
+}
+
+function ringToShapePath(ring: FootprintRing): THREE.Path {
+	const path = new THREE.Path();
+	drawFootprintRingPath(path, ring);
+	return path;
+}
+
+function ringToLineLoop(ring: FootprintRing, y: number, color: number): THREE.Line {
+	const points = ring.map(([x, z]) => new THREE.Vector3(x, y, z));
+	return new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color }));
+}
+
+function createClawbotFootprintHighlight(alliance: 'red' | 'blue'): THREE.Group {
+	const color = allianceColor(alliance);
+	const highlightY = ROBOT_FLOOR_Y + 2;
+	const group = new THREE.Group();
+	group.name = 'ClawbotFootprintHighlight';
+
+	for (const polygon of CLAWBOT_LOCAL_FOOTPRINT) {
+		const [outer, ...holes] = polygon;
+		if (!outer || outer.length < 4) {
+			continue;
+		}
+
+		const shape = new THREE.Shape();
+		drawFootprintRingPath(shape, outer);
+		shape.holes = holes.filter((hole) => hole.length >= 4).map((hole) => ringToShapePath(hole));
+
+		const fillGeometry = new THREE.ShapeGeometry(shape);
+		fillGeometry.rotateX(-Math.PI / 2);
+		const fill = new THREE.Mesh(
+			fillGeometry,
+			new THREE.MeshBasicMaterial({
+				color,
+				transparent: true,
+				opacity: 0.4,
+				depthWrite: false,
+				side: THREE.DoubleSide
+			})
+		);
+		fill.position.y = highlightY;
+
+		group.add(fill, ringToLineLoop(outer, highlightY + 0.5, color));
+		for (const hole of holes) {
+			if (hole.length >= 4) {
+				group.add(ringToLineLoop(hole, highlightY + 0.5, color));
+			}
+		}
+	}
+
+	return group;
+}
+
 function prepareClawbotModel(model: THREE.Group): void {
 	const box = new THREE.Box3().setFromObject(model);
 	const size = new THREE.Vector3();
@@ -215,7 +284,8 @@ export class ClawbotObject extends GameObject {
 		licensePlateFront: THREE.Group,
 		licensePlateBack: THREE.Group
 	) {
-		const group = createRobotFootprintGroup(alliance);
+		const group = new THREE.Group();
+		group.add(createClawbotFootprintHighlight(alliance));
 		prepareClawbotModel(clawbotModel);
 		attachLicensePlate(group, clawbotModel, licensePlateFront, licensePlateBack, alliance);
 
