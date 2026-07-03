@@ -136,7 +136,7 @@
 
 	<ScoringTabBar {activeTab} onTabChange={handleTabChange} />
 
-	<div class="flex-1 overflow-y-auto p-2">
+	<div class="scoring-panel-scroll flex-1 overflow-y-auto p-2">
 		{#if activeTab === 'overview'}
 			<OverviewTab {userScoring} />
 		{:else if activeTab === 'midfield'}

@@ -10,9 +10,10 @@
 		onDecrement: () => void;
 		correctValue?: number | null;
 		showAnswer?: boolean;
+		compact?: boolean;
 	}
 
-	let { title, color, value, onIncrement, onDecrement, correctValue = null, showAnswer = false }: Props = $props();
+	let { title, color, value, onIncrement, onDecrement, correctValue = null, showAnswer = false, compact = false }: Props = $props();
 
 	const borderClass = $derived(color === 'red' ? 'border-red-700' : color === 'blue' ? 'border-blue-700' : 'border-yellow-700');
 
@@ -37,7 +38,7 @@
 	const isCorrect = $derived(correctValue !== null && value === correctValue);
 </script>
 
-<div class="rounded-lg border-2 bg-[#141414] p-2 {borderClass}">
+<div class="rounded-lg border-2 bg-[#141414] {borderClass}" class:p-2={!compact} class:p-1={compact}>
 	<div class="mb-2 flex items-center justify-center gap-2 border-b border-gray-700 pb-2">
 		<span class="text-sm font-bold {titleClass}">{title}</span>
 		<PinShapeIcon {color} size={18} />
@@ -47,16 +48,36 @@
 			<div class="flex items-center gap-3">
 				<button
 					type="button"
-					class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-lg font-bold {minusClass}"
+					class="flex cursor-pointer items-center justify-center rounded-full font-bold {minusClass}"
+					class:h-8={!compact}
+					class:w-8={!compact}
+					class:text-lg={!compact}
+					class:h-6={compact}
+					class:w-6={compact}
+					class:text-sm={compact}
 					onclick={onDecrement}
 					aria-label="Decrease {title}"
 				>
 					−
 				</button>
-				<span class="min-w-8 text-center text-2xl font-bold text-gray-100">{value}</span>
+				<span
+					class="text-center font-bold text-gray-100"
+					class:min-w-8={!compact}
+					class:text-2xl={!compact}
+					class:min-w-6={compact}
+					class:text-lg={compact}
+				>
+					{value}
+				</span>
 				<button
 					type="button"
-					class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-lg font-bold {plusClass}"
+					class="flex cursor-pointer items-center justify-center rounded-full font-bold {plusClass}"
+					class:h-8={!compact}
+					class:w-8={!compact}
+					class:text-lg={!compact}
+					class:h-6={compact}
+					class:w-6={compact}
+					class:text-sm={compact}
 					onclick={onIncrement}
 					aria-label="Increase {title}"
 				>

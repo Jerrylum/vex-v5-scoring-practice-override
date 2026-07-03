@@ -70,6 +70,7 @@
 				onDecrement={() => decrementGoal('red')}
 				correctValue={actualCounts.midfieldGoal.visible.red}
 				{showAnswer}
+				compact
 			/>
 			<CounterCard
 				title="Blue"
@@ -79,6 +80,7 @@
 				onDecrement={() => decrementGoal('blue')}
 				correctValue={actualCounts.midfieldGoal.visible.blue}
 				{showAnswer}
+				compact
 			/>
 			<CounterCard
 				title="Yellow"
@@ -88,6 +90,7 @@
 				onDecrement={() => decrementGoal('yellow')}
 				correctValue={actualCounts.midfieldGoal.visible.yellow}
 				{showAnswer}
+				compact
 			/>
 		</div>
 	</div>
@@ -103,6 +106,7 @@
 				onDecrement={() => decrementRobot('red')}
 				correctValue={midfieldCounts.red}
 				{showAnswer}
+				compact
 			/>
 			<CounterCard
 				title="Blue"
@@ -112,6 +116,7 @@
 				onDecrement={() => decrementRobot('blue')}
 				correctValue={midfieldCounts.blue}
 				{showAnswer}
+				compact
 			/>
 		</div>
 	</div>
