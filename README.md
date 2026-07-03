@@ -1,70 +1,73 @@
-# VEX IQ Scoring Practice — Level Up
+# VEX V5 Scoring Practice — Override
 
-An interactive 3D web application for practicing [VIQRC Level Up](https://content.vexrobotics.com/docs/2026-2027/level-up/files/viqrc-level-up-0.1.2.pdf) (2026–2027) scoring. Count scored bean bags across pyramid goals, floor goals, and L4 goals, then check your total against the correct answer.
+An interactive 3D web application for practicing [V5RC Override](https://link.vex.com/docs/26-27/v5rc/game-manual) (2026–2027) scoring. Examine randomly generated field setups in a 3D viewport, enter counts on the scoring panel similar to TM Mobile, and check your answer against the correct totals.
 
-This project simplifies some edge cases for learning, but works well as a starting point for new scorekeeper referees and students learning the Level Up scoring system.
+Like the companion [VEX IQ Scoring Practice — Level Up](https://github.com/Jerrylum/vex-iq-scoring-practice-level-up) project, this app is built with SvelteKit, Three.js, and Bun. It is intended as a training tool for scorekeeper referees and anyone learning the Override scoring system. The scoring panel is organized by field region—four quadrants plus the midfield—similar to how scorekeepers work at events, with an overview tab for a full-field summary.
 
-**Available at:** [vex-iq-scoring.jerryio.com](https://vex-iq-scoring.jerryio.com)
-
-![VEX IQ Scoring Practice — Level Up Screenshot](docs/web-app-screenshot-2627-3.png)
+This project simplifies some edge cases for learning, but works well as a starting point for new scorekeeper referees preparing for Override events.
 
 ## How to Play
 
 1. Select a difficulty level and click **New** to generate a random scenario.
-2. Examine the 3D field and count **scored bean bags** for each goal tier using the panel on the right.
-3. Use **−** and **+** to enter your counts. The panel shows your running point total.
-4. Click **Check** to verify your answer and see the correct counts per goal.
+2. Examine the 3D field. Count **visible pin halves** on each goal, note each quadrant's **toggle color**, and count **robots in the midfield**.
+3. Use the scoring panel tabs to enter your counts. Red and blue alliance totals update automatically.
+4. Click **Check** to verify your answer and see the correct counts per region.
+5. Use the link button to copy a shareable URL so others can practice the same scenario.
 
-### Scoring (2026–2027 Level Up)
+## Scoring (2026–2027 Override)
 
-| Goal  | Points per scored bean bag |
-| ----- | -------------------------- |
-| Floor | 1                          |
-| L1    | 3                          |
-| L2    | 6                          |
-| L3    | 12                         |
-| L4    | 16                         |
+Each **placed pin** can have zero, one, or two **scored halves**. Only **fully visible** halves count. End-of-match point values:
 
-In red and blue goals, **red/blue and yellow** bean bags can score. On the **L4 goal**, only **yellow** bean bags score.
+| Scoring item                                        | Points |
+| --------------------------------------------------- | ------ |
+| Each scored alliance-colored pin (red or blue half) | 5      |
+| Each scored yellow pin (visible half, when owned)   | 10     |
+| Each robot in the midfield                          | 8      |
 
-### Scoring Panel
+**Yellow pin ownership** determines which alliance receives yellow points:
 
-The panel tracks scored bean bags for:
+- In a **quadrant**, yellow pins score for the alliance whose color the toggle is set to. A neutral (yellow) toggle means yellow pins in that quadrant do not score.
+- In the **midfield**, yellow pins score for the alliance with more robots in the midfield at end of match. If tied, yellow pins in the midfield do not score.
 
-- **Red Floor** and **Blue Floor**
-- **Red/Blue L1, L2, and L3** (pyramid goals)
-- **L4 Goal** (centered row)
-
-Your total score is calculated automatically from the counts above.
+Alliance-colored halves always score for their respective alliances regardless of toggle status. Each alliance earns 8 points per robot in the midfield.
 
 ## Difficulty Levels
 
 ### Easy
 
-- Simple goal configurations
-- Fewer bean bags per goal
-- Floor goals may be empty or hold a single bean bag
+- No robots on the field
+- Simple midfield configuration (single yellow/yellow pin)
+- Shorter quadrant stacks
 
 ### Medium
 
-- More varied pyramid stacks
-- Floor goals with multiple bean bags across stack positions
+- All four robots placed on the field
+- Varied midfield stacks (single pin or short stack)
+- Medium-complexity quadrant stacks with cups
 
 ### Hard
 
-- Mixed-color stacks (distractor bean bags that do not score)
-- Invalid floor placements (bean bags that do not count as scored)
-- More complex L4 configurations
+- Robots on the field, including a clawbot that may occupy midfield space
+- Tall midfield stacks
+- Complex quadrant stacks with mixed pin types and edge cases
+
+## Scenario Sharing
+
+Each generated scenario uses a deterministic **master seed**. When you click the link button, the app copies a URL that encodes the seed, difficulty, and generator version. Opening that link on another device reproduces the same field layout and scoring answer key.
 
 ## Scope & Limitations
 
-This practice app focuses on **goal scoring** only. It does **not** currently include:
+This practice app focuses on **end-of-match goal scoring** in generated scenarios. It does **not** currently include:
 
-- Load zones or bean bags introduced during the match
-- Preloads or bean bags remaining elsewhere on the field
-- Robot contact rules (SC1–SC5 assume bean bags are not touching robots)
+- Autonomous Bonus, Autonomous Win Points, or Autonomous Points
+- Match Loads, preloads, or scoring objects elsewhere on the field
+- Loaders, load zones, or toggles as interactive field elements beyond their set color
+- Violations, disqualifications, or match-affecting rule edge cases
+- Robot contact rules (SC2 assumes standard placed/visible status from final stack positions)
 
-For the official scoring rules, see the [VIQRC Level Up Game Manual](https://content.vexrobotics.com/docs/2026-2027/level-up/files/viqrc-level-up-0.1.2.pdf).
+Cups are rendered in 3D stacks and affect which pin halves are visible, but the app does not simulate full match dynamics or object placement outside the generated goal regions.
+
+For the official scoring rules, see the [V5RC Override Game Manual](https://link.vex.com/docs/26-27/v5rc/game-manual).
 
 ## Getting Started
 
@@ -104,6 +107,12 @@ bun run preview
 bun run deploy
 ```
 
+### Tests
+
+```bash
+bun run test
+```
+
 ### Code Formatting
 
 ```bash
@@ -140,4 +149,4 @@ This is a practice/educational project. Feel free to fork and modify for your ow
 
 This project is licensed under the GNU General Public License v3.0 (GPLv3). See the [LICENSE](LICENSE) file for details.
 
-VEX IQ is a trademark of Innovation First International, Inc. This project is for educational purposes.
+VEX and VEX V5 are trademarks of Innovation First International, Inc. This project is for educational purposes.
