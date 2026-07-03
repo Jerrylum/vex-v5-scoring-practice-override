@@ -1,9 +1,9 @@
 <script lang="ts">
+	import LinkIcon from '$lib/components/icons/LinkIcon.svelte';
 	import MidfieldTab from './MidfieldTab.svelte';
 	import OverviewTab from './OverviewTab.svelte';
 	import QuadrantTab from './QuadrantTab.svelte';
 	import ScoringTabBar from './ScoringTabBar.svelte';
-	import { GENERATOR_VERSION } from '$lib/generatorVersion';
 	import type { Level } from '$lib/ScenarioGenerator';
 	import type { MidfieldCounts, ScenarioScoring } from '$lib/Scoring';
 	import {
@@ -27,6 +27,7 @@
 		isReloading: boolean;
 		onReload: () => void;
 		onCopyLink: () => void;
+		onGoToSimulator: () => void;
 	}
 
 	let {
@@ -39,7 +40,8 @@
 		isLoading,
 		isReloading,
 		onReload,
-		onCopyLink
+		onCopyLink,
+		onGoToSimulator
 	}: Props = $props();
 
 	let activeTab = $state<ScoringTabId>('overview');
@@ -67,50 +69,69 @@
 	}
 </script>
 
-<div class="flex h-full flex-col bg-[#0a0a0a] text-white">
+<div class="flex h-full flex-col bg-[#0a0a0a] text-[#CDD7E1]">
 	<div class="flex-none border-b border-gray-800 p-3">
-		<h2 class="text-lg font-bold">Scoring Panel</h2>
+		<div class="flex items-center justify-between gap-2">
+			<h2 class="text-lg font-bold text-[#CDD7E1]">Scoring Panel</h2>
+			<div class="flex items-center gap-2">
+				<button
+					type="button"
+					class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-[#dde7ee] bg-transparent text-[#007fff] transition-colors hover:bg-[#141414] disabled:cursor-not-allowed disabled:opacity-50"
+					onclick={onCopyLink}
+					disabled={currentSeed === null || isLoading || isReloading}
+					aria-label="Copy link"
+					title={linkMessage ?? 'Copy link'}
+				>
+					<LinkIcon size={14} />
+				</button>
+				<button
+					type="button"
+					class="cursor-pointer rounded-full border border-[#dde7ee] bg-transparent px-3 py-1 text-xs text-[#CDD7E1] transition-colors hover:bg-[#141414] md:hidden"
+					onclick={onGoToSimulator}
+				>
+					Go to simulator
+				</button>
+			</div>
+		</div>
+
+		{#if linkMessage}
+			<p class="mt-1 text-xs text-[#007fff]">{linkMessage}</p>
+		{/if}
+
 		<div class="mt-3 flex gap-2">
-			<select
-				id="difficulty"
-				class="flex-1 cursor-pointer rounded-md border-none bg-[#0076BB] px-3 py-2 text-sm text-white transition-colors hover:bg-[#005a91] disabled:cursor-not-allowed disabled:bg-[#888B95]"
-				bind:value={currentDifficulty}
-				disabled={isReloading || isLoading}
-			>
-				<option value="easy">Easy</option>
-				<option value="medium">Medium</option>
-				<option value="hard">Hard</option>
-			</select>
+			<div class="relative flex-1">
+				<select
+					id="difficulty"
+					class="w-full cursor-pointer appearance-none rounded-full border border-[#dde7ee] bg-transparent py-2 pr-9 pl-3 text-sm text-[#CDD7E1] outline-none focus:border-[#007fff] disabled:cursor-not-allowed disabled:opacity-50"
+					bind:value={currentDifficulty}
+					disabled={isReloading || isLoading}
+				>
+					<option value="easy">Easy</option>
+					<option value="medium">Medium</option>
+					<option value="hard">Hard</option>
+				</select>
+				<svg
+					class="pointer-events-none absolute top-1/2 right-3.5 h-3.5 w-3.5 -translate-y-1/2 text-[#CDD7E1]"
+					viewBox="0 0 20 20"
+					fill="currentColor"
+					aria-hidden="true"
+				>
+					<path
+						fill-rule="evenodd"
+						d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+						clip-rule="evenodd"
+					/>
+				</svg>
+			</div>
 			<button
 				type="button"
-				class="cursor-pointer rounded-md border-none bg-green-600 px-4 py-2 text-sm text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-[#888B95]"
+				class="cursor-pointer rounded-full bg-[#32383E] px-4 py-2 text-sm text-[#CDD7E1] transition-colors hover:bg-[#3d444b] disabled:cursor-not-allowed disabled:opacity-50"
 				onclick={onReload}
 				disabled={isReloading || isLoading}
 			>
 				{isReloading ? '...' : 'New'}
 			</button>
 		</div>
-		<div class="mt-2 space-y-1 text-xs text-gray-400">
-			<div class="flex justify-between">
-				<span>Seed</span>
-				<span class="font-mono text-gray-300">{currentSeed ?? '—'}</span>
-			</div>
-			<div class="flex justify-between">
-				<span>Generator</span>
-				<span class="text-gray-300">v{GENERATOR_VERSION}</span>
-			</div>
-		</div>
-		<button
-			type="button"
-			class="mt-2 w-full cursor-pointer rounded-md border border-gray-700 bg-[#141414] px-3 py-1.5 text-xs text-white hover:bg-[#1a1a1a] disabled:cursor-not-allowed disabled:opacity-50"
-			onclick={onCopyLink}
-			disabled={currentSeed === null || isLoading || isReloading}
-		>
-			Copy link
-		</button>
-		{#if linkMessage}
-			<p class="mt-1 text-xs text-gray-400">{linkMessage}</p>
-		{/if}
 	</div>
 
 	<ScoringTabBar {activeTab} onTabChange={handleTabChange} />
@@ -145,7 +166,7 @@
 				<span
 					class:text-green-400={showAnswer && isCorrect}
 					class:text-red-400={showAnswer && !isCorrect}
-					class:text-blue-300={!showAnswer}
+					class:text-[#007fff]={!showAnswer}
 				>
 					Blue: {userPoints.blue}
 				</span>
@@ -167,14 +188,14 @@
 		<div class="flex gap-2">
 			<button
 				type="button"
-				class="flex-1 cursor-pointer rounded-md bg-[#0076BB] px-3 py-2 text-sm font-semibold transition-colors hover:bg-[#005a91]"
+				class="flex-1 cursor-pointer rounded-full bg-[#32383E] px-3 py-2 text-sm font-semibold text-[#CDD7E1] transition-colors hover:bg-[#3d444b]"
 				onclick={toggleAnswer}
 			>
 				{showAnswer ? 'Hide' : 'Check'}
 			</button>
 			<button
 				type="button"
-				class="flex-1 cursor-pointer rounded-md bg-[#888B95] px-3 py-2 text-sm font-semibold transition-colors hover:bg-[#6b6e76]"
+				class="flex-1 cursor-pointer rounded-full border border-[#dde7ee] bg-transparent px-3 py-2 text-sm font-semibold text-[#CDD7E1] transition-colors hover:bg-[#141414]"
 				onclick={resetScoring}
 			>
 				Reset

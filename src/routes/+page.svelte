@@ -175,7 +175,7 @@
 
 		{#if isPanelCollapsed}
 			<button
-				class="absolute right-4 bottom-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[#0076BB] text-white shadow-lg hover:bg-[#005a91] md:hidden"
+				class="absolute right-4 bottom-4 z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-[#007fff] text-white shadow-lg hover:bg-[#0066cc] md:hidden"
 				onclick={togglePanel}
 				aria-label="Open scoring panel"
 			>
@@ -214,6 +214,7 @@
 					{isReloading}
 					onReload={reloadScenario}
 					onCopyLink={copyShareLink}
+					onGoToSimulator={togglePanel}
 				/>
 			{/key}
 		{/if}
