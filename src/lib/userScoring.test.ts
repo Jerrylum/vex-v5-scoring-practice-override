@@ -51,7 +51,7 @@ describe('calculateUserAlliancePoints', () => {
 		const user = emptyUserScenarioScoring();
 		user.redQuadrantOne = { red: 1, blue: 0, yellow: 1, toggleColor: 'red' };
 
-		expect(calculateUserAlliancePoints(user)).toEqual({ red: 45, blue: 0 });
+		expect(calculateUserAlliancePoints(user)).toEqual({ red: 15, blue: 0 });
 	});
 
 	it('does not score midfield yellow when robot counts tie', () => {
@@ -59,7 +59,14 @@ describe('calculateUserAlliancePoints', () => {
 		user.midfieldGoal.yellow = 2;
 		user.midfieldRobots = { red: 1, blue: 1 };
 
-		expect(calculateUserAlliancePoints(user)).toEqual({ red: 0, blue: 0 });
+		expect(calculateUserAlliancePoints(user)).toEqual({ red: 8, blue: 8 });
+	});
+
+	it('awards midfield robot points to each alliance', () => {
+		const user = emptyUserScenarioScoring();
+		user.midfieldRobots = { red: 2, blue: 1 };
+
+		expect(calculateUserAlliancePoints(user)).toEqual({ red: 16, blue: 8 });
 	});
 });
 
@@ -88,6 +95,6 @@ describe('isUserScoringCorrect', () => {
 		user.midfieldRobots = { red: 2, blue: 1 };
 
 		expect(isUserScoringCorrect(user, actual, { red: 2, blue: 1 })).toBe(true);
-		expect(calculateActualAlliancePoints(actual, { red: 2, blue: 1 })).toEqual({ red: 45, blue: 15 });
+		expect(calculateActualAlliancePoints(actual, { red: 2, blue: 1 })).toEqual({ red: 31, blue: 23 });
 	});
 });

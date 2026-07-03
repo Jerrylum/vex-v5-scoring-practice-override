@@ -41,11 +41,14 @@ const QUADRANT_KEY_BY_ID: Record<QuadrantId, QuadrantKey> = {
 	blueQuadrantTwo: 'blueQuadrantTwo'
 };
 
+/** Points per scored pin half per the game manual scoring table. */
 export const PIN_HALF_POINTS = {
-	red: 15,
+	red: 5,
 	blue: 5,
-	yellow: 30
+	yellow: 10
 } as const;
+
+export const MIDFIELD_ROBOT_POINTS = 8;
 
 function emptyUserQuadrantScoring(): UserQuadrantScoring {
 	return { red: 0, blue: 0, yellow: 0, toggleColor: 'yellow' };
@@ -127,6 +130,9 @@ export function calculateUserAlliancePoints(user: UserScenarioScoring): { red: n
 	red += midfieldYellowPoints.red;
 	blue += midfieldYellowPoints.blue;
 
+	red += user.midfieldRobots.red * MIDFIELD_ROBOT_POINTS;
+	blue += user.midfieldRobots.blue * MIDFIELD_ROBOT_POINTS;
+
 	return { red, blue };
 }
 
@@ -157,6 +163,9 @@ export function calculateActualAlliancePoints(actual: ScenarioScoring, midfieldR
 	}
 
 	addScoredGoalPoints(actual.midfieldGoal, yellowOwnerFromMidfieldRobots(midfieldRobots), points);
+
+	points.red += midfieldRobots.red * MIDFIELD_ROBOT_POINTS;
+	points.blue += midfieldRobots.blue * MIDFIELD_ROBOT_POINTS;
 
 	return points;
 }
