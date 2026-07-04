@@ -1,10 +1,4 @@
-export {
-	RobotsStructure,
-	RobotsCase,
-	NoRobotCase,
-	ClawbotOnFieldCase,
-	generateRobotPlacements
-} from './RobotsStructure';
+export { RobotsStructure, RobotsCase, NoRobotCase, ClawbotOnFieldCase, generateRobotPlacements } from './RobotsStructure';
 
 export {
 	MidfieldStructure,

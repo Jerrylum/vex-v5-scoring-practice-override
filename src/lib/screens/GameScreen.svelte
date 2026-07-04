@@ -204,7 +204,7 @@
 					onReload={reloadScenario}
 					onCopyLink={copyShareLink}
 					onGoToSimulator={togglePanel}
-					onOpenSettings={onOpenSettings}
+					{onOpenSettings}
 				/>
 			{/key}
 		</div>

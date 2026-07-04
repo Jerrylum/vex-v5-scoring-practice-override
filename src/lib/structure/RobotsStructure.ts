@@ -3,13 +3,7 @@ import { Structure, ScoringObject, Robot } from '../ScoringObject';
 import type { Scene } from '../Scene';
 import { type MidfieldCounts, type ScenarioContext, type ScoringSlice } from '../Scoring';
 import type { RobotsSnapshot, RobotPlacement } from '../ScenarioSnapshot';
-import {
-	isRobotInExclusionZone,
-	isRobotWithinField,
-	maxRobotCenterOffset,
-	ROBOT_SIZE,
-	robotsOverlap
-} from '../fieldConstants';
+import { isRobotInExclusionZone, isRobotWithinField, maxRobotCenterOffset, ROBOT_SIZE, robotsOverlap } from '../fieldConstants';
 import { clawbotOverlapsMidfield } from '../clawbotCollision';
 import { mulberry32 } from '../utils';
 

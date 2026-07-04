@@ -39,11 +39,7 @@
 			aria-labelledby={ariaLabelledBy}
 			tabindex="-1"
 		>
-			<button
-				type="button"
-				class="absolute inset-0 cursor-pointer bg-black/60 backdrop-blur-sm"
-				aria-label="Close dialog"
-				onclick={onClose}
+			<button type="button" class="absolute inset-0 cursor-pointer bg-black/60 backdrop-blur-sm" aria-label="Close dialog" onclick={onClose}
 			></button>
 			<div
 				class={[

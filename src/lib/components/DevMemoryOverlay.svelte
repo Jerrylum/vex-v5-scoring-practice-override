@@ -35,7 +35,7 @@
 <div
 	class="pointer-events-none fixed top-2 left-2 z-[9999] max-w-[min(100vw-1rem,22rem)] rounded bg-black/80 px-2 py-1.5 font-mono text-[10px] leading-relaxed text-lime-300 shadow-lg"
 >
-	<div class="text-[9px] uppercase tracking-wide text-lime-400/80">Dev memory (1s)</div>
+	<div class="text-[9px] tracking-wide text-lime-400/80 uppercase">Dev memory (1s)</div>
 	{#if snapshot}
 		<div>{formatDevMemorySnapshot(snapshot)}</div>
 	{:else}

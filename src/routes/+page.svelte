@@ -4,11 +4,7 @@
 	import GameScreen from '$lib/screens/GameScreen.svelte';
 	import LoadingScreen from '$lib/screens/LoadingScreen.svelte';
 	import MenuScreen from '$lib/screens/MenuScreen.svelte';
-	import {
-		loadGraphicProfileSetting,
-		resolveGraphicProfile,
-		type GraphicProfileSetting
-	} from '$lib/graphicProfile';
+	import { loadGraphicProfileSetting, resolveGraphicProfile, type GraphicProfileSetting } from '$lib/graphicProfile';
 	import { parseScenarioLink } from '$lib/scenarioLink';
 	import { Scene } from '$lib/Scene';
 
@@ -63,12 +59,7 @@
 </svelte:head>
 
 <div class="relative h-screen w-screen overflow-hidden bg-black">
-	<div
-		id="container"
-		class="absolute inset-0"
-		class:invisible={screen !== 'game'}
-		class:pointer-events-none={screen !== 'game'}
-	></div>
+	<div id="container" class="absolute inset-0" class:invisible={screen !== 'game'} class:pointer-events-none={screen !== 'game'}></div>
 
 	{#if screen === 'loading'}
 		<LoadingScreen message={loadingMessage} />
