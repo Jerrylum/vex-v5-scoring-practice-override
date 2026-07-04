@@ -179,14 +179,14 @@
 	</div>
 
 	<div
-		class="pointer-events-auto relative flex h-full flex-col overflow-hidden bg-[#0a0a0a] text-white shadow-2xl transition-all duration-300 max-md:absolute max-md:top-0 max-md:right-0 max-md:z-40"
+		class="pointer-events-auto relative flex h-full flex-col overflow-hidden bg-[#0a0a0a] text-white shadow-2xl transition-all duration-300 max-md:absolute max-md:inset-0 max-md:z-40"
 		class:w-[440px]={!isPanelCollapsed}
 		class:w-12={isPanelCollapsed}
 		class:max-md:w-full={!isPanelCollapsed}
 		class:max-md:hidden={isPanelCollapsed}
 	>
 		<div
-			class="flex h-full w-[440px] flex-col"
+			class="flex h-full w-full flex-col"
 			class:invisible={isPanelCollapsed}
 			class:pointer-events-none={isPanelCollapsed}
 			aria-hidden={isPanelCollapsed}
