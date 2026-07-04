@@ -51,6 +51,7 @@
 	},
 	"dependencies": {
 		"polygon-clipping": "^0.15.7",
+		"svelte-portal": "^2.2.1",
 		"three": "^0.181.0"
 	}
 }

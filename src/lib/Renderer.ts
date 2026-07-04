@@ -1,6 +1,22 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import type { GraphicProfile } from './graphicProfile';
+
+function targetPixelRatio(profile: GraphicProfile): number {
+	switch (profile) {
+		case 'performance':
+			return 1;
+		case 'balance':
+			return Math.min(window.devicePixelRatio, 1.5);
+		case 'bestQuality':
+			return Math.min(window.devicePixelRatio, 2);
+	}
+}
+
+function useAntialiasing(profile: GraphicProfile): boolean {
+	return profile === 'bestQuality';
+}
 
 export class Renderer {
 	public scene: THREE.Scene;
@@ -9,35 +25,38 @@ export class Renderer {
 	private controls: OrbitControls;
 	private container: HTMLElement;
 	private pmremGenerator: THREE.PMREMGenerator;
+	private readonly graphicProfile: GraphicProfile;
 
-	constructor(containerId: string) {
+	constructor(containerId: string, graphicProfile: GraphicProfile) {
+		this.graphicProfile = graphicProfile;
 		this.container = document.getElementById(containerId)!;
 
-		// Initialize scene
 		this.scene = new THREE.Scene();
 		this.scene.background = new THREE.Color(0x333333);
 
-		// Initialize camera
 		const width = this.container.clientWidth;
 		const height = this.container.clientHeight;
 		this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 10000);
 		this.camera.position.set(100, 100, 100);
 
-		// Initialize renderer with PBR-friendly output
-		this.renderer = new THREE.WebGLRenderer({ antialias: true });
-		this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+		this.renderer = new THREE.WebGLRenderer({ antialias: useAntialiasing(graphicProfile) });
+		this.renderer.setPixelRatio(targetPixelRatio(graphicProfile));
 		this.renderer.setSize(width, height);
 		this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 		this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
 		this.renderer.toneMappingExposure = 0.3;
 		this.renderer.shadowMap.enabled = false;
-		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 		this.container.appendChild(this.renderer.domElement);
+
+		this.renderer.domElement.addEventListener('webglcontextlost', (event) => {
+			event.preventDefault();
+			console.error('WebGL context lost — scene exceeded GPU memory or the tab was backgrounded.');
+		});
 
 		this.pmremGenerator = new THREE.PMREMGenerator(this.renderer);
 		this.pmremGenerator.compileEquirectangularShader();
+		this.setupEnvironment();
 
-		// Initialize OrbitControls for mouse camera control
 		this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 		this.controls.enableDamping = true;
 		this.controls.dampingFactor = 0.05;
@@ -46,12 +65,8 @@ export class Renderer {
 		this.controls.maxDistance = 3600;
 		this.controls.maxPolarAngle = Math.PI;
 
-		this.setupEnvironment();
-
-		// Handle window resize
 		window.addEventListener('resize', () => this.onWindowResize());
 
-		// Start render loop
 		this.animate();
 	}
 
@@ -74,22 +89,23 @@ export class Renderer {
 		const height = this.container.clientHeight;
 		this.camera.aspect = width / height;
 		this.camera.updateProjectionMatrix();
-		this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+		this.renderer.setPixelRatio(targetPixelRatio(this.graphicProfile));
 		this.renderer.setSize(width, height);
 	}
 
 	public resize(): void {
-		// Public method to manually trigger resize (e.g., when panel is collapsed/expanded)
 		this.onWindowResize();
+	}
+
+	public getWebGLRenderer(): THREE.WebGLRenderer {
+		return this.renderer;
 	}
 
 	private animate(): void {
 		requestAnimationFrame(() => this.animate());
 
-		// Update controls (handles damping)
 		this.controls.update();
 
-		// Render the scene
 		this.renderer.render(this.scene, this.camera);
 	}
 }

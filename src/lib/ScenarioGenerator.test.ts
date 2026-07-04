@@ -16,9 +16,9 @@ describe('generateScenario determinism', () => {
 		});
 	}
 
-	it('uses allOnField robots case for medium difficulty', () => {
+	it('uses clawbotOnField robots case for medium difficulty', () => {
 		const snapshot = scenarioToSnapshot(generateScenario({ difficulty: 'medium', masterSeed: 482910374 }), 'medium');
-		expect(snapshot.robots.caseType).toBe('allOnField');
+		expect(snapshot.robots.caseType).toBe('clawbotOnField');
 	});
 
 	it('uses clawbotOnField robots case for hard difficulty', () => {

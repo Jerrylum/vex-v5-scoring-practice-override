@@ -16,7 +16,7 @@ export interface RobotPlacement {
 export type StackItem = { kind: 'pin'; pinType: PinType; isFlipped: boolean } | { kind: 'cup'; isFlipped: boolean };
 
 export interface RobotsSnapshot {
-	caseType: 'none' | 'allOnField' | 'clawbotOnField';
+	caseType: 'none' | 'clawbotOnField';
 	placements?: RobotPlacement[];
 }
 

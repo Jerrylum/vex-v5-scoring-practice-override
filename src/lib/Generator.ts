@@ -1,17 +1,15 @@
+import * as THREE from 'three';
 import { mulberry32 } from './utils';
 
 export type Level = 'easy' | 'medium' | 'hard';
 
-export type RobotsCaseType = 'none' | 'allOnField' | 'clawbotOnField';
+export type RobotsCaseType = 'none' | 'clawbotOnField';
 export type MidfieldCaseType = 'oneYY' | 'shortStack' | 'tallStack';
 export type QuadrantCaseType = 'noPin' | 'shortStack' | 'mediumStack' | 'hardStack';
 
 export function pickRobotsCaseType(level: Level): RobotsCaseType {
 	if (level === 'easy') {
 		return 'none';
-	}
-	if (level === 'medium') {
-		return 'allOnField';
 	}
 	return 'clawbotOnField';
 }

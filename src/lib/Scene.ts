@@ -1,15 +1,17 @@
 import * as THREE from 'three';
-import { ModelLoader } from './ModelLoader';
+import { ModelLoader, type LoadingProgressCallback } from './ModelLoader';
 import {
 	Field,
 	GameObject,
 	PinObject,
 	CupObject,
-	RobotObject,
 	ClawbotObject,
+	ClawbotFootprintObject,
 	ToggleObject,
 	pinDisplayName,
 	pinModelPath,
+	FIELD_PERIMETER_MODEL,
+	FIELD_ELEMENTS_MODEL,
 	CUP_MODEL,
 	TOGGLE_MODEL,
 	CLAWBOT_MODEL,
@@ -17,12 +19,15 @@ import {
 	type PinType
 } from './GameObject';
 import { Renderer } from './Renderer';
+import { collectDevMemorySnapshot } from './devMemoryMonitor';
+import type { GraphicProfile } from './graphicProfile';
 import { FT } from './utils';
 import type { ToggleId } from './structure/QuadrantDefinition';
 
 export class Scene {
 	private renderer: Renderer;
 	private modelLoader: ModelLoader;
+	private readonly graphicProfile: GraphicProfile;
 	private field: Field | null = null;
 	private northToggle: ToggleObject | null = null;
 	private eastToggle: ToggleObject | null = null;
@@ -39,29 +44,33 @@ export class Scene {
 	private cupCounter = 0;
 	private robotCounter = 0;
 
-	constructor(containerId: string) {
-		this.renderer = new Renderer(containerId);
-		this.modelLoader = new ModelLoader();
+	constructor(containerId: string, graphicProfile: GraphicProfile) {
+		this.graphicProfile = graphicProfile;
+		this.renderer = new Renderer(containerId, graphicProfile);
+		this.modelLoader = new ModelLoader(graphicProfile);
+	}
+
+	public setLoadingProgressCallback(callback: LoadingProgressCallback | null): void {
+		this.modelLoader.setProgressCallback(callback);
 	}
 
 	public resize(): void {
 		this.renderer.resize();
 	}
 
+	public getDevMemorySnapshot() {
+		return collectDevMemorySnapshot(this.renderer.getWebGLRenderer());
+	}
+
 	public async initialize(): Promise<void> {
 		await this.preloadGameObjects();
 		await this.loadField();
-
-		const loadingElement = document.getElementById('loading');
-		if (loadingElement) {
-			loadingElement.style.display = 'none';
-		}
-
 		console.log('Scene initialized successfully');
 	}
 
 	private async loadField(): Promise<void> {
 		this.field = await this.addField();
+
 		this.northToggle = await this.addToggle('blue', new THREE.Vector3(0, 353, FT * -6 + 14));
 		this.eastToggle = await this.addToggle('blue', new THREE.Vector3(FT * 6 - 14, 353, 0), new THREE.Euler(0, -Math.PI / 2, 0));
 		this.southToggle = await this.addToggle('red', new THREE.Vector3(0, 353, FT * 6 - 14), new THREE.Euler(0, Math.PI, 0));
@@ -80,20 +89,29 @@ export class Scene {
 
 	private async preloadGameObjects(): Promise<void> {
 		await Promise.all([
-			this.modelLoader.loadModel('/V5RC-Override-H2H-_-FieldElements.glb', 'Field'),
+			this.modelLoader.loadModel(FIELD_PERIMETER_MODEL, 'FieldPerimeter'),
+			this.modelLoader.loadModel(FIELD_ELEMENTS_MODEL, 'FieldElements'),
 			this.modelLoader.loadModel(TOGGLE_MODEL, 'Toggle'),
 			this.modelLoader.loadModel(CUP_MODEL, 'Cup'),
-			this.modelLoader.loadModel(CLAWBOT_MODEL, 'Clawbot'),
 			this.modelLoader.loadModel(LICENSE_PLATE_MODEL, 'LicensePlate'),
 			...Object.entries(pinModelPath).map(([pinType, path]) => this.modelLoader.loadModel(path, pinDisplayName(pinType as PinType)))
 		]);
+
+		if (this.graphicProfile !== 'performance') {
+			await this.modelLoader.loadModel(CLAWBOT_MODEL, 'Clawbot');
+		}
 
 		console.log('All game object models preloaded');
 	}
 
 	public async addField(position: THREE.Vector3 = new THREE.Vector3(0, 0, 0)): Promise<Field> {
-		const model = await this.modelLoader.loadModel('/V5RC-Override-H2H-_-FieldElements.glb', 'Field');
-		const field = new Field(model);
+		const [perimeter, elements] = await Promise.all([
+			this.modelLoader.loadModel(FIELD_PERIMETER_MODEL, 'FieldPerimeter'),
+			this.modelLoader.loadModel(FIELD_ELEMENTS_MODEL, 'FieldElements')
+		]);
+		const combined = new THREE.Group();
+		combined.add(perimeter, elements);
+		const field = new Field(combined);
 		field.setPosition(position);
 
 		this.renderer.scene.add(field.getObject());
@@ -162,21 +180,21 @@ export class Scene {
 		return cup;
 	}
 
-	public addRobot(alliance: 'red' | 'blue', position: THREE.Vector3, rotationY: number): RobotObject {
+	public async addClawbot(alliance: 'red' | 'blue', position: THREE.Vector3, rotationY: number): Promise<GameObject> {
 		const instanceId = this.robotCounter++;
-		const robot = new RobotObject(alliance, instanceId);
-		robot.setPosition(position);
-		robot.setRotation(new THREE.Euler(0, rotationY, 0));
 
-		this.renderer.scene.add(robot.getObject());
-		this.scoringObjects.push(robot);
+		if (this.graphicProfile === 'performance') {
+			const clawbot = new ClawbotFootprintObject(alliance, instanceId);
+			clawbot.setPosition(position);
+			clawbot.setRotation(new THREE.Euler(0, rotationY, 0));
 
-		console.log(`Added ${alliance} robot at`, position);
-		return robot;
-	}
+			this.renderer.scene.add(clawbot.getObject());
+			this.scoringObjects.push(clawbot);
 
-	public async addClawbot(alliance: 'red' | 'blue', position: THREE.Vector3, rotationY: number): Promise<ClawbotObject> {
-		const instanceId = this.robotCounter++;
+			console.log(`Added ${alliance} clawbot footprint at`, position);
+			return clawbot;
+		}
+
 		const [clawbotModel, licensePlateFront, licensePlateBack] = await Promise.all([
 			this.modelLoader.loadModel(CLAWBOT_MODEL, 'Clawbot'),
 			this.modelLoader.loadModel(LICENSE_PLATE_MODEL, 'LicensePlate'),

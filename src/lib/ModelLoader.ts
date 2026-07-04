@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import type { GraphicProfile } from './graphicProfile';
 
 /** GLB exports from Blender are in meters; the scene uses millimeters. */
 const GLTF_TO_SCENE_SCALE = 1000;
@@ -8,34 +9,64 @@ const GLTF_TO_SCENE_SCALE = 1000;
 /** Draco decoder WASM/JS served from static/draco/gltf (copied from three.js). */
 const DRACO_DECODER_PATH = '/draco/gltf/';
 
+const CLEAR_MATERIAL_STANDARD = {
+	opacity: 0.38,
+	roughness: 0.25
+} as const;
+
+const CLEAR_MATERIAL_DESKTOP = {
+	transmission: 0.55,
+	opacity: 0.4,
+	roughness: 0.08
+} as const;
+
+export type LoadingProgressCallback = (message: string) => void;
+
 export class ModelLoader {
 	private modelCache: Map<string, THREE.Group> = new Map();
 	private dracoLoader: DRACOLoader | null = null;
 	private gltfLoader: GLTFLoader | null = null;
+	private onProgress: LoadingProgressCallback | null = null;
+
+	constructor(private readonly graphicProfile: GraphicProfile) {}
+
+	public setProgressCallback(callback: LoadingProgressCallback | null): void {
+		this.onProgress = callback;
+	}
 
 	private updateLoadingProgress(message: string): void {
-		const loadingElement = document.getElementById('loading');
-		if (loadingElement) {
-			loadingElement.textContent = message;
-		}
+		this.onProgress?.(message);
 	}
 
 	private isClearMaterial(material: THREE.Material): boolean {
 		return /acrylic|clear|glass|polycarbonate|transparent/i.test(material.name);
 	}
 
-	private createClearMaterial(material: THREE.MeshStandardMaterial): THREE.MeshPhysicalMaterial {
-		return new THREE.MeshPhysicalMaterial({
+	private createClearMaterial(material: THREE.MeshStandardMaterial): THREE.Material {
+		if (this.graphicProfile === 'bestQuality') {
+			return new THREE.MeshPhysicalMaterial({
+				color: material.color,
+				metalness: 0,
+				roughness: CLEAR_MATERIAL_DESKTOP.roughness,
+				transmission: CLEAR_MATERIAL_DESKTOP.transmission,
+				thickness: 0,
+				transparent: true,
+				opacity: CLEAR_MATERIAL_DESKTOP.opacity,
+				side: THREE.DoubleSide,
+				depthWrite: false,
+				envMapIntensity: 1,
+				name: material.name
+			});
+		}
+
+		return new THREE.MeshStandardMaterial({
 			color: material.color,
 			metalness: 0,
-			roughness: 0.05,
-			transmission: 0.85,
-			thickness: 0,
+			roughness: CLEAR_MATERIAL_STANDARD.roughness,
 			transparent: true,
-			opacity: 1,
+			opacity: CLEAR_MATERIAL_STANDARD.opacity,
 			side: THREE.DoubleSide,
 			depthWrite: false,
-			envMapIntensity: 1,
 			name: material.name
 		});
 	}
@@ -45,7 +76,7 @@ export class ModelLoader {
 			return this.createClearMaterial(material);
 		}
 
-		if (material instanceof THREE.MeshStandardMaterial) {
+		if (material instanceof THREE.MeshStandardMaterial && this.graphicProfile === 'bestQuality') {
 			material.envMapIntensity = 1;
 		}
 
@@ -54,6 +85,7 @@ export class ModelLoader {
 
 	private prepareMeshes(object: THREE.Group): number {
 		let meshCount = 0;
+		const skipNormalCompute = this.graphicProfile !== 'bestQuality';
 
 		object.traverse((child) => {
 			if (child instanceof THREE.Mesh) {
@@ -69,7 +101,9 @@ export class ModelLoader {
 
 				if (child.geometry) {
 					child.geometry.computeBoundingBox();
-					child.geometry.computeVertexNormals();
+					if (!skipNormalCompute && !child.geometry.attributes.normal) {
+						child.geometry.computeVertexNormals();
+					}
 				}
 			}
 		});

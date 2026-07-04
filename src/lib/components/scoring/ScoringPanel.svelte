@@ -1,5 +1,6 @@
 <script lang="ts">
 	import LinkIcon from '$lib/components/icons/LinkIcon.svelte';
+	import GearIcon from '$lib/components/icons/GearIcon.svelte';
 	import MidfieldTab from './MidfieldTab.svelte';
 	import OverviewTab from './OverviewTab.svelte';
 	import QuadrantTab from './QuadrantTab.svelte';
@@ -28,6 +29,7 @@
 		onReload: () => void;
 		onCopyLink: () => void;
 		onGoToSimulator: () => void;
+		onOpenSettings: () => void;
 	}
 
 	let {
@@ -41,7 +43,8 @@
 		isReloading,
 		onReload,
 		onCopyLink,
-		onGoToSimulator
+		onGoToSimulator,
+		onOpenSettings
 	}: Props = $props();
 
 	let activeTab = $state<ScoringTabId>('overview');
@@ -53,11 +56,6 @@
 
 	function handleTabChange(tab: ScoringTabId) {
 		activeTab = tab;
-	}
-
-	function resetScoring() {
-		userScoring = emptyUserScenarioScoring();
-		showAnswer = false;
 	}
 
 	function toggleAnswer() {
@@ -86,10 +84,12 @@
 				</button>
 				<button
 					type="button"
-					class="cursor-pointer rounded-full border border-[#dde7ee] bg-transparent px-3 py-1 text-xs text-[#CDD7E1] transition-colors hover:bg-[#141414] md:hidden"
-					onclick={onGoToSimulator}
+					class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-[#dde7ee] bg-transparent text-[#007fff] transition-colors hover:bg-[#141414]"
+					onclick={onOpenSettings}
+					aria-label="Settings"
+					title="Settings"
 				>
-					Go to simulator
+					<GearIcon size={14} />
 				</button>
 			</div>
 		</div>
@@ -196,9 +196,9 @@
 			<button
 				type="button"
 				class="flex-1 cursor-pointer rounded-full border border-[#dde7ee] bg-transparent px-3 py-2 text-sm font-semibold text-[#CDD7E1] transition-colors hover:bg-[#141414]"
-				onclick={resetScoring}
+				onclick={onGoToSimulator}
 			>
-				Reset
+				Go to simulator
 			</button>
 		</div>
 	</div>

@@ -2,7 +2,6 @@ export {
 	RobotsStructure,
 	RobotsCase,
 	NoRobotCase,
-	RobotsOnFieldCase,
 	ClawbotOnFieldCase,
 	generateRobotPlacements
 } from './RobotsStructure';

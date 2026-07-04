@@ -23,6 +23,9 @@ export function pinDisplayName(pinType: PinType): string {
 	return PIN_DISPLAY_NAMES[pinType];
 }
 
+export const FIELD_PERIMETER_MODEL = '/V5RC-FieldPerimeter.glb';
+export const FIELD_ELEMENTS_MODEL = '/V5RC-Override-H2H-_-FieldElements.glb';
+export const FIELD_MODELS = [FIELD_PERIMETER_MODEL, FIELD_ELEMENTS_MODEL] as const;
 export const CUP_MODEL = '/V5RC-Override-H2H-_-Cup.glb';
 export const TOGGLE_MODEL = '/V5RC-Override-H2H-_-Toggle.glb';
 export const CLAWBOT_MODEL = '/V5RC-Clawbot.glb';
@@ -111,28 +114,6 @@ const ALLIANCE_COLORS = {
 
 function allianceColor(alliance: 'red' | 'blue'): number {
 	return ALLIANCE_COLORS[alliance];
-}
-
-function createRobotFootprintGroup(alliance: 'red' | 'blue'): THREE.Group {
-	const size = ROBOT_MAX_SIZE;
-	const color = allianceColor(alliance);
-	const geometry = new THREE.BoxGeometry(size, size, size);
-	const material = new THREE.MeshStandardMaterial({
-		color,
-		transparent: true,
-		opacity: 0.35,
-		depthWrite: false
-	});
-	const mesh = new THREE.Mesh(geometry, material);
-	mesh.position.y = ROBOT_FLOOR_Y + size / 2;
-
-	const edges = new THREE.EdgesGeometry(geometry);
-	const outline = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color }));
-	outline.position.copy(mesh.position);
-
-	const group = new THREE.Group();
-	group.add(mesh, outline);
-	return group;
 }
 
 type FootprintRing = ReadonlyArray<readonly [x: number, z: number]>;
@@ -265,11 +246,11 @@ function attachLicensePlate(
 	footprintGroup.add(licensePlateBack);
 }
 
-export class RobotObject extends GameObject {
+export class ClawbotFootprintObject extends GameObject {
 	public readonly alliance: 'red' | 'blue';
 
 	constructor(alliance: 'red' | 'blue', instanceId: number) {
-		super(createRobotFootprintGroup(alliance), `Robot_${alliance}_${instanceId}`);
+		super(createClawbotFootprintHighlight(alliance), `ClawbotFootprint_${alliance}_${instanceId}`);
 		this.alliance = alliance;
 	}
 }

@@ -3,7 +3,7 @@
  *
  * All horizontal coordinates are in millimeters on the XZ plane (Y is up).
  * Robot footprints are 18" squares modeled as oriented boxes; corner math matches
- * Three.js `RobotObject` container.rotation.y.
+ * Three.js Y-axis rotation on clawbot / footprint containers.
  */
 import * as THREE from 'three';
 import { FT, ROBOT_MAX_SIZE, TILE } from './utils';
@@ -92,7 +92,7 @@ export function isInExclusionZone(x: number, z: number): boolean {
 
 /**
  * World-space corners of the robot's oriented square footprint.
- * Rotation matches Three.js Y-axis rotation on `RobotObject`.
+ * Rotation matches Three.js Y-axis rotation on clawbot containers.
  */
 export function getRobotFootprintCorners(x: number, z: number, size: number, rotationY: number): Point2D[] {
 	const half = size / 2;

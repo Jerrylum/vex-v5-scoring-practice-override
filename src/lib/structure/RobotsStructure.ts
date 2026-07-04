@@ -5,7 +5,6 @@ import { type MidfieldCounts, type ScenarioContext, type ScoringSlice } from '..
 import type { RobotsSnapshot, RobotPlacement } from '../ScenarioSnapshot';
 import {
 	isRobotInExclusionZone,
-	isRobotInMidfield,
 	isRobotWithinField,
 	maxRobotCenterOffset,
 	ROBOT_SIZE,
@@ -47,12 +46,9 @@ export class RobotsStructure extends Structure {
 			return new RobotsStructure(new NoRobotCase());
 		}
 		if (!snapshot.placements || snapshot.placements.length !== 4) {
-			throw new Error('RobotsOnFieldCase snapshot requires 4 placements');
+			throw new Error('ClawbotOnFieldCase snapshot requires 4 placements');
 		}
-		if (snapshot.caseType === 'clawbotOnField') {
-			return new RobotsStructure(new ClawbotOnFieldCase(snapshot.placements));
-		}
-		return new RobotsStructure(new RobotsOnFieldCase(snapshot.placements));
+		return new RobotsStructure(new ClawbotOnFieldCase(snapshot.placements));
 	}
 }
 
@@ -130,11 +126,11 @@ export function generateRobotPlacements(seed: number): RobotPlacement[] {
 	return placements;
 }
 
-export class RobotsOnFieldCase extends RobotsCase {
+export class ClawbotOnFieldCase extends RobotsCase {
 	constructor(public readonly placements: RobotPlacement[]) {
 		super();
 		if (placements.length !== 4) {
-			throw new Error('RobotsOnFieldCase requires exactly 4 robot placements');
+			throw new Error('ClawbotOnFieldCase requires exactly 4 robot placements');
 		}
 	}
 
@@ -149,26 +145,6 @@ export class RobotsOnFieldCase extends RobotsCase {
 	public getMidfieldCounts(): MidfieldCounts {
 		const counts: MidfieldCounts = { red: 0, blue: 0 };
 		for (const p of this.placements) {
-			if (isRobotInMidfield(p.x, p.z, ROBOT_SIZE, p.rotationY)) {
-				counts[p.alliance]++;
-			}
-		}
-		return counts;
-	}
-
-	public async visualize(scene: Scene): Promise<void> {
-		await Promise.all(this.placements.map((p) => scene.addRobot(p.alliance, new THREE.Vector3(p.x, 0, p.z), p.rotationY)));
-	}
-
-	public toSnapshot(): RobotsSnapshot {
-		return { caseType: 'allOnField', placements: this.placements };
-	}
-}
-
-export class ClawbotOnFieldCase extends RobotsOnFieldCase {
-	public override getMidfieldCounts(): MidfieldCounts {
-		const counts: MidfieldCounts = { red: 0, blue: 0 };
-		for (const p of this.placements) {
 			if (clawbotOverlapsMidfield(p.x, p.z, p.rotationY)) {
 				counts[p.alliance]++;
 			}
@@ -176,11 +152,11 @@ export class ClawbotOnFieldCase extends RobotsOnFieldCase {
 		return counts;
 	}
 
-	public override async visualize(scene: Scene): Promise<void> {
+	public async visualize(scene: Scene): Promise<void> {
 		await Promise.all(this.placements.map((p) => scene.addClawbot(p.alliance, new THREE.Vector3(p.x, 0, p.z), p.rotationY)));
 	}
 
-	public override toSnapshot(): RobotsSnapshot {
+	public toSnapshot(): RobotsSnapshot {
 		return { caseType: 'clawbotOnField', placements: this.placements };
 	}
 }
