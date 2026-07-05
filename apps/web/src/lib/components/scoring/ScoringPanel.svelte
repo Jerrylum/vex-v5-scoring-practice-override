@@ -1,6 +1,7 @@
 <script lang="ts">
 	import LinkIcon from '$lib/components/icons/LinkIcon.svelte';
 	import GearIcon from '$lib/components/icons/GearIcon.svelte';
+	import MenuIcon from '$lib/components/icons/MenuIcon.svelte';
 	import MidfieldTab from './MidfieldTab.svelte';
 	import OverviewTab from './OverviewTab.svelte';
 	import QuadrantTab from './QuadrantTab.svelte';
@@ -29,12 +30,14 @@
 		allowReload?: boolean;
 		allowDifficultyChange?: boolean;
 		copyLinkDisabled?: boolean;
+		shareRoomMode?: boolean;
 		showAnswer?: boolean;
 		onShowAnswerChange?: (value: boolean) => void;
 		onReload: () => void;
 		onCopyLink: () => void;
 		onGoToSimulator: () => void;
 		onOpenSettings: () => void;
+		onOpenPauseMenu: () => void;
 	}
 
 	let {
@@ -49,12 +52,14 @@
 		allowReload = true,
 		allowDifficultyChange = true,
 		copyLinkDisabled = false,
+		shareRoomMode = false,
 		showAnswer = $bindable(false),
 		onShowAnswerChange,
 		onReload,
 		onCopyLink,
 		onGoToSimulator,
-		onOpenSettings
+		onOpenSettings,
+		onOpenPauseMenu
 	}: Props = $props();
 
 	const userPoints = $derived(calculateUserAlliancePoints(userScoring));
@@ -85,11 +90,20 @@
 			<div class="flex items-center gap-2">
 				<button
 					type="button"
+					class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-[#dde7ee] bg-transparent text-[#007fff] transition-colors hover:bg-[#141414]"
+					onclick={onOpenPauseMenu}
+					aria-label="Open menu"
+					title="Menu (Esc)"
+				>
+					<MenuIcon size={14} />
+				</button>
+				<button
+					type="button"
 					class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-[#dde7ee] bg-transparent text-[#007fff] transition-colors hover:bg-[#141414] disabled:cursor-not-allowed disabled:opacity-50"
 					onclick={onCopyLink}
 					disabled={copyLinkDisabled || isLoading || isReloading}
-					aria-label="Copy link"
-					title={linkMessage ?? 'Copy link'}
+					aria-label={shareRoomMode ? 'Share room' : 'Copy link'}
+					title={linkMessage ?? (shareRoomMode ? 'Share room' : 'Copy link')}
 				>
 					<LinkIcon size={14} />
 				</button>

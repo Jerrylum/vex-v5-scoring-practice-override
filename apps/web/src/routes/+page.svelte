@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
+	import PauseMenuDialog from '$lib/components/PauseMenuDialog.svelte';
+	import RoomShareDialog from '$lib/components/RoomShareDialog.svelte';
 	import SettingsDialog from '$lib/components/SettingsDialog.svelte';
 	import GameScreen from '$lib/screens/GameScreen.svelte';
 	import LoadingScreen from '$lib/screens/LoadingScreen.svelte';
@@ -14,20 +17,28 @@
 
 	type AppScreen = 'loading' | 'menu' | 'lobby' | 'game';
 	type GameMode = 'singleplayer' | 'multiplayer';
-	type LobbyMode = 'create' | 'join';
 
 	let screen = $state<AppScreen>('loading');
 	let gameMode = $state<GameMode>('singleplayer');
-	let lobbyMode = $state<LobbyMode>('create');
 	let lobbyRoomId = $state<string | null>(null);
 	let loadingMessage = $state('Loading scene...');
 	let settingsOpen = $state(false);
+	let pauseMenuOpen = $state(false);
+	let shareDialogOpen = $state(false);
 	let graphicProfileSetting = $state<GraphicProfileSetting>('auto');
 	let modelLoader = $state<ModelLoader | null>(null);
 	let initError = $state<string | null>(null);
 
 	function openSettings() {
 		settingsOpen = true;
+	}
+
+	function openPauseMenu() {
+		pauseMenuOpen = true;
+	}
+
+	function openShareDialog() {
+		shareDialogOpen = true;
 	}
 
 	function handleProfileChange(setting: GraphicProfileSetting) {
@@ -41,7 +52,6 @@
 
 	function startMultiplayer() {
 		gameMode = 'multiplayer';
-		lobbyMode = 'create';
 		lobbyRoomId = null;
 		screen = 'lobby';
 	}
@@ -51,13 +61,56 @@
 			roomSession.disconnect();
 		}
 		gameMode = 'singleplayer';
+		lobbyRoomId = null;
+		shareDialogOpen = false;
 		screen = 'menu';
+	}
+
+	function handleBackToMenu() {
+		pauseMenuOpen = false;
+		goToMenu();
 	}
 
 	function startMultiplayerGame() {
 		gameMode = 'multiplayer';
 		screen = 'game';
 	}
+
+	$effect(() => {
+		if (!browser) return;
+
+		const inGame = screen === 'game';
+		const shareOpen = shareDialogOpen;
+		const settings = settingsOpen;
+		const pauseOpen = pauseMenuOpen;
+
+		function handleEscape(event: KeyboardEvent) {
+			if (event.key !== 'Escape') return;
+
+			if (shareOpen) {
+				event.preventDefault();
+				shareDialogOpen = false;
+				return;
+			}
+			if (settings) {
+				event.preventDefault();
+				settingsOpen = false;
+				return;
+			}
+			if (pauseOpen) {
+				event.preventDefault();
+				pauseMenuOpen = false;
+				return;
+			}
+			if (inGame) {
+				event.preventDefault();
+				openPauseMenu();
+			}
+		}
+
+		document.addEventListener('keydown', handleEscape, true);
+		return () => document.removeEventListener('keydown', handleEscape, true);
+	});
 
 	onMount(() => {
 		const init = async () => {
@@ -79,7 +132,6 @@
 					screen = 'game';
 				} else if (roomId) {
 					gameMode = 'multiplayer';
-					lobbyMode = 'join';
 					lobbyRoomId = roomId;
 					screen = 'lobby';
 				} else {
@@ -91,6 +143,7 @@
 				loadingMessage = initError;
 			}
 		};
+
 		init();
 	});
 </script>
@@ -105,11 +158,28 @@
 	{:else if screen === 'menu'}
 		<MenuScreen onSingleplayer={startSingleplayer} onMultiplayer={startMultiplayer} onSettings={openSettings} />
 	{:else if screen === 'lobby'}
-		<LobbyScreen mode={lobbyMode} roomId={lobbyRoomId} onBack={goToMenu} onStartGame={startMultiplayerGame} />
+		<LobbyScreen roomId={lobbyRoomId} onStartGame={startMultiplayerGame} onLeave={goToMenu} />
 	{:else if screen === 'game' && modelLoader}
-		<GameScreen {modelLoader} mode={gameMode} onOpenSettings={openSettings} />
+		<GameScreen
+			{modelLoader}
+			mode={gameMode}
+			onOpenSettings={openSettings}
+			onOpenPauseMenu={openPauseMenu}
+			onOpenShareDialog={openShareDialog}
+		/>
 	{/if}
 </div>
+
+<PauseMenuDialog
+	open={pauseMenuOpen}
+	mode={gameMode}
+	onClose={() => (pauseMenuOpen = false)}
+	onOpenSettings={openSettings}
+	onOpenShareDialog={gameMode === 'multiplayer' ? openShareDialog : undefined}
+	onBackToMenu={handleBackToMenu}
+/>
+
+<RoomShareDialog open={shareDialogOpen} onClose={() => (shareDialogOpen = false)} />
 
 <SettingsDialog
 	open={settingsOpen}

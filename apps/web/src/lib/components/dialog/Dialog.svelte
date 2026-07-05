@@ -24,12 +24,6 @@
 	});
 </script>
 
-<svelte:window
-	onkeydown={(e) => {
-		if (open && e.key === 'Escape') onClose();
-	}}
-/>
-
 {#if open}
 	<Portal target="body">
 		<div
@@ -43,12 +37,12 @@
 			></button>
 			<div
 				class={[
-					'relative max-h-[80vh] w-full max-w-md overflow-hidden rounded-lg border border-gray-800 bg-[#0a0a0a] text-[#CDD7E1] shadow-xl',
+					'relative flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-lg border border-gray-800 bg-[#0a0a0a] text-[#CDD7E1] shadow-xl',
 					contentClass
 				]}
 				use:focusTrap
 			>
-				<div class="overflow-y-auto p-4">
+				<div class="scoring-panel-scroll min-h-0 overflow-y-auto p-4">
 					{@render children?.()}
 				</div>
 			</div>

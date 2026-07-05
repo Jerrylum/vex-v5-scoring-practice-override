@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import ChevronLeftIcon from '$lib/components/icons/ChevronLeftIcon.svelte';
+	import ChevronRightIcon from '$lib/components/icons/ChevronRightIcon.svelte';
 	import ScoringPanel from '$lib/components/scoring/ScoringPanel.svelte';
 	import type { ModelLoader } from '$lib/ModelLoader';
 	import { roomSession } from '$lib/multiplayer/roomSession.svelte';
@@ -30,14 +32,23 @@
 		modelLoader: ModelLoader;
 		mode?: 'singleplayer' | 'multiplayer';
 		onOpenSettings: () => void;
+		onOpenPauseMenu: () => void;
+		onOpenShareDialog: () => void;
 	}
 
-	let { modelLoader, mode = 'singleplayer', onOpenSettings }: Props = $props();
+	let {
+		modelLoader,
+		mode = 'singleplayer',
+		onOpenSettings,
+		onOpenPauseMenu,
+		onOpenShareDialog
+	}: Props = $props();
 
 	const isMultiplayer = $derived(mode === 'multiplayer');
 
 	let scene = $state<Scene | null>(null);
 	let sceneContainer = $state<HTMLElement | null>(null);
+	let gameRoot = $state<HTMLElement | null>(null);
 
 	let currentDifficulty = $state<Level>('medium');
 	let currentSeed = $state<number | null>(null);
@@ -55,6 +66,10 @@
 
 	function togglePanel() {
 		isPanelCollapsed = !isPanelCollapsed;
+	}
+
+	function focusGameRoot() {
+		gameRoot?.focus({ preventScroll: true });
 	}
 
 	$effect(() => {
@@ -223,17 +238,9 @@
 		}
 	}
 
-	async function copyShareLink() {
+	async function handleShareLink() {
 		if (isMultiplayer) {
-			const link = roomSession.getRoomLink();
-			if (!link) return;
-			try {
-				await navigator.clipboard.writeText(link);
-				linkMessage = 'Room link copied.';
-			} catch (error) {
-				console.error('Failed to copy room link:', error);
-				linkMessage = 'Could not copy link.';
-			}
+			onOpenShareDialog();
 			return;
 		}
 
@@ -286,32 +293,35 @@
 			}
 		};
 		init();
+		focusGameRoot();
 	});
 </script>
 
-<div class="pointer-events-none relative z-10 flex h-screen w-screen">
+<div
+	bind:this={gameRoot}
+	tabindex="-1"
+	class="pointer-events-none relative z-10 flex h-screen w-screen outline-none"
+>
 	<div class="relative h-full min-w-0 flex-1 overflow-hidden">
-		<div bind:this={sceneContainer} class="pointer-events-auto absolute inset-0"></div>
+		<div bind:this={sceneContainer} class="pointer-events-auto absolute inset-0" onpointerdown={focusGameRoot}></div>
 
 		{#if isPanelCollapsed}
 			<button
 				class="pointer-events-auto absolute right-4 bottom-4 z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-[#007fff] text-white shadow-lg hover:bg-[#0066cc]"
 				onclick={togglePanel}
-				aria-label="Expand panel"
-				title="Expand panel"
+				aria-label="Expand scoring panel"
+				title="Expand scoring panel"
 			>
-				<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-				</svg>
+				<ChevronLeftIcon size={20} />
 			</button>
 		{:else}
 			<button
-				class="pointer-events-auto absolute right-4 bottom-4 z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-[#374151] text-xl text-white shadow-lg hover:bg-[#4b5563] max-md:hidden"
+				class="pointer-events-auto absolute right-4 bottom-4 z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-[#374151] text-white shadow-lg hover:bg-[#4b5563] max-md:hidden"
 				onclick={togglePanel}
-				aria-label="Collapse panel"
-				title="Collapse panel"
+				aria-label="Collapse scoring panel"
+				title="Collapse scoring panel"
 			>
-				▶
+				<ChevronRightIcon size={20} />
 			</button>
 		{/if}
 	</div>
@@ -336,11 +346,13 @@
 					allowReload={!isMultiplayer || roomSession.isHost}
 					allowDifficultyChange={!isMultiplayer || roomSession.isHost}
 					copyLinkDisabled={isMultiplayer ? !roomSession.roomId : currentSeed === null}
+					shareRoomMode={isMultiplayer}
 					onShowAnswerChange={handleShowAnswerChange}
 					onReload={reloadScenario}
-					onCopyLink={copyShareLink}
+					onCopyLink={handleShareLink}
 					onGoToSimulator={togglePanel}
 					{onOpenSettings}
+					{onOpenPauseMenu}
 				/>
 			{/key}
 		</div>
