@@ -69,6 +69,33 @@ Cups are rendered in 3D stacks and affect which pin halves are visible, but the 
 
 For the official scoring rules, see the [V5RC Override Game Manual](https://link.vex.com/docs/26-27/v5rc/game-manual).
 
+## Multiplayer
+
+Practice scoring with other referees in a shared room (similar to Tournament Manager’s shared panel).
+
+- **Create a room** from the main menu → Multiplayer. Pick difficulty, then share the room link or QR code.
+- **Join a room** by opening a link with `?roomId=…`.
+- **Peer room:** each browser tab gets its own auto-generated name and client id. Any connected referee can start scoring, generate a new scenario, or toggle show answer.
+- **Sync:** scoring, scenario, and show-answer state broadcast to all clients. Edits are debounced; reconnect re-joins the room after a transport drop.
+- **View presets:** use the pause menu (Esc) to switch local camera angles (Head Ref, SW/SE scorekeeper, Observer). View choice is per-tab only and is not synced.
+
+### Multiplayer development
+
+Run the web app and Cloudflare Worker together:
+
+```bash
+bun run dev:all
+```
+
+- Web: `http://localhost:5173`
+- Worker WebSocket: `ws://localhost:8787/ws`
+
+Regenerate Worker types after changing `wrangler.jsonc`:
+
+```bash
+cd apps/worker && bun run cf-typegen
+```
+
 ## Getting Started
 
 ### Prerequisites

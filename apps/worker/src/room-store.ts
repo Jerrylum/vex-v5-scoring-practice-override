@@ -91,6 +91,10 @@ export function joinRoom(data: RoomStoreData, clientId: string, displayName: str
 		throw new RoomNotFoundError();
 	}
 
+	if (data.state.participants.some((participant) => participant.clientId === clientId)) {
+		return { state: data.state, kit: buildJoiningKit(data.meta, data.state) };
+	}
+
 	const state: RoomState = {
 		...data.state,
 		participants: [...data.state.participants, createParticipant(clientId, displayName)]

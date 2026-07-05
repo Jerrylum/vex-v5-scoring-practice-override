@@ -8,10 +8,11 @@
 		actualCounts: ScenarioScoring;
 		midfieldCounts: MidfieldCounts;
 		showAnswer: boolean;
+		readOnly?: boolean;
 		onUpdate: (userScoring: UserScenarioScoring) => void;
 	}
 
-	let { userScoring, actualCounts, midfieldCounts, showAnswer, onUpdate }: Props = $props();
+	let { userScoring, actualCounts, midfieldCounts, showAnswer, readOnly = false, onUpdate }: Props = $props();
 
 	function incrementGoal(field: keyof PinHalfCounts) {
 		onUpdate({
@@ -70,6 +71,7 @@
 				onDecrement={() => decrementGoal('red')}
 				correctValue={actualCounts.midfieldGoal.visible.red}
 				{showAnswer}
+				disabled={readOnly}
 				compact
 			/>
 			<CounterCard
@@ -80,6 +82,7 @@
 				onDecrement={() => decrementGoal('blue')}
 				correctValue={actualCounts.midfieldGoal.visible.blue}
 				{showAnswer}
+				disabled={readOnly}
 				compact
 			/>
 			<CounterCard
@@ -90,6 +93,7 @@
 				onDecrement={() => decrementGoal('yellow')}
 				correctValue={actualCounts.midfieldGoal.visible.yellow}
 				{showAnswer}
+				disabled={readOnly}
 				compact
 			/>
 		</div>
@@ -106,6 +110,7 @@
 				onDecrement={() => decrementRobot('red')}
 				correctValue={midfieldCounts.red}
 				{showAnswer}
+				disabled={readOnly}
 				compact
 			/>
 			<CounterCard
@@ -116,6 +121,7 @@
 				onDecrement={() => decrementRobot('blue')}
 				correctValue={midfieldCounts.blue}
 				{showAnswer}
+				disabled={readOnly}
 				compact
 			/>
 		</div>

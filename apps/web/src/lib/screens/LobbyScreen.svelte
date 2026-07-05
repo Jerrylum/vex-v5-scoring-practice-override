@@ -1,6 +1,7 @@
 <script lang="ts">
 	import RoomQrCode from '$lib/components/RoomQrCode.svelte';
-	import { generateScenario, scenarioToSnapshot } from '$lib/ScenarioGenerator';
+	import { generateScenario, scenarioToSnapshot, type Level } from '$lib/ScenarioGenerator';
+	import { connectionLabelForState } from '$lib/multiplayer/connectionLabel';
 	import { roomSession } from '$lib/multiplayer/roomSession.svelte';
 	import { randomMasterSeed } from '$lib/utils';
 
@@ -14,6 +15,7 @@
 
 	let isBusy = $state(false);
 	let statusMessage = $state<string | null>(null);
+	let lobbyDifficulty = $state<Level>('medium');
 
 	const roomLink = $derived(roomSession.getRoomLink());
 
@@ -30,9 +32,9 @@
 		roomSession.setError(null);
 
 		try {
-			const difficulty = 'medium' as const;
+			const difficulty = lobbyDifficulty;
 			const scenario = scenarioToSnapshot(generateScenario({ difficulty, masterSeed: randomMasterSeed() }), difficulty);
-			await roomSession.createRoom(difficulty, scenario);
+			await roomSession.createRoom(scenario);
 			statusMessage = 'Room created. Share the link with other referees.';
 		} catch (error) {
 			console.error('Failed to create room:', error);
@@ -84,17 +86,7 @@
 		}
 	}
 
-	const connectionLabel = $derived(
-		roomSession.connectionState === 'connected'
-			? 'Connected'
-			: roomSession.connectionState === 'connecting'
-				? 'Connecting…'
-				: roomSession.connectionState === 'reconnecting'
-					? 'Reconnecting…'
-					: roomSession.connectionState === 'error'
-						? 'Connection error'
-						: 'Offline'
-	);
+	const connectionLabel = $derived(connectionLabelForState(roomSession.connectionState));
 
 	let autoConnectAttempted = $state(false);
 
@@ -116,6 +108,20 @@
 
 		{#if !roomSession.kit && isBusy}
 			<p class="text-center text-sm text-gray-400">{roomId ? 'Joining room…' : 'Creating room…'}</p>
+		{:else if !roomSession.kit && !roomId}
+			<div class="mb-4">
+				<label for="lobby-difficulty" class="mb-1 block text-xs tracking-wide text-gray-500 uppercase">Difficulty</label>
+				<select
+					id="lobby-difficulty"
+					class="w-full cursor-pointer rounded-full border border-gray-700 bg-[#141414] px-4 py-2 text-sm text-[#CDD7E1]"
+					bind:value={lobbyDifficulty}
+					disabled={isBusy}
+				>
+					<option value="easy">Easy</option>
+					<option value="medium">Medium</option>
+					<option value="hard">Hard</option>
+				</select>
+			</div>
 		{/if}
 
 		{#if roomSession.kit}

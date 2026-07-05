@@ -1,11 +1,20 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import ChevronLeftIcon from '$lib/components/icons/ChevronLeftIcon.svelte';
 	import ChevronRightIcon from '$lib/components/icons/ChevronRightIcon.svelte';
+	import ConnectionLabel from '$lib/components/multiplayer/ConnectionLabel.svelte';
 	import ScoringPanel from '$lib/components/scoring/ScoringPanel.svelte';
+	import type { ConfirmRequestOptions } from '$lib/dialog/confirmRequest';
 	import type { ModelLoader } from '$lib/ModelLoader';
 	import { roomSession } from '$lib/multiplayer/roomSession.svelte';
+	import {
+		defaultTabForPreset,
+		getRefereeViewPreset,
+		setRefereeViewPreset,
+		shouldCollapsePanelForPreset,
+		type RefereeViewPreset
+	} from '$lib/refereeView';
 	import { Scene } from '$lib/Scene';
 	import { GENERATOR_VERSION } from '$lib/generatorVersion';
 	import { emptyScenarioScoring, type ScenarioScoring } from '$lib/Scoring';
@@ -25,6 +34,7 @@
 		type ScenarioLinkParseOutcome
 	} from '$lib/scenarioLink';
 	import { emptyUserScenarioScoring, type UserScenarioScoring } from '$lib/userScoring';
+	import type { ScoringTabId } from '$lib/userScoring';
 	import type { ScenarioSnapshot } from '@vex-v5-override/protocol';
 	import { randomMasterSeed } from '$lib/utils';
 
@@ -34,6 +44,8 @@
 		onOpenSettings: () => void;
 		onOpenPauseMenu: () => void;
 		onOpenShareDialog: () => void;
+		requestConfirm: (options: ConfirmRequestOptions) => Promise<boolean>;
+		registerViewPreset?: (handler: (preset: RefereeViewPreset) => void) => void;
 	}
 
 	let {
@@ -41,7 +53,9 @@
 		mode = 'singleplayer',
 		onOpenSettings,
 		onOpenPauseMenu,
-		onOpenShareDialog
+		onOpenShareDialog,
+		requestConfirm,
+		registerViewPreset
 	}: Props = $props();
 
 	const isMultiplayer = $derived(mode === 'multiplayer');
@@ -53,6 +67,7 @@
 	let currentDifficulty = $state<Level>('medium');
 	let currentSeed = $state<number | null>(null);
 	let scenarioRevision = $state(0);
+	let scenarioSyncKey = $state('');
 	let linkMessage = $state<string | null>(null);
 	let isLoading = $state(true);
 	let isReloading = $state(false);
@@ -63,6 +78,21 @@
 	let userScoring = $state<UserScenarioScoring>(emptyUserScenarioScoring());
 	let showAnswer = $state(false);
 	let applyingRemoteState = false;
+	let lastAppliedScoringRevision = $state(-1);
+	let scoringTab = $state<ScoringTabId>(defaultTabForPreset(getRefereeViewPreset()));
+	let viewPreset = $state<RefereeViewPreset>(getRefereeViewPreset());
+
+	const isScoringConnected = $derived(!isMultiplayer || roomSession.connectionState === 'connected');
+
+	const DIFFICULTY_LABELS: Record<Level, string> = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
+
+	function applyViewPreset(preset: RefereeViewPreset) {
+		viewPreset = preset;
+		setRefereeViewPreset(preset);
+		scoringTab = defaultTabForPreset(preset);
+		isPanelCollapsed = shouldCollapsePanelForPreset(preset);
+		scene?.applyViewPreset(preset);
+	}
 
 	function togglePanel() {
 		isPanelCollapsed = !isPanelCollapsed;
@@ -84,41 +114,46 @@
 		return () => observer.disconnect();
 	});
 
+	// Apply server scoring/showAnswer only when room revision advances — not on local edits.
 	$effect(() => {
-		if (!isMultiplayer || !roomSession.roomState || applyingRemoteState) return;
+		if (!isMultiplayer || !roomSession.roomState) return;
 
-		const remoteScoring = roomSession.roomState.scoring;
-		if (JSON.stringify(remoteScoring) !== JSON.stringify(userScoring)) {
-			applyingRemoteState = true;
-			userScoring = $state.snapshot(remoteScoring) as UserScenarioScoring;
-			queueMicrotask(() => {
-				applyingRemoteState = false;
-			});
-		}
+		const revision = roomSession.lastAppliedRevision;
+		if (revision === lastAppliedScoringRevision) return;
 
-		showAnswer = roomSession.roomState.showAnswer ?? false;
+		const state = roomSession.roomState;
+		lastAppliedScoringRevision = revision;
+		applyingRemoteState = true;
+		userScoring = $state.snapshot(state.scoring) as UserScenarioScoring;
+		showAnswer = state.showAnswer ?? false;
+		queueMicrotask(() => {
+			applyingRemoteState = false;
+		});
 	});
 
 	$effect(() => {
-		if (
-			!isMultiplayer ||
-			applyingRemoteState ||
-			roomSession.syncingFromServer ||
-			!roomSession.roomState ||
-			roomSession.connectionState !== 'connected'
-		)
-			return;
-		if (JSON.stringify(userScoring) === JSON.stringify(roomSession.roomState.scoring)) return;
-		void roomSession.updateScoring(userScoring);
+		if (!isMultiplayer || !isScoringConnected) return;
+
+		const local = userScoring;
+		untrack(() => {
+			const remote = roomSession.roomState?.scoring;
+			if (!remote || JSON.stringify(local) === JSON.stringify(remote)) return;
+			roomSession.scheduleScoringUpdate(local);
+		});
 	});
+
+	function scenarioKeyFromState(state: NonNullable<typeof roomSession.roomState>): string {
+		return JSON.stringify(state.scenario);
+	}
 
 	$effect(() => {
 		if (!isMultiplayer || !roomSession.roomState || !scene) return;
 
-		const remoteRevision = roomSession.roomState.revision;
-		if (remoteRevision === scenarioRevision) return;
+		const key = scenarioKeyFromState(roomSession.roomState);
+		if (key === scenarioSyncKey) return;
 
-		scenarioRevision = remoteRevision;
+		scenarioSyncKey = key;
+		scenarioRevision = roomSession.roomState.revision;
 		void reloadFromRoomState(scene, roomSession.roomState);
 	});
 
@@ -174,6 +209,7 @@
 			applyingRemoteState = true;
 			userScoring = $state.snapshot(state.scoring) as UserScenarioScoring;
 			showAnswer = state.showAnswer ?? false;
+			lastAppliedScoringRevision = state.revision;
 			queueMicrotask(() => {
 				applyingRemoteState = false;
 			});
@@ -212,22 +248,55 @@
 		}
 	}
 
+	async function regenerateMultiplayerScenario(difficulty: Level) {
+		if (!scene || !isScoringConnected) return;
+
+		const scenario = scenarioToSnapshot(generateScenario({ difficulty, masterSeed: randomMasterSeed() }), difficulty);
+		await roomSession.regenerateScenario(scenario);
+	}
+
+	function handleMultiplayerDifficultyChange(next: Level): Promise<boolean> {
+		return requestConfirm({
+			title: 'Change difficulty',
+			message: `Change difficulty to ${DIFFICULTY_LABELS[next]} and generate a new scenario for everyone in this room? Scoring will reset.`,
+			confirmLabel: 'Continue',
+			onConfirm: async () => {
+				currentDifficulty = next;
+				await executeMultiplayerReload(next);
+			}
+		});
+	}
+
+	async function executeMultiplayerReload(difficulty: Level) {
+		isReloading = true;
+		linkMessage = null;
+		try {
+			await regenerateMultiplayerScenario(difficulty);
+		} catch (error) {
+			console.error('Failed to regenerate scenario:', error);
+			throw error;
+		} finally {
+			isReloading = false;
+		}
+	}
+
 	async function reloadScenario() {
 		if (isReloading || !scene) return;
+
+		if (isMultiplayer) {
+			await requestConfirm({
+				title: 'New scenario',
+				message: 'Generate a new scenario for everyone in this room? Scoring will reset.',
+				confirmLabel: 'Generate',
+				onConfirm: () => executeMultiplayerReload(currentDifficulty)
+			});
+			return;
+		}
 
 		isReloading = true;
 		linkMessage = null;
 
 		try {
-			if (isMultiplayer) {
-				const scenario = scenarioToSnapshot(
-					generateScenario({ difficulty: currentDifficulty, masterSeed: randomMasterSeed() }),
-					currentDifficulty
-				);
-				await roomSession.regenerateScenario(scenario);
-				return;
-			}
-
 			scene.clearScoringObjects();
 			await generateNewScenario(scene, { ok: false, error: 'missing_token' });
 		} catch (error) {
@@ -261,9 +330,14 @@
 	}
 
 	async function handleShowAnswerChange(next: boolean) {
+		if (applyingRemoteState) return;
 		showAnswer = next;
-		if (isMultiplayer) {
-			await roomSession.setShowAnswer(next);
+		if (isMultiplayer && isScoringConnected) {
+			try {
+				await roomSession.setShowAnswer(next);
+			} catch {
+				// roomSession sets error
+			}
 		}
 	}
 
@@ -276,8 +350,10 @@
 				await activeScene.initialize();
 				scene = activeScene;
 				activeScene.resize();
+				applyViewPreset(viewPreset);
 
 				if (isMultiplayer && roomSession.roomState) {
+					scenarioSyncKey = scenarioKeyFromState(roomSession.roomState);
 					scenarioRevision = roomSession.roomState.revision;
 					await reloadFromRoomState(activeScene, roomSession.roomState);
 				} else {
@@ -293,16 +369,24 @@
 		};
 		init();
 		focusGameRoot();
+		registerViewPreset?.(applyViewPreset);
 	});
 </script>
 
-<div
-	bind:this={gameRoot}
-	tabindex="-1"
-	class="pointer-events-none relative z-10 flex h-screen w-screen outline-none"
->
+<div bind:this={gameRoot} tabindex="-1" class="pointer-events-none relative z-10 flex h-screen w-screen outline-none">
 	<div class="relative h-full min-w-0 flex-1 overflow-hidden">
 		<div bind:this={sceneContainer} class="pointer-events-auto absolute inset-0" onpointerdown={focusGameRoot}></div>
+
+		{#if isMultiplayer}
+			<ConnectionLabel />
+		{/if}
+
+		{#if isMultiplayer && roomSession.error}
+			<div class="pointer-events-auto absolute top-3 right-3 z-40 max-w-xs rounded-lg bg-red-950 px-3 py-2 text-xs text-red-200">
+				{roomSession.error}
+				<button type="button" class="ml-2 underline" onclick={() => roomSession.clearError()}>Dismiss</button>
+			</div>
+		{/if}
 
 		{#if isPanelCollapsed}
 			<button
@@ -331,19 +415,22 @@
 		aria-hidden={isPanelCollapsed}
 	>
 		<div class="flex h-full w-full flex-col">
-			{#key isMultiplayer ? scenarioRevision : currentSeed}
+			{#key isMultiplayer ? scenarioSyncKey : currentSeed}
 				<ScoringPanel
 					bind:userScoring
 					bind:currentDifficulty
 					bind:showAnswer
+					bind:activeTab={scoringTab}
 					{actualCounts}
 					{midfieldCounts}
 					currentSeed={isMultiplayer ? scenarioRevision : currentSeed}
-					{linkMessage}
+					linkMessage={roomSession.error ? null : linkMessage}
 					{isLoading}
 					{isReloading}
-					allowReload={true}
-					allowDifficultyChange={true}
+					allowReload={isScoringConnected}
+					allowDifficultyChange={isScoringConnected}
+					readOnly={!isScoringConnected}
+					onDifficultyChange={isMultiplayer ? handleMultiplayerDifficultyChange : undefined}
 					copyLinkDisabled={isMultiplayer ? !roomSession.roomId : currentSeed === null}
 					shareRoomMode={isMultiplayer}
 					onShowAnswerChange={handleShowAnswerChange}

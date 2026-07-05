@@ -24,6 +24,7 @@ import type { GraphicProfile } from './graphicProfile';
 import { preloadGameAssets } from './preloadGameAssets';
 import { FT } from './utils';
 import type { ToggleId } from './structure/QuadrantDefinition';
+import { CAMERA_PRESETS, getRefereeViewPreset, type RefereeViewPreset } from './refereeView';
 
 export class Scene {
 	private renderer: Renderer;
@@ -81,7 +82,7 @@ export class Scene {
 
 		const maxDim = 3600;
 
-		this.renderer.setCameraView(new THREE.Vector3(0, 1800, 3600), new THREE.Vector3(0, 0, 0));
+		this.applyViewPreset(getRefereeViewPreset());
 
 		this.renderer.camera.near = maxDim * 0.01;
 		this.renderer.camera.far = maxDim * 10;
@@ -264,5 +265,10 @@ export class Scene {
 
 	public getScoringObjects(): GameObject[] {
 		return [...this.scoringObjects];
+	}
+
+	public applyViewPreset(preset: RefereeViewPreset): void {
+		const { position, target } = CAMERA_PRESETS[preset];
+		this.renderer.setCameraView(position, target);
 	}
 }

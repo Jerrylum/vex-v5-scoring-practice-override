@@ -29,15 +29,18 @@
 		isReloading: boolean;
 		allowReload?: boolean;
 		allowDifficultyChange?: boolean;
+		readOnly?: boolean;
 		copyLinkDisabled?: boolean;
 		shareRoomMode?: boolean;
 		showAnswer?: boolean;
+		activeTab?: ScoringTabId;
 		onShowAnswerChange?: (value: boolean) => void;
 		onReload: () => void;
 		onCopyLink: () => void;
 		onGoToSimulator: () => void;
 		onOpenSettings: () => void;
 		onOpenPauseMenu: () => void;
+		onDifficultyChange?: (next: Level) => boolean | Promise<boolean>;
 	}
 
 	let {
@@ -51,15 +54,18 @@
 		isReloading,
 		allowReload = true,
 		allowDifficultyChange = true,
+		readOnly = false,
 		copyLinkDisabled = false,
 		shareRoomMode = false,
 		showAnswer = $bindable(false),
+		activeTab = $bindable('overview' as ScoringTabId),
 		onShowAnswerChange,
 		onReload,
 		onCopyLink,
 		onGoToSimulator,
 		onOpenSettings,
-		onOpenPauseMenu
+		onOpenPauseMenu,
+		onDifficultyChange
 	}: Props = $props();
 
 	const userPoints = $derived(calculateUserAlliancePoints(userScoring));
@@ -70,8 +76,6 @@
 		activeTab = tab;
 	}
 
-	let activeTab = $state<ScoringTabId>('overview');
-
 	function toggleAnswer() {
 		const next = !showAnswer;
 		showAnswer = next;
@@ -80,6 +84,20 @@
 
 	function updateQuadrant(key: (typeof QUADRANT_TAB_CONFIG)[number]['key'], quadrant: UserScenarioScoring[typeof key]) {
 		userScoring = { ...userScoring, [key]: quadrant };
+	}
+
+	async function handleDifficultyChange(event: Event) {
+		const select = event.currentTarget as HTMLSelectElement;
+		const next = select.value as Level;
+		if (next === currentDifficulty) return;
+
+		if (onDifficultyChange) {
+			const accepted = await onDifficultyChange(next);
+			if (!accepted) select.value = currentDifficulty;
+			return;
+		}
+
+		currentDifficulty = next;
 	}
 </script>
 
@@ -128,8 +146,9 @@
 				<select
 					id="difficulty"
 					class="w-full cursor-pointer appearance-none rounded-full border border-[#dde7ee] bg-transparent py-2 pr-9 pl-3 text-sm text-[#CDD7E1] outline-none focus:border-[#007fff] disabled:cursor-not-allowed disabled:opacity-50"
-					bind:value={currentDifficulty}
-					disabled={!allowDifficultyChange || isReloading || isLoading}
+					value={currentDifficulty}
+					onchange={handleDifficultyChange}
+					disabled={!allowDifficultyChange || isReloading || isLoading || readOnly}
 				>
 					<option value="easy">Easy</option>
 					<option value="medium">Medium</option>
@@ -165,7 +184,7 @@
 		{#if activeTab === 'overview'}
 			<OverviewTab {userScoring} />
 		{:else if activeTab === 'midfield'}
-			<MidfieldTab {userScoring} {actualCounts} {midfieldCounts} {showAnswer} onUpdate={(next) => (userScoring = next)} />
+			<MidfieldTab {userScoring} {actualCounts} {midfieldCounts} {showAnswer} {readOnly} onUpdate={(next) => (userScoring = next)} />
 		{:else}
 			{#each QUADRANT_TAB_CONFIG as config (config.tabId)}
 				{#if activeTab === config.tabId}
@@ -175,6 +194,7 @@
 						quadrant={userScoring[config.key]}
 						{actualCounts}
 						{showAnswer}
+						{readOnly}
 						onUpdate={(next) => updateQuadrant(config.key, next)}
 					/>
 				{/if}
@@ -213,8 +233,9 @@
 		<div class="flex gap-2">
 			<button
 				type="button"
-				class="flex-1 cursor-pointer rounded-full bg-[#32383E] px-3 py-2 text-sm font-semibold text-[#CDD7E1] transition-colors hover:bg-[#3d444b]"
+				class="flex-1 cursor-pointer rounded-full bg-[#32383E] px-3 py-2 text-sm font-semibold text-[#CDD7E1] transition-colors hover:bg-[#3d444b] disabled:cursor-not-allowed disabled:opacity-50"
 				onclick={toggleAnswer}
+				disabled={readOnly}
 			>
 				{showAnswer ? 'Hide' : 'Check'}
 			</button>

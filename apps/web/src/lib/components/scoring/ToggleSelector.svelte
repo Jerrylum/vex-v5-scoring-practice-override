@@ -7,9 +7,10 @@
 		onChange: (color: ToggleColor) => void;
 		correctValue?: ToggleColor | null;
 		showAnswer?: boolean;
+		disabled?: boolean;
 	}
 
-	let { value, onChange, correctValue = null, showAnswer = false }: Props = $props();
+	let { value, onChange, correctValue = null, showAnswer = false, disabled = false }: Props = $props();
 
 	const colors: ToggleColor[] = ['red', 'yellow', 'blue'];
 	const isCorrect = $derived(correctValue !== null && value === correctValue);
@@ -24,7 +25,10 @@
 					<button
 						type="button"
 						class="cursor-pointer rounded p-1 transition-transform hover:scale-110"
+						class:cursor-not-allowed={disabled}
+						class:opacity-50={disabled}
 						onclick={() => onChange(color)}
+						disabled={disabled}
 						aria-label="Set toggle to {color}"
 						aria-pressed={value === color}
 					>

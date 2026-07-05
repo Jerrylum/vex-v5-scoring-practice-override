@@ -18,26 +18,53 @@
 
 	let { open, title, message = '', confirmLabel, cancelLabel, tone = 'danger', busy = false, onConfirm, onCancel }: Props = $props();
 
+	let confirmButton = $state<HTMLButtonElement | null>(null);
+
+	$effect(() => {
+		if (!open || busy) return;
+		queueMicrotask(() => confirmButton?.focus());
+	});
+
 	// Unique id so multiple confirm dialogs never share an aria-labelledby target.
 	const titleId = `confirm-dialog-title-${crypto.randomUUID()}`;
 
+	const buttonDisabledClass = 'disabled:cursor-not-allowed disabled:opacity-50';
+
 	const CONFIRM_TONE_CLASS: Record<ConfirmTone, string> = {
-		danger: 'border-red-600 bg-red-600 text-white hover:border-red-700 hover:bg-red-700 hover:text-white',
-		primary: 'btn-primary'
+		danger:
+			'cursor-pointer rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 ' +
+			buttonDisabledClass,
+		primary:
+			'cursor-pointer rounded-full bg-[#007fff] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0066cc] ' +
+			buttonDisabledClass
 	};
 </script>
 
 <Dialog {open} onClose={onCancel} ariaLabelledBy={titleId} contentClass="max-w-md">
-	<div class="space-y-3">
-		<h3 id={titleId} class="text-base font-semibold">{title}</h3>
+	<div class="space-y-4">
+		<h2 id={titleId} class="text-lg font-bold text-white">{title}</h2>
 		{#if message}
-			<p class="text-sm whitespace-pre-line text-gray-600">{message}</p>
+			<p class="text-sm whitespace-pre-line text-gray-400">{message}</p>
 		{/if}
 		<div class="flex items-center justify-end gap-2 pt-1">
-			<button type="button" class="btn" disabled={busy} onclick={onCancel}>
+			<button
+				type="button"
+				class={[
+					'cursor-pointer rounded-full bg-[#32383E] px-4 py-2 text-sm text-[#CDD7E1] hover:bg-[#3d444b]',
+					buttonDisabledClass
+				]}
+				disabled={busy}
+				onclick={onCancel}
+			>
 				{cancelLabel ?? 'Cancel'}
 			</button>
-			<button type="button" class={['btn', CONFIRM_TONE_CLASS[tone]]} disabled={busy} onclick={onConfirm}>
+			<button
+				type="button"
+				bind:this={confirmButton}
+				class={CONFIRM_TONE_CLASS[tone]}
+				disabled={busy}
+				onclick={onConfirm}
+			>
 				{confirmLabel ?? 'Confirm'}
 			</button>
 		</div>

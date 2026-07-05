@@ -10,10 +10,11 @@
 		quadrant: UserQuadrantScoring;
 		actualCounts: ScenarioScoring;
 		showAnswer: boolean;
+		readOnly?: boolean;
 		onUpdate: (quadrant: UserQuadrantScoring) => void;
 	}
 
-	let { label, quadrantKey, quadrant, actualCounts, showAnswer, onUpdate }: Props = $props();
+	let { label, quadrantKey, quadrant, actualCounts, showAnswer, readOnly = false, onUpdate }: Props = $props();
 
 	const actualPinCounts = $derived(getActualQuadrantCounts(actualCounts, quadrantKey));
 	const actualToggle = $derived(getActualToggleColor(actualCounts, quadrantKey));
@@ -39,6 +40,7 @@
 		onDecrement={() => decrement('red')}
 		correctValue={actualPinCounts?.red ?? null}
 		{showAnswer}
+		disabled={readOnly}
 	/>
 	<CounterCard
 		title="Blue Pins"
@@ -48,6 +50,7 @@
 		onDecrement={() => decrement('blue')}
 		correctValue={actualPinCounts?.blue ?? null}
 		{showAnswer}
+		disabled={readOnly}
 	/>
 	<CounterCard
 		title="Yellow Pins"
@@ -57,11 +60,13 @@
 		onDecrement={() => decrement('yellow')}
 		correctValue={actualPinCounts?.yellow ?? null}
 		{showAnswer}
+		disabled={readOnly}
 	/>
 	<ToggleSelector
 		value={quadrant.toggleColor}
 		onChange={(toggleColor) => onUpdate({ ...quadrant, toggleColor })}
 		correctValue={actualToggle}
 		{showAnswer}
+		disabled={readOnly}
 	/>
 </div>

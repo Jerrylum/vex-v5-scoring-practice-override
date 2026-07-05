@@ -302,6 +302,8 @@ export class WebsocketClient<TClientRouter extends AnyRouter> {
 				},
 				this.reconnectDelay * Math.pow(2, this.reconnectAttempts)
 			);
+		} else {
+			this.connectionState = 'error';
 		}
 		this.options.onClosed(event.code, event.reason);
 	}

@@ -11,9 +11,20 @@
 		correctValue?: number | null;
 		showAnswer?: boolean;
 		compact?: boolean;
+		disabled?: boolean;
 	}
 
-	let { title, color, value, onIncrement, onDecrement, correctValue = null, showAnswer = false, compact = false }: Props = $props();
+	let {
+		title,
+		color,
+		value,
+		onIncrement,
+		onDecrement,
+		correctValue = null,
+		showAnswer = false,
+		compact = false,
+		disabled = false
+	}: Props = $props();
 
 	const borderClass = $derived(color === 'red' ? 'border-red-700' : color === 'blue' ? 'border-blue-700' : 'border-yellow-700');
 
@@ -55,7 +66,10 @@
 					class:h-6={compact}
 					class:w-6={compact}
 					class:text-sm={compact}
+					class:cursor-not-allowed={disabled}
+					class:opacity-50={disabled}
 					onclick={onDecrement}
+					disabled={disabled}
 					aria-label="Decrease {title}"
 				>
 					−
@@ -78,7 +92,10 @@
 					class:h-6={compact}
 					class:w-6={compact}
 					class:text-sm={compact}
+					class:cursor-not-allowed={disabled}
+					class:opacity-50={disabled}
 					onclick={onIncrement}
+					disabled={disabled}
 					aria-label="Increase {title}"
 				>
 					+

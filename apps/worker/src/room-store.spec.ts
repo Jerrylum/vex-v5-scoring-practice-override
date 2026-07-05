@@ -78,6 +78,18 @@ describe('room-store', () => {
 		).toThrow(RoomAlreadyExistsError);
 	});
 
+	it('does not duplicate participants when the same client joins again', () => {
+		const data = emptyStore();
+		const created = createRoom(data, roomId, clientOneId, 'Mac-7f3a', {
+			scenario: sampleScenario
+		});
+		data.meta = created.meta;
+		data.state = created.state;
+
+		const joined = joinRoom(data, clientOneId, 'Mac-7f3a', {});
+		expect(joined.state.participants).toHaveLength(1);
+	});
+
 	it('joins a room with a new client each time', () => {
 		const data = emptyStore();
 		const created = createRoom(data, roomId, clientOneId, 'Mac-7f3a', {

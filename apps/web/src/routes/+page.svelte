@@ -2,8 +2,10 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import PauseMenuDialog from '$lib/components/PauseMenuDialog.svelte';
+	import ConfirmDialog from '$lib/components/dialog/ConfirmDialog.svelte';
 	import RoomShareDialog from '$lib/components/RoomShareDialog.svelte';
 	import SettingsDialog from '$lib/components/SettingsDialog.svelte';
+	import type { ConfirmRequestOptions } from '$lib/dialog/confirmRequest';
 	import GameScreen from '$lib/screens/GameScreen.svelte';
 	import LoadingScreen from '$lib/screens/LoadingScreen.svelte';
 	import LobbyScreen from '$lib/screens/LobbyScreen.svelte';
@@ -17,28 +19,101 @@
 
 	type AppScreen = 'loading' | 'menu' | 'lobby' | 'game';
 	type GameMode = 'singleplayer' | 'multiplayer';
+	type AppDialog =
+		| 'settings'
+		| 'pause'
+		| 'share'
+		| { type: 'confirm'; content: Pick<ConfirmRequestOptions, 'title' | 'message' | 'confirmLabel'> };
 
 	let screen = $state<AppScreen>('loading');
 	let gameMode = $state<GameMode>('singleplayer');
 	let lobbyRoomId = $state<string | null>(null);
 	let loadingMessage = $state('Loading scene...');
-	let settingsOpen = $state(false);
-	let pauseMenuOpen = $state(false);
-	let shareDialogOpen = $state(false);
+	let openDialog = $state<AppDialog | null>(null);
+	let confirmBusy = $state(false);
+	let confirmResolver = $state<((accepted: boolean) => void) | null>(null);
+	let confirmOnConfirm = $state<(() => void | Promise<void>) | null>(null);
 	let graphicProfileSetting = $state<GraphicProfileSetting>('auto');
 	let modelLoader = $state<ModelLoader | null>(null);
 	let initError = $state<string | null>(null);
+	let viewPresetHandler = $state<((preset: import('$lib/refereeView').RefereeViewPreset) => void) | null>(null);
 
 	function openSettings() {
-		settingsOpen = true;
+		dismissConfirm(false);
+		openDialog = 'settings';
 	}
 
 	function openPauseMenu() {
-		pauseMenuOpen = true;
+		dismissConfirm(false);
+		openDialog = 'pause';
 	}
 
 	function openShareDialog() {
-		shareDialogOpen = true;
+		dismissConfirm(false);
+		openDialog = 'share';
+	}
+
+	function isConfirmDialog(dialog: AppDialog | null): dialog is Extract<AppDialog, { type: 'confirm' }> {
+		return typeof dialog === 'object' && dialog !== null && dialog.type === 'confirm';
+	}
+
+	function dismissConfirm(accepted: boolean) {
+		confirmResolver?.(accepted);
+		confirmResolver = null;
+		confirmOnConfirm = null;
+		if (isConfirmDialog(openDialog)) {
+			openDialog = null;
+		}
+	}
+
+	function requestConfirm(options: ConfirmRequestOptions): Promise<boolean> {
+		dismissConfirm(false);
+		return new Promise((resolve) => {
+			confirmResolver = resolve;
+			confirmOnConfirm = options.onConfirm;
+			openDialog = {
+				type: 'confirm',
+				content: {
+					title: options.title,
+					message: options.message,
+					confirmLabel: options.confirmLabel
+				}
+			};
+		});
+	}
+
+	async function handleConfirmDialogConfirm() {
+		if (!isConfirmDialog(openDialog)) return;
+
+		const onConfirm = confirmOnConfirm;
+		const resolve = confirmResolver;
+		confirmOnConfirm = null;
+		confirmResolver = null;
+
+		confirmBusy = true;
+		try {
+			await onConfirm?.();
+			openDialog = null;
+			resolve?.(true);
+		} catch (error) {
+			console.error('Confirm action failed:', error);
+			openDialog = null;
+			resolve?.(false);
+		} finally {
+			confirmBusy = false;
+		}
+	}
+
+	function handleConfirmDialogCancel() {
+		dismissConfirm(false);
+	}
+
+	function closeDialog() {
+		if (isConfirmDialog(openDialog)) {
+			dismissConfirm(false);
+			return;
+		}
+		openDialog = null;
 	}
 
 	function handleProfileChange(setting: GraphicProfileSetting) {
@@ -62,12 +137,12 @@
 		}
 		gameMode = 'singleplayer';
 		lobbyRoomId = null;
-		shareDialogOpen = false;
+		closeDialog();
 		screen = 'menu';
 	}
 
 	function handleBackToMenu() {
-		pauseMenuOpen = false;
+		closeDialog();
 		goToMenu();
 	}
 
@@ -80,26 +155,14 @@
 		if (!browser) return;
 
 		const inGame = screen === 'game';
-		const shareOpen = shareDialogOpen;
-		const settings = settingsOpen;
-		const pauseOpen = pauseMenuOpen;
+		const activeDialog = openDialog;
 
 		function handleEscape(event: KeyboardEvent) {
 			if (event.key !== 'Escape') return;
 
-			if (shareOpen) {
+			if (activeDialog) {
 				event.preventDefault();
-				shareDialogOpen = false;
-				return;
-			}
-			if (settings) {
-				event.preventDefault();
-				settingsOpen = false;
-				return;
-			}
-			if (pauseOpen) {
-				event.preventDefault();
-				pauseMenuOpen = false;
+				closeDialog();
 				return;
 			}
 			if (inGame) {
@@ -166,24 +229,44 @@
 			onOpenSettings={openSettings}
 			onOpenPauseMenu={openPauseMenu}
 			onOpenShareDialog={openShareDialog}
+			{requestConfirm}
+			registerViewPreset={(handler) => {
+				viewPresetHandler = handler;
+			}}
 		/>
 	{/if}
 </div>
 
 <PauseMenuDialog
-	open={pauseMenuOpen}
+	open={openDialog === 'pause'}
 	mode={gameMode}
-	onClose={() => (pauseMenuOpen = false)}
+	onClose={closeDialog}
 	onOpenSettings={openSettings}
 	onOpenShareDialog={gameMode === 'multiplayer' ? openShareDialog : undefined}
 	onBackToMenu={handleBackToMenu}
+	onViewPresetChange={(preset) => {
+		viewPresetHandler?.(preset);
+	}}
 />
 
-<RoomShareDialog open={shareDialogOpen} onClose={() => (shareDialogOpen = false)} />
+<RoomShareDialog open={openDialog === 'share'} onClose={closeDialog} />
 
 <SettingsDialog
-	open={settingsOpen}
+	open={openDialog === 'settings'}
 	profileSetting={graphicProfileSetting}
-	onClose={() => (settingsOpen = false)}
+	onClose={closeDialog}
 	onChange={handleProfileChange}
 />
+
+{#if isConfirmDialog(openDialog)}
+	<ConfirmDialog
+		open={true}
+		title={openDialog.content.title}
+		message={openDialog.content.message}
+		confirmLabel={openDialog.content.confirmLabel}
+		tone="primary"
+		busy={confirmBusy}
+		onConfirm={handleConfirmDialogConfirm}
+		onCancel={handleConfirmDialogCancel}
+	/>
+{/if}
