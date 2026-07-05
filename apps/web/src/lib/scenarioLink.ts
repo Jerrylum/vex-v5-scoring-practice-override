@@ -1,11 +1,7 @@
-import type { Level } from './Generator';
+import type { Level, ScenarioLinkParams } from '@vex-v5-override/protocol';
 import { GENERATOR_VERSION } from './generatorVersion';
 
-export interface ScenarioLinkParams {
-	generatorVersion: number;
-	masterSeed: number;
-	difficulty: Level;
-}
+export type { ScenarioLinkParams };
 
 export type ScenarioLinkParseError = 'missing_token' | 'invalid_token' | 'invalid_difficulty' | 'version_mismatch';
 

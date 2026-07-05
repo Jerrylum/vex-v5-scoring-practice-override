@@ -27,9 +27,9 @@ export class Renderer {
 	private pmremGenerator: THREE.PMREMGenerator;
 	private readonly graphicProfile: GraphicProfile;
 
-	constructor(containerId: string, graphicProfile: GraphicProfile) {
+	constructor(container: HTMLElement, graphicProfile: GraphicProfile) {
 		this.graphicProfile = graphicProfile;
-		this.container = document.getElementById(containerId)!;
+		this.container = container;
 
 		this.scene = new THREE.Scene();
 		this.scene.background = new THREE.Color(0x333333);

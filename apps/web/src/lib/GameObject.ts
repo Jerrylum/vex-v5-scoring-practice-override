@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import { ROBOT_FLOOR_Y } from './fieldConstants';
 import { CLAWBOT_LOCAL_FOOTPRINT } from './generated/clawbotFootprint';
 import { ROBOT_MAX_SIZE } from './utils';
+import type { PinType } from '@vex-v5-override/protocol';
 
-export type PinType = 'redBlue' | 'redYellow' | 'blueYellow' | 'yellowYellow';
+export type { PinType };
 
 export const pinModelPath: Record<PinType, string> = {
 	redBlue: '/V5RC-Override-H2H-_-RedBluePin.glb',

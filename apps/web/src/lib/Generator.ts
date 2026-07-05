@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { mulberry32 } from './utils';
+import type { Level } from '@vex-v5-override/protocol';
 
-export type Level = 'easy' | 'medium' | 'hard';
+export type { Level };
 
 export type RobotsCaseType = 'none' | 'clawbotOnField';
 export type MidfieldCaseType = 'oneYY' | 'shortStack' | 'tallStack';

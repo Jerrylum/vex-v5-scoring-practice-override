@@ -1,22 +1,14 @@
 import type { QuadrantId } from './structure/QuadrantDefinition';
 import type { MidfieldCounts, PinHalfCounts, QuadrantGoalPairScoring, ScenarioScoring, ToggleColor } from './Scoring';
 import { emptyPinHalfCounts } from './Scoring';
+import {
+	emptyUserScenarioScoring,
+	type UserQuadrantScoring,
+	type UserScenarioScoring
+} from '@vex-v5-override/protocol';
 
-export interface UserQuadrantScoring {
-	red: number;
-	blue: number;
-	yellow: number;
-	toggleColor: ToggleColor;
-}
-
-export interface UserScenarioScoring {
-	redQuadrantOne: UserQuadrantScoring;
-	redQuadrantTwo: UserQuadrantScoring;
-	blueQuadrantOne: UserQuadrantScoring;
-	blueQuadrantTwo: UserQuadrantScoring;
-	midfieldGoal: PinHalfCounts;
-	midfieldRobots: MidfieldCounts;
-}
+export type { UserQuadrantScoring, UserScenarioScoring };
+export { emptyUserScenarioScoring };
 
 export type ScoringTabId = 'overview' | 'redQ1' | 'redQ2' | 'blueQ1' | 'blueQ2' | 'midfield';
 
@@ -49,21 +41,6 @@ export const PIN_HALF_POINTS = {
 } as const;
 
 export const MIDFIELD_ROBOT_POINTS = 8;
-
-function emptyUserQuadrantScoring(): UserQuadrantScoring {
-	return { red: 0, blue: 0, yellow: 0, toggleColor: 'yellow' };
-}
-
-export function emptyUserScenarioScoring(): UserScenarioScoring {
-	return {
-		redQuadrantOne: emptyUserQuadrantScoring(),
-		redQuadrantTwo: emptyUserQuadrantScoring(),
-		blueQuadrantOne: emptyUserQuadrantScoring(),
-		blueQuadrantTwo: emptyUserQuadrantScoring(),
-		midfieldGoal: emptyPinHalfCounts(),
-		midfieldRobots: { red: 0, blue: 0 }
-	};
-}
 
 /** Visible pin-half totals for a quadrant (what referees count on the panel). */
 export function aggregateQuadrantVisible(quadrant: QuadrantGoalPairScoring): PinHalfCounts {

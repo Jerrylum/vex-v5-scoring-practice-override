@@ -2,7 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import ScoringPanel from '$lib/components/scoring/ScoringPanel.svelte';
-	import type { Scene } from '$lib/Scene';
+	import type { ModelLoader } from '$lib/ModelLoader';
+	import { Scene } from '$lib/Scene';
 	import { GENERATOR_VERSION } from '$lib/generatorVersion';
 	import { emptyScenarioScoring, type ScenarioScoring } from '$lib/Scoring';
 	import type { Scenario } from '$lib/Scenario';
@@ -17,11 +18,14 @@
 	import { randomMasterSeed } from '$lib/utils';
 
 	interface Props {
-		scene: Scene;
+		modelLoader: ModelLoader;
 		onOpenSettings: () => void;
 	}
 
-	let { scene, onOpenSettings }: Props = $props();
+	let { modelLoader, onOpenSettings }: Props = $props();
+
+	let scene = $state<Scene | null>(null);
+	let sceneContainer = $state<HTMLElement | null>(null);
 
 	let currentDifficulty = $state<Level>('medium');
 	let currentSeed = $state<number | null>(null);
@@ -36,10 +40,19 @@
 
 	function togglePanel() {
 		isPanelCollapsed = !isPanelCollapsed;
-		setTimeout(() => {
-			scene.resize();
-		}, 350);
 	}
+
+	$effect(() => {
+		const container = sceneContainer;
+		const activeScene = scene;
+		if (!container || !activeScene) return;
+
+		const observer = new ResizeObserver(() => {
+			activeScene.resize();
+		});
+		observer.observe(container);
+		return () => observer.disconnect();
+	});
 
 	function resolveGenerateOptions(linkOutcome: ScenarioLinkParseOutcome): GenerateScenarioOptions {
 		if (linkOutcome.ok) {
@@ -61,9 +74,9 @@
 		};
 	}
 
-	async function applyScenario(scenario: Scenario) {
+	async function applyScenario(activeScene: Scene, scenario: Scenario) {
 		for (const structure of scenario.structures) {
-			await structure.visualize(scene);
+			await structure.visualize(activeScene);
 		}
 
 		actualCounts = scenario.calculateScoring();
@@ -87,17 +100,17 @@
 		goto(path, { replaceState: true, keepFocus: true, noScroll: true });
 	}
 
-	async function generateNewScenario(linkOutcome: ScenarioLinkParseOutcome) {
+	async function generateNewScenario(activeScene: Scene, linkOutcome: ScenarioLinkParseOutcome) {
 		const options = resolveGenerateOptions(linkOutcome);
 
 		try {
 			const scenario = generateScenario(options);
-			await applyScenario(scenario);
+			await applyScenario(activeScene, scenario);
 		} catch (error) {
 			if (error instanceof GeneratorVersionMismatchError) {
 				linkMessage = `This link uses an older scenario format (v${GENERATOR_VERSION} required). Starting a new scenario.`;
 				const scenario = generateScenario({ difficulty: currentDifficulty, masterSeed: randomMasterSeed() });
-				await applyScenario(scenario);
+				await applyScenario(activeScene, scenario);
 				return;
 			}
 			throw error;
@@ -105,14 +118,14 @@
 	}
 
 	async function reloadScenario() {
-		if (isReloading) return;
+		if (isReloading || !scene) return;
 
 		isReloading = true;
 		linkMessage = null;
 
 		try {
 			scene.clearScoringObjects();
-			await generateNewScenario({ ok: false, error: 'missing_token' });
+			await generateNewScenario(scene, { ok: false, error: 'missing_token' });
 		} catch (error) {
 			console.error('Failed to reload scenario:', error);
 		} finally {
@@ -140,9 +153,16 @@
 
 	onMount(() => {
 		const init = async () => {
+			if (!sceneContainer) return;
+
 			try {
+				const activeScene = new Scene(sceneContainer, modelLoader);
+				await activeScene.initialize();
+				scene = activeScene;
+				activeScene.resize();
+
 				const linkOutcome = parseScenarioLink(new URLSearchParams(window.location.search));
-				await generateNewScenario(linkOutcome);
+				await generateNewScenario(activeScene, linkOutcome);
 				isLoading = false;
 			} catch (error) {
 				console.error('Failed to load scenario:', error);
@@ -154,7 +174,9 @@
 </script>
 
 <div class="pointer-events-none relative z-10 flex h-screen w-screen">
-	<div class="relative h-full flex-1 overflow-hidden">
+	<div class="relative h-full min-w-0 flex-1 overflow-hidden">
+		<div bind:this={sceneContainer} class="pointer-events-auto absolute inset-0"></div>
+
 		{#if isPanelCollapsed}
 			<button
 				class="pointer-events-auto absolute right-4 bottom-4 z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-[#007fff] text-white shadow-lg hover:bg-[#0066cc]"
@@ -179,18 +201,11 @@
 	</div>
 
 	<div
-		class="pointer-events-auto relative flex h-full flex-col overflow-hidden bg-[#0a0a0a] text-white shadow-2xl transition-all duration-300 max-md:absolute max-md:inset-0 max-md:z-40"
-		class:w-[440px]={!isPanelCollapsed}
-		class:w-12={isPanelCollapsed}
-		class:max-md:w-full={!isPanelCollapsed}
-		class:max-md:hidden={isPanelCollapsed}
+		class="pointer-events-auto relative flex h-full w-[440px] flex-col overflow-hidden bg-[#0a0a0a] text-white shadow-2xl max-md:absolute max-md:inset-0 max-md:z-40 max-md:w-full"
+		class:hidden={isPanelCollapsed}
+		aria-hidden={isPanelCollapsed}
 	>
-		<div
-			class="flex h-full w-full flex-col"
-			class:invisible={isPanelCollapsed}
-			class:pointer-events-none={isPanelCollapsed}
-			aria-hidden={isPanelCollapsed}
-		>
+		<div class="flex h-full w-full flex-col">
 			{#key currentSeed}
 				<ScoringPanel
 					bind:userScoring

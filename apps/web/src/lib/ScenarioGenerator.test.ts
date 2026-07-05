@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ScenarioSnapshotSchema } from '@vex-v5-override/protocol';
 import type { Level } from './Generator';
 import { generateScenario, GeneratorVersionMismatchError, scenarioToSnapshot } from './ScenarioGenerator';
 import { buildScenarioShareUrl, decodeScenarioToken, encodeScenarioToken, parseScenarioLink } from './scenarioLink';
@@ -42,6 +43,13 @@ describe('generateScenario determinism', () => {
 
 	it('throws on generator version mismatch', () => {
 		expect(() => generateScenario({ difficulty: 'medium', masterSeed: 1, generatorVersion: 0 })).toThrow(GeneratorVersionMismatchError);
+	});
+
+	it('snapshot output matches protocol ScenarioSnapshotSchema', () => {
+		for (const difficulty of LEVELS) {
+			const snapshot = scenarioToSnapshot(generateScenario({ difficulty, masterSeed: 482910374 }), difficulty);
+			expect(ScenarioSnapshotSchema.parse(snapshot)).toEqual(snapshot);
+		}
 	});
 });
 

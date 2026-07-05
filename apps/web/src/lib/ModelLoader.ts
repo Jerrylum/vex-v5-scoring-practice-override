@@ -28,7 +28,7 @@ export class ModelLoader {
 	private gltfLoader: GLTFLoader | null = null;
 	private onProgress: LoadingProgressCallback | null = null;
 
-	constructor(private readonly graphicProfile: GraphicProfile) {}
+	constructor(public readonly graphicProfile: GraphicProfile) {}
 
 	public setProgressCallback(callback: LoadingProgressCallback | null): void {
 		this.onProgress = callback;

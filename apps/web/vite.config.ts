@@ -5,9 +5,9 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit(), devtoolsJson()],
-	server: {
+		server: {
 		fs: {
-			allow: ['static']
+			allow: ['static', '../..']
 		}
 	}
 });

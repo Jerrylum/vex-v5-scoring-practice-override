@@ -21,6 +21,7 @@ import {
 import { Renderer } from './Renderer';
 import { collectDevMemorySnapshot } from './devMemoryMonitor';
 import type { GraphicProfile } from './graphicProfile';
+import { preloadGameAssets } from './preloadGameAssets';
 import { FT } from './utils';
 import type { ToggleId } from './structure/QuadrantDefinition';
 
@@ -43,14 +44,16 @@ export class Scene {
 	};
 	private cupCounter = 0;
 	private robotCounter = 0;
+	private loadingProgressCallback: LoadingProgressCallback | null = null;
 
-	constructor(containerId: string, graphicProfile: GraphicProfile) {
-		this.graphicProfile = graphicProfile;
-		this.renderer = new Renderer(containerId, graphicProfile);
-		this.modelLoader = new ModelLoader(graphicProfile);
+	constructor(container: HTMLElement, modelLoader: ModelLoader) {
+		this.graphicProfile = modelLoader.graphicProfile;
+		this.renderer = new Renderer(container, this.graphicProfile);
+		this.modelLoader = modelLoader;
 	}
 
 	public setLoadingProgressCallback(callback: LoadingProgressCallback | null): void {
+		this.loadingProgressCallback = callback;
 		this.modelLoader.setProgressCallback(callback);
 	}
 
@@ -88,20 +91,7 @@ export class Scene {
 	}
 
 	private async preloadGameObjects(): Promise<void> {
-		await Promise.all([
-			this.modelLoader.loadModel(FIELD_PERIMETER_MODEL, 'FieldPerimeter'),
-			this.modelLoader.loadModel(FIELD_ELEMENTS_MODEL, 'FieldElements'),
-			this.modelLoader.loadModel(TOGGLE_MODEL, 'Toggle'),
-			this.modelLoader.loadModel(CUP_MODEL, 'Cup'),
-			this.modelLoader.loadModel(LICENSE_PLATE_MODEL, 'LicensePlate'),
-			...Object.entries(pinModelPath).map(([pinType, path]) => this.modelLoader.loadModel(path, pinDisplayName(pinType as PinType)))
-		]);
-
-		if (this.graphicProfile !== 'performance') {
-			await this.modelLoader.loadModel(CLAWBOT_MODEL, 'Clawbot');
-		}
-
-		console.log('All game object models preloaded');
+		await preloadGameAssets(this.modelLoader, this.loadingProgressCallback ?? undefined);
 	}
 
 	public async addField(position: THREE.Vector3 = new THREE.Vector3(0, 0, 0)): Promise<Field> {

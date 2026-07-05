@@ -5,8 +5,9 @@
 	import LoadingScreen from '$lib/screens/LoadingScreen.svelte';
 	import MenuScreen from '$lib/screens/MenuScreen.svelte';
 	import { loadGraphicProfileSetting, resolveGraphicProfile, type GraphicProfileSetting } from '$lib/graphicProfile';
+	import { ModelLoader } from '$lib/ModelLoader';
+	import { preloadGameAssets } from '$lib/preloadGameAssets';
 	import { parseScenarioLink } from '$lib/scenarioLink';
-	import { Scene } from '$lib/Scene';
 
 	type AppScreen = 'loading' | 'menu' | 'game';
 
@@ -14,7 +15,7 @@
 	let loadingMessage = $state('Loading scene...');
 	let settingsOpen = $state(false);
 	let graphicProfileSetting = $state<GraphicProfileSetting>('auto');
-	let currentScene = $state<Scene | null>(null);
+	let modelLoader = $state<ModelLoader | null>(null);
 	let initError = $state<string | null>(null);
 
 	function openSettings() {
@@ -27,7 +28,6 @@
 
 	function startSingleplayer() {
 		screen = 'game';
-		currentScene?.resize();
 	}
 
 	onMount(() => {
@@ -35,12 +35,11 @@
 			try {
 				graphicProfileSetting = loadGraphicProfileSetting();
 				const profile = resolveGraphicProfile(graphicProfileSetting);
-				const scene = new Scene('container', profile);
-				scene.setLoadingProgressCallback((message) => {
+				const loader = new ModelLoader(profile);
+				await preloadGameAssets(loader, (message) => {
 					loadingMessage = message;
 				});
-				await scene.initialize();
-				currentScene = scene;
+				modelLoader = loader;
 
 				const linkOutcome = parseScenarioLink(new URLSearchParams(window.location.search));
 				screen = linkOutcome.ok ? 'game' : 'menu';
@@ -59,14 +58,12 @@
 </svelte:head>
 
 <div class="relative h-screen w-screen overflow-hidden bg-black">
-	<div id="container" class="absolute inset-0" class:invisible={screen !== 'game'} class:pointer-events-none={screen !== 'game'}></div>
-
 	{#if screen === 'loading'}
 		<LoadingScreen message={loadingMessage} />
 	{:else if screen === 'menu'}
 		<MenuScreen onSingleplayer={startSingleplayer} onSettings={openSettings} />
-	{:else if screen === 'game' && currentScene}
-		<GameScreen scene={currentScene} onOpenSettings={openSettings} />
+	{:else if screen === 'game' && modelLoader}
+		<GameScreen {modelLoader} onOpenSettings={openSettings} />
 	{/if}
 </div>
 

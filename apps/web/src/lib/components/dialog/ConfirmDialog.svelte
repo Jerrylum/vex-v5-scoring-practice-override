@@ -1,6 +1,4 @@
 <script lang="ts">
-	import '@src/i18n/i18n.svelte';
-	import { _ } from 'svelte-i18n';
 	import Dialog from './Dialog.svelte';
 
 	type ConfirmTone = 'danger' | 'primary';
@@ -37,10 +35,10 @@
 		{/if}
 		<div class="flex items-center justify-end gap-2 pt-1">
 			<button type="button" class="btn" disabled={busy} onclick={onCancel}>
-				{cancelLabel ?? $_('common.actions.cancel')}
+				{cancelLabel ?? 'Cancel'}
 			</button>
 			<button type="button" class={['btn', CONFIRM_TONE_CLASS[tone]]} disabled={busy} onclick={onConfirm}>
-				{confirmLabel ?? $_('common.actions.confirm')}
+				{confirmLabel ?? 'Confirm'}
 			</button>
 		</div>
 	</div>
