@@ -1,10 +1,11 @@
 <script lang="ts">
 	interface Props {
 		onSingleplayer: () => void;
+		onMultiplayer: () => void;
 		onSettings: () => void;
 	}
 
-	let { onSingleplayer, onSettings }: Props = $props();
+	let { onSingleplayer, onMultiplayer, onSettings }: Props = $props();
 </script>
 
 <div class="relative z-10 flex h-screen w-screen flex-col items-center justify-center bg-black px-6 text-[#CDD7E1]">
@@ -21,11 +22,10 @@
 		</button>
 		<button
 			type="button"
-			class="cursor-not-allowed rounded-full border border-gray-700 bg-[#141414] px-6 py-3 text-sm font-semibold text-gray-500"
-			disabled
-			title="Coming soon"
+			class="cursor-pointer rounded-full border border-[#007fff] bg-[#141414] px-6 py-3 text-sm font-semibold text-[#CDD7E1] transition-colors hover:bg-[#1a1a1a]"
+			onclick={onMultiplayer}
 		>
-			Multiplayer (coming soon)
+			Multiplayer
 		</button>
 		<button
 			type="button"

@@ -12,8 +12,7 @@
 		"format": "prettier --write . --ignore-path ../../.prettierignore",
 		"lint": "prettier --check . --ignore-path ../../.prettierignore && eslint .",
 		"test": "vitest run",
-		"generate:clawbot-footprint": "bun scripts/generate-clawbot-footprint.ts",
-		"deploy": "wrangler pages deploy --project-name vex-v5-scoring-practice-override --branch main build"
+		"generate:clawbot-footprint": "bun scripts/generate-clawbot-footprint.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",
@@ -50,6 +49,8 @@
 	},
 	"dependencies": {
 		"@vex-v5-override/protocol": "workspace:*",
+		"@vex-v5-override/worker": "workspace:*",
+		"@vex-v5-override/wrpc": "workspace:*",
 		"polygon-clipping": "^0.15.7",
 		"svelte-portal": "^2.2.1",
 		"three": "^0.181.0"

@@ -26,6 +26,11 @@
 		linkMessage: string | null;
 		isLoading: boolean;
 		isReloading: boolean;
+		allowReload?: boolean;
+		allowDifficultyChange?: boolean;
+		copyLinkDisabled?: boolean;
+		showAnswer?: boolean;
+		onShowAnswerChange?: (value: boolean) => void;
 		onReload: () => void;
 		onCopyLink: () => void;
 		onGoToSimulator: () => void;
@@ -41,14 +46,16 @@
 		linkMessage,
 		isLoading,
 		isReloading,
+		allowReload = true,
+		allowDifficultyChange = true,
+		copyLinkDisabled = false,
+		showAnswer = $bindable(false),
+		onShowAnswerChange,
 		onReload,
 		onCopyLink,
 		onGoToSimulator,
 		onOpenSettings
 	}: Props = $props();
-
-	let activeTab = $state<ScoringTabId>('overview');
-	let showAnswer = $state(false);
 
 	const userPoints = $derived(calculateUserAlliancePoints(userScoring));
 	const actualPoints = $derived(calculateActualAlliancePoints(actualCounts, midfieldCounts));
@@ -58,8 +65,12 @@
 		activeTab = tab;
 	}
 
+	let activeTab = $state<ScoringTabId>('overview');
+
 	function toggleAnswer() {
-		showAnswer = !showAnswer;
+		const next = !showAnswer;
+		showAnswer = next;
+		onShowAnswerChange?.(next);
 	}
 
 	function updateQuadrant(key: (typeof QUADRANT_TAB_CONFIG)[number]['key'], quadrant: UserScenarioScoring[typeof key]) {
@@ -76,7 +87,7 @@
 					type="button"
 					class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-[#dde7ee] bg-transparent text-[#007fff] transition-colors hover:bg-[#141414] disabled:cursor-not-allowed disabled:opacity-50"
 					onclick={onCopyLink}
-					disabled={currentSeed === null || isLoading || isReloading}
+					disabled={copyLinkDisabled || isLoading || isReloading}
 					aria-label="Copy link"
 					title={linkMessage ?? 'Copy link'}
 				>
@@ -104,7 +115,7 @@
 					id="difficulty"
 					class="w-full cursor-pointer appearance-none rounded-full border border-[#dde7ee] bg-transparent py-2 pr-9 pl-3 text-sm text-[#CDD7E1] outline-none focus:border-[#007fff] disabled:cursor-not-allowed disabled:opacity-50"
 					bind:value={currentDifficulty}
-					disabled={isReloading || isLoading}
+					disabled={!allowDifficultyChange || isReloading || isLoading}
 				>
 					<option value="easy">Easy</option>
 					<option value="medium">Medium</option>
@@ -127,7 +138,7 @@
 				type="button"
 				class="cursor-pointer rounded-full bg-[#32383E] px-4 py-2 text-sm text-[#CDD7E1] transition-colors hover:bg-[#3d444b] disabled:cursor-not-allowed disabled:opacity-50"
 				onclick={onReload}
-				disabled={isReloading || isLoading}
+				disabled={!allowReload || isReloading || isLoading}
 			>
 				{isReloading ? '...' : 'New'}
 			</button>

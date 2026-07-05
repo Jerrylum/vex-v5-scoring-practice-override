@@ -1,0 +1,37 @@
+{
+	"name": "@vex-v5-override/worker",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./src/server-router": "./src/server-router.ts"
+	},
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev",
+		"cf-typegen": "wrangler types",
+		"format": "prettier --write .",
+		"check": "tsc --noEmit",
+		"lint": "prettier --check . && eslint .",
+		"test:unit": "vitest",
+		"test": "bun run test:unit -- --run"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20250726.0",
+		"@eslint/compat": "^1.2.5",
+		"@eslint/js": "^9.18.0",
+		"eslint": "^9.32.0",
+		"eslint-config-prettier": "^10.1.8",
+		"prettier": "^3.6.2",
+		"typescript": "^5.5.2",
+		"typescript-eslint": "^8.20.0",
+		"vitest": "^3.2.3",
+		"wrangler": "^4.45.0"
+	},
+	"dependencies": {
+		"@vex-v5-override/protocol": "workspace:*",
+		"@vex-v5-override/wrpc": "workspace:*",
+		"zod": "^4.0.15"
+	}
+}

@@ -1,0 +1,115 @@
+import {
+	RegenerateScenarioInputSchema,
+	RoomStateSchema,
+	SetPhaseInputSchema,
+	SetShowAnswerInputSchema,
+	UpdateScoringInputSchema
+} from '@vex-v5-override/protocol';
+import type { WRPCRootObject } from '@vex-v5-override/wrpc/server';
+import { WRPCError } from '@vex-v5-override/wrpc/server';
+import { NotHostError, RoomNotFoundError, regenerateScenario, resetScoring, setPhase, setShowAnswer, updateScoring } from '../room-store';
+import type { ServerContext } from '../server-router';
+import { broadcastRoomState } from './broadcast';
+
+export function buildRoomRoute(w: WRPCRootObject<object, ServerContext, Record<string, never>>) {
+	return {
+		updateScoring: w.procedure
+			.input(UpdateScoringInputSchema)
+			.output(RoomStateSchema)
+			.mutation(async ({ ctx, input, session }) => {
+				try {
+					const next = updateScoring(ctx.store, input);
+					ctx.store.state = next;
+					await ctx.persist();
+					broadcastRoomState(ctx.network, next);
+					return next;
+				} catch (error) {
+					if (error instanceof RoomNotFoundError) {
+						throw new WRPCError(error.message, 'NOT_FOUND');
+					}
+					throw error;
+				}
+			}),
+
+		regenerateScenario: w.procedure
+			.input(RegenerateScenarioInputSchema)
+			.output(RoomStateSchema)
+			.mutation(async ({ ctx, input, session }) => {
+				try {
+					const next = regenerateScenario(ctx.store, session.currentClient.clientId, input);
+					ctx.store.state = next;
+					await ctx.persist();
+					broadcastRoomState(ctx.network, next);
+					return next;
+				} catch (error) {
+					if (error instanceof RoomNotFoundError) {
+						throw new WRPCError(error.message, 'NOT_FOUND');
+					}
+					if (error instanceof NotHostError) {
+						throw new WRPCError(error.message, 'FORBIDDEN');
+					}
+					throw error;
+				}
+			}),
+
+		resetScoring: w.procedure.output(RoomStateSchema).mutation(async ({ ctx, session }) => {
+			try {
+				const next = resetScoring(ctx.store, session.currentClient.clientId);
+				ctx.store.state = next;
+				await ctx.persist();
+				broadcastRoomState(ctx.network, next);
+				return next;
+			} catch (error) {
+				if (error instanceof RoomNotFoundError) {
+					throw new WRPCError(error.message, 'NOT_FOUND');
+				}
+				if (error instanceof NotHostError) {
+					throw new WRPCError(error.message, 'FORBIDDEN');
+				}
+				throw error;
+			}
+		}),
+
+		setShowAnswer: w.procedure
+			.input(SetShowAnswerInputSchema)
+			.output(RoomStateSchema)
+			.mutation(async ({ ctx, input, session }) => {
+				try {
+					const next = setShowAnswer(ctx.store, session.currentClient.clientId, input.showAnswer);
+					ctx.store.state = next;
+					await ctx.persist();
+					broadcastRoomState(ctx.network, next);
+					return next;
+				} catch (error) {
+					if (error instanceof RoomNotFoundError) {
+						throw new WRPCError(error.message, 'NOT_FOUND');
+					}
+					if (error instanceof NotHostError) {
+						throw new WRPCError(error.message, 'FORBIDDEN');
+					}
+					throw error;
+				}
+			}),
+
+		setPhase: w.procedure
+			.input(SetPhaseInputSchema)
+			.output(RoomStateSchema)
+			.mutation(async ({ ctx, input, session }) => {
+				try {
+					const next = setPhase(ctx.store, session.currentClient.clientId, input.phase);
+					ctx.store.state = next;
+					await ctx.persist();
+					broadcastRoomState(ctx.network, next);
+					return next;
+				} catch (error) {
+					if (error instanceof RoomNotFoundError) {
+						throw new WRPCError(error.message, 'NOT_FOUND');
+					}
+					if (error instanceof NotHostError) {
+						throw new WRPCError(error.message, 'FORBIDDEN');
+					}
+					throw error;
+				}
+			})
+	};
+}

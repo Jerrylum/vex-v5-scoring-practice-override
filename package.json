@@ -4,10 +4,13 @@
 	"workspaces": ["apps/*", "packages/*"],
 	"scripts": {
 		"dev": "bun run --filter @vex-v5-override/web dev",
+		"dev:worker": "bun run --filter @vex-v5-override/worker dev",
+		"dev:all": "bun run --filter @vex-v5-override/web dev & bun run --filter @vex-v5-override/worker dev",
 		"build": "bun run --filter @vex-v5-override/web build",
+		"deploy": "bun run build && bun run --filter @vex-v5-override/worker deploy",
 		"check": "bun run --filter '*' check",
 		"test": "bun run --filter '*' test",
 		"lint": "bun run --filter '*' lint",
-		"format": "prettier --write \"apps/web\" \"packages/protocol\" --ignore-path .prettierignore"
+		"format": "prettier --write \"apps/web\" \"apps/worker\" \"packages/protocol\" \"packages/wrpc\" --ignore-path .prettierignore"
 	}
 }

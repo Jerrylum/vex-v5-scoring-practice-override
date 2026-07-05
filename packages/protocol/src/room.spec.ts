@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { SNAPSHOT_VERSION } from './constants';
-import { JoiningKitSchema, RoomStateSchema, parseJoiningKit, parseRoomState } from './room';
+import {
+	ConnectionIntentionSchema,
+	CreateRoomInputSchema,
+	JoinRoomInputSchema,
+	JoiningKitSchema,
+	RegenerateScenarioInputSchema,
+	RoomStateSchema,
+	parseConnectionIntention,
+	parseJoiningKit,
+	parseRoomState
+} from './room';
 import { emptyUserScenarioScoring } from './scoring';
 
 const sampleScenario = {
@@ -76,5 +86,30 @@ describe('RoomStateSchema', () => {
 
 	it('rejects missing required fields', () => {
 		expect(() => RoomStateSchema.parse({ revision: 0 })).toThrow();
+	});
+});
+
+describe('ConnectionIntentionSchema', () => {
+	it('parses ws query params shape', () => {
+		const intention = {
+			roomId: '550e8400-e29b-41d4-a716-446655440010',
+			clientId: '550e8400-e29b-41d4-a716-446655440001',
+			deviceId: '550e8400-e29b-41d4-a716-446655440002',
+			displayName: 'Ref 1',
+			action: 'create' as const
+		};
+		expect(ConnectionIntentionSchema.parse(intention)).toEqual(intention);
+		expect(parseConnectionIntention(intention)).toEqual(intention);
+	});
+});
+
+describe('room RPC inputs', () => {
+	it('parses create, join, and regenerate inputs', () => {
+		expect(CreateRoomInputSchema.parse({ scenario: sampleScenario, displayName: 'Host' })).toEqual({
+			scenario: sampleScenario,
+			displayName: 'Host'
+		});
+		expect(JoinRoomInputSchema.parse({ displayName: 'Guest' })).toEqual({ displayName: 'Guest' });
+		expect(RegenerateScenarioInputSchema.parse({ scenario: sampleScenario })).toEqual({ scenario: sampleScenario });
 	});
 });

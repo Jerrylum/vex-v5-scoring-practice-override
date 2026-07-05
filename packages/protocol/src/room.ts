@@ -50,3 +50,45 @@ export function parseRoomState(input: unknown): RoomState {
 export function parseJoiningKit(input: unknown): JoiningKit {
 	return JoiningKitSchema.parse(input);
 }
+
+export const ConnectionIntentionSchema = z.object({
+	roomId: z.uuid(),
+	clientId: z.uuid(),
+	deviceId: z.uuid(),
+	displayName: z.string().min(1).max(32),
+	action: RoomActionSchema
+});
+export type ConnectionIntention = z.infer<typeof ConnectionIntentionSchema>;
+
+export const CreateRoomInputSchema = z.object({
+	scenario: ScenarioSnapshotSchema,
+	displayName: z.string().min(1).max(32)
+});
+export type CreateRoomInput = z.infer<typeof CreateRoomInputSchema>;
+
+export const JoinRoomInputSchema = z.object({
+	displayName: z.string().min(1).max(32)
+});
+export type JoinRoomInput = z.infer<typeof JoinRoomInputSchema>;
+
+export const UpdateScoringInputSchema = UserScenarioScoringSchema;
+export type UpdateScoringInput = z.infer<typeof UpdateScoringInputSchema>;
+
+export const RegenerateScenarioInputSchema = z.object({
+	scenario: ScenarioSnapshotSchema
+});
+export type RegenerateScenarioInput = z.infer<typeof RegenerateScenarioInputSchema>;
+
+export const SetShowAnswerInputSchema = z.object({
+	showAnswer: z.boolean()
+});
+export type SetShowAnswerInput = z.infer<typeof SetShowAnswerInputSchema>;
+
+export const SetPhaseInputSchema = z.object({
+	phase: RoomPhaseSchema
+});
+export type SetPhaseInput = z.infer<typeof SetPhaseInputSchema>;
+
+export function parseConnectionIntention(input: unknown): ConnectionIntention {
+	return ConnectionIntentionSchema.parse(input);
+}

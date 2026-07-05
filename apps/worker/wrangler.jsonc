@@ -1,0 +1,31 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "vex-v5-scoring-practice-override",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-07-26",
+	"compatibility_flags": ["nodejs_compat"],
+	"assets": {
+		"directory": "../web/build",
+		"not_found_handling": "404-page",
+		"html_handling": "auto-trailing-slash",
+		"run_worker_first": ["/ws", "/join"],
+		"binding": "ASSETS"
+	},
+	"durable_objects": {
+		"bindings": [
+			{
+				"class_name": "RoomDurableObject",
+				"name": "ROOM_SERVER"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"new_sqlite_classes": ["RoomDurableObject"],
+			"tag": "v1"
+		}
+	],
+	"observability": {
+		"enabled": true
+	}
+}

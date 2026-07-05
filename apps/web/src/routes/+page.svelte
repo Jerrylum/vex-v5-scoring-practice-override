@@ -3,15 +3,23 @@
 	import SettingsDialog from '$lib/components/SettingsDialog.svelte';
 	import GameScreen from '$lib/screens/GameScreen.svelte';
 	import LoadingScreen from '$lib/screens/LoadingScreen.svelte';
+	import LobbyScreen from '$lib/screens/LobbyScreen.svelte';
 	import MenuScreen from '$lib/screens/MenuScreen.svelte';
 	import { loadGraphicProfileSetting, resolveGraphicProfile, type GraphicProfileSetting } from '$lib/graphicProfile';
 	import { ModelLoader } from '$lib/ModelLoader';
+	import { parseRoomIdFromUrl } from '$lib/multiplayer/identity';
+	import { roomSession } from '$lib/multiplayer/roomSession.svelte';
 	import { preloadGameAssets } from '$lib/preloadGameAssets';
 	import { parseScenarioLink } from '$lib/scenarioLink';
 
-	type AppScreen = 'loading' | 'menu' | 'game';
+	type AppScreen = 'loading' | 'menu' | 'lobby' | 'game';
+	type GameMode = 'singleplayer' | 'multiplayer';
+	type LobbyMode = 'create' | 'join';
 
 	let screen = $state<AppScreen>('loading');
+	let gameMode = $state<GameMode>('singleplayer');
+	let lobbyMode = $state<LobbyMode>('create');
+	let lobbyRoomId = $state<string | null>(null);
 	let loadingMessage = $state('Loading scene...');
 	let settingsOpen = $state(false);
 	let graphicProfileSetting = $state<GraphicProfileSetting>('auto');
@@ -27,6 +35,27 @@
 	}
 
 	function startSingleplayer() {
+		gameMode = 'singleplayer';
+		screen = 'game';
+	}
+
+	function startMultiplayer() {
+		gameMode = 'multiplayer';
+		lobbyMode = 'create';
+		lobbyRoomId = null;
+		screen = 'lobby';
+	}
+
+	function goToMenu() {
+		if (gameMode === 'multiplayer') {
+			roomSession.disconnect();
+		}
+		gameMode = 'singleplayer';
+		screen = 'menu';
+	}
+
+	function startMultiplayerGame() {
+		gameMode = 'multiplayer';
 		screen = 'game';
 	}
 
@@ -41,8 +70,21 @@
 				});
 				modelLoader = loader;
 
-				const linkOutcome = parseScenarioLink(new URLSearchParams(window.location.search));
-				screen = linkOutcome.ok ? 'game' : 'menu';
+				const searchParams = new URLSearchParams(window.location.search);
+				const linkOutcome = parseScenarioLink(searchParams);
+				const roomId = parseRoomIdFromUrl(searchParams);
+
+				if (linkOutcome.ok) {
+					gameMode = 'singleplayer';
+					screen = 'game';
+				} else if (roomId) {
+					gameMode = 'multiplayer';
+					lobbyMode = 'join';
+					lobbyRoomId = roomId;
+					screen = 'lobby';
+				} else {
+					screen = 'menu';
+				}
 			} catch (error) {
 				console.error('Failed to initialize scene:', error);
 				initError = 'Failed to load scene';
@@ -61,9 +103,11 @@
 	{#if screen === 'loading'}
 		<LoadingScreen message={loadingMessage} />
 	{:else if screen === 'menu'}
-		<MenuScreen onSingleplayer={startSingleplayer} onSettings={openSettings} />
+		<MenuScreen onSingleplayer={startSingleplayer} onMultiplayer={startMultiplayer} onSettings={openSettings} />
+	{:else if screen === 'lobby'}
+		<LobbyScreen mode={lobbyMode} roomId={lobbyRoomId} onBack={goToMenu} onStartGame={startMultiplayerGame} />
 	{:else if screen === 'game' && modelLoader}
-		<GameScreen {modelLoader} onOpenSettings={openSettings} />
+		<GameScreen {modelLoader} mode={gameMode} onOpenSettings={openSettings} />
 	{/if}
 </div>
 

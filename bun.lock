@@ -9,6 +9,8 @@
       "name": "@vex-v5-override/web",
       "dependencies": {
         "@vex-v5-override/protocol": "workspace:*",
+        "@vex-v5-override/worker": "workspace:*",
+        "@vex-v5-override/wrpc": "workspace:*",
         "polygon-clipping": "^0.15.7",
         "svelte-portal": "^2.2.1",
         "three": "^0.181.0",
@@ -47,8 +49,46 @@
         "typescript": "^5",
       },
     },
+    "apps/worker": {
+      "name": "@vex-v5-override/worker",
+      "version": "0.0.0",
+      "dependencies": {
+        "@vex-v5-override/protocol": "workspace:*",
+        "@vex-v5-override/wrpc": "workspace:*",
+        "zod": "^4.0.15",
+      },
+      "devDependencies": {
+        "@cloudflare/workers-types": "^4.20250726.0",
+        "@eslint/compat": "^1.2.5",
+        "@eslint/js": "^9.18.0",
+        "eslint": "^9.32.0",
+        "eslint-config-prettier": "^10.1.8",
+        "prettier": "^3.6.2",
+        "typescript": "^5.5.2",
+        "typescript-eslint": "^8.20.0",
+        "vitest": "^3.2.3",
+        "wrangler": "^4.45.0",
+      },
+    },
     "packages/protocol": {
       "name": "@vex-v5-override/protocol",
+      "version": "0.0.0",
+      "dependencies": {
+        "zod": "^4.0.15",
+      },
+      "devDependencies": {
+        "@eslint/compat": "^1.2.5",
+        "@eslint/js": "^9.18.0",
+        "eslint": "^9.32.0",
+        "eslint-config-prettier": "^10.1.8",
+        "prettier": "^3.6.2",
+        "typescript": "^5.5.2",
+        "typescript-eslint": "^8.20.0",
+        "vitest": "^3.2.3",
+      },
+    },
+    "packages/wrpc": {
+      "name": "@vex-v5-override/wrpc",
       "version": "0.0.0",
       "dependencies": {
         "zod": "^4.0.15",
@@ -85,6 +125,8 @@
     "@cloudflare/workerd-linux-arm64": ["@cloudflare/workerd-linux-arm64@1.20251125.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-EiRn+jrNaIs1QveabXGHFoyn3s/l02ui6Yp3nssyNhtmtgviddtt8KObBfM1jQKjXTpZlunhwdN4Bxf4jhlOMw=="],
 
     "@cloudflare/workerd-windows-64": ["@cloudflare/workerd-windows-64@1.20251125.0", "", { "os": "win32", "cpu": "x64" }, "sha512-6fdIsSeu65g++k8Y2DKzNKs0BkoU+KKI6GAAVBOLh2vvVWWnCP1OgMdVb5JAdjDrjDT5i0GSQu0bgQ8fPsW6zw=="],
+
+    "@cloudflare/workers-types": ["@cloudflare/workers-types@4.20260702.1", "", {}, "sha512-mOhf5TUEB1m2vPrxtqoIGfz0fUC9xyxRDx5gWHy5s+OCo6dcV+g7wI1R7gYCMFohhqF/2y2xeKVwMwCJjfn/WA=="],
 
     "@cspotcode/source-map-support": ["@cspotcode/source-map-support@0.8.1", "", { "dependencies": { "@jridgewell/trace-mapping": "0.3.9" } }, "sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw=="],
 
@@ -369,6 +411,10 @@
     "@vex-v5-override/protocol": ["@vex-v5-override/protocol@workspace:packages/protocol"],
 
     "@vex-v5-override/web": ["@vex-v5-override/web@workspace:apps/web"],
+
+    "@vex-v5-override/worker": ["@vex-v5-override/worker@workspace:apps/worker"],
+
+    "@vex-v5-override/wrpc": ["@vex-v5-override/wrpc@workspace:packages/wrpc"],
 
     "@vitest/browser": ["@vitest/browser@3.2.4", "", { "dependencies": { "@testing-library/dom": "^10.4.0", "@testing-library/user-event": "^14.6.1", "@vitest/mocker": "3.2.4", "@vitest/utils": "3.2.4", "magic-string": "^0.30.17", "sirv": "^3.0.1", "tinyrainbow": "^2.0.0", "ws": "^8.18.2" }, "peerDependencies": { "playwright": "*", "vitest": "3.2.4", "webdriverio": "^7.0.0 || ^8.0.0 || ^9.0.0" }, "optionalPeers": ["playwright", "webdriverio"] }, "sha512-tJxiPrWmzH8a+w9nLKlQMzAKX/7VjFs50MWgcAj7p9XQ7AQ9/35fByFYptgPELyLw+0aixTnC4pUWV+APcZ/kw=="],
 
