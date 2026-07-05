@@ -8,6 +8,6 @@
 		"check": "bun run --filter '*' check",
 		"test": "bun run --filter '*' test",
 		"lint": "bun run --filter '*' lint",
-		"format": "bun run --filter '*' format"
+		"format": "prettier --write \"apps/web\" \"packages/protocol\" --ignore-path .prettierignore"
 	}
 }

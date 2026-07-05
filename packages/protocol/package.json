@@ -7,9 +7,9 @@
 		".": "./src/index.ts"
 	},
 	"scripts": {
-		"format": "prettier --write .",
+		"format": "prettier --write . --ignore-path ../../.prettierignore",
 		"check": "tsc --noEmit",
-		"lint": "prettier --check . && eslint .",
+		"lint": "prettier --check . --ignore-path ../../.prettierignore && eslint .",
 		"test:unit": "vitest",
 		"test": "bun run test:unit -- --run"
 	},
