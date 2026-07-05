@@ -114,7 +114,7 @@
 		return () => observer.disconnect();
 	});
 
-	// Apply server scoring/showAnswer only when room revision advances — not on local edits.
+	// Inbound: drive userScoring from room revision, not from diff vs local state (that reverted edits).
 	$effect(() => {
 		if (!isMultiplayer || !roomSession.roomState) return;
 
@@ -131,6 +131,8 @@
 		});
 	});
 
+	// Outbound: react only to local userScoring changes. untrack() avoids subscribing to roomState
+	// (which would re-run while syncingFromServer and skip sending after the flag clears).
 	$effect(() => {
 		if (!isMultiplayer || !isScoringConnected) return;
 
@@ -146,6 +148,7 @@
 		return JSON.stringify(state.scenario);
 	}
 
+	// Reload 3D scene only when scenario payload changes — not on every room revision (scoring-only updates).
 	$effect(() => {
 		if (!isMultiplayer || !roomSession.roomState || !scene) return;
 

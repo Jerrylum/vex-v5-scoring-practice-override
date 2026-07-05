@@ -1,12 +1,18 @@
-const CLIENT_NAME_SUFFIX_LENGTH = 4;
+import { generateUUID } from '../utils';
 
-export function generateUUID(): string {
-	return crypto.randomUUID();
-}
+export { generateUUID };
+
+const CLIENT_NAME_SUFFIX_LENGTH = 4;
 
 function randomSuffix(length: number): string {
 	const bytes = new Uint8Array(Math.ceil(length / 2));
-	crypto.getRandomValues(bytes);
+	if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+		crypto.getRandomValues(bytes);
+	} else {
+		for (let i = 0; i < bytes.length; i++) {
+			bytes[i] = Math.floor(Math.random() * 256);
+		}
+	}
 	return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0'))
 		.join('')
 		.slice(0, length);

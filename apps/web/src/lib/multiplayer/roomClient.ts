@@ -1,4 +1,4 @@
-import { ConnectionCloseCode, createClientManager, type ClientOptions, type ConnectionState } from '@vex-v5-override/wrpc/client';
+import { createClientManager, type ClientOptions, type ConnectionState } from '@vex-v5-override/wrpc/client';
 import type { ServerRouter } from '@vex-v5-override/worker/src/server-router';
 import { clientRouter, type ClientRouter } from './client-router';
 import { generateClientName, generateUUID } from './identity';
@@ -49,13 +49,7 @@ function createClientOptions(): ClientOptions<ClientRouter> {
 		action: pending.action,
 		onContext: async () => ({}),
 		onOpen: () => {},
-		onClosed: (code) => {
-			if (code === ConnectionCloseCode.KICKED) {
-				import('./roomSession.svelte').then(({ roomSession }) => {
-					roomSession.setError('You were removed from the room.');
-				});
-			}
-		},
+		onClosed: () => {},
 		onConnectionStateChange: (state) => {
 			connectionState = state;
 			onConnectionStateChange?.(state);
@@ -63,17 +57,13 @@ function createClientOptions(): ClientOptions<ClientRouter> {
 	};
 }
 
+/** Params for the next WRPC client; read when createClientOptions runs inside getClient(). */
 let pendingConnection: RoomConnectionParams | null = null;
 
 export function resetRoomClient(): void {
 	clientManager.resetClient();
 	pendingConnection = null;
 	connectionState = 'offline';
-}
-
-export function prepareConnection(params: RoomConnectionParams): void {
-	pendingConnection = params;
-	clientManager.resetClient();
 }
 
 export function getRoomRpcClient(): ReturnType<typeof clientManager.getClient>[1] {
@@ -89,8 +79,10 @@ export function createConnectionParams(roomId: string, action: RoomConnectionAct
 	};
 }
 
-export async function connectRoom(params: RoomConnectionParams): Promise<RoomConnectionParams> {
-	prepareConnection(params);
+/** Configure and instantiate the WRPC client. WebSocket open happens on the first RPC call. */
+export function connectRoom(params: RoomConnectionParams): RoomConnectionParams {
+	pendingConnection = params;
+	clientManager.resetClient();
 	clientManager.getClient();
 	return params;
 }

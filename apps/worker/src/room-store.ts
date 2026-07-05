@@ -92,6 +92,7 @@ export function joinRoom(data: RoomStoreData, clientId: string, displayName: str
 	}
 
 	if (data.state.participants.some((participant) => participant.clientId === clientId)) {
+		// Re-join after reconnect (or duplicate handshake) must not append the same client twice.
 		return { state: data.state, kit: buildJoiningKit(data.meta, data.state) };
 	}
 

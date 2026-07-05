@@ -13,20 +13,36 @@ import {
 import { buildRoomUrl, clearRoomUrl, generateUUID, setRoomUrl } from './identity';
 import { createDebouncedScoringUpdate, shouldApplyRemoteRevision } from './roomSync';
 
+/**
+ * Client-side multiplayer session: room kit, connection state, and sync to the worker.
+ *
+ * wrpc only reconnects the WebSocket — it does not re-run joinRoom or refresh room state.
+ * The server also removes a client from participants on disconnect. Recovery is handled here:
+ * - resyncAfterReconnect: had a kit, transport dropped, wrpc came back → joinRoom for fresh snapshot
+ * - completePendingHandshake: join/create never finished (e.g. server down on first load) → retry mutation
+ */
 class RoomSessionStore {
 	kit = $state<JoiningKit | null>(null);
 	connectionState = $state<ConnectionState>('offline');
 	error = $state<string | null>(null);
 	clientId = $state<string | null>(null);
+	/** True while applying a server broadcast; blocks outbound scoring to avoid echo loops. */
 	syncingFromServer = $state(false);
 	lastAppliedRevision = $state(-1);
 
 	private wasConnectedOnce = false;
+	/** Set on reconnecting; cleared when resyncAfterReconnect runs on the next connected. */
 	private pendingRoomResync = false;
+	/**
+	 * Connection params from an in-flight join/create. Kept when the handshake mutation fails so
+	 * completePendingHandshake can retry after wrpc connects — roomId getter is null until kit exists.
+	 */
 	private pendingConnectionParams: RoomConnectionParams | null = null;
 	private pendingCreateScenario: ScenarioSnapshot | null = null;
+	/** Prevents completePendingHandshake from racing joinRoom/createRoom on the same connected event. */
 	private handshakeInFlight = false;
 	private resyncInFlight = false;
+	/** User clicked Leave; suppresses auto re-join if wrpc fires connected during teardown. */
 	private intentionalDisconnect = false;
 	private scoringUpdate = createDebouncedScoringUpdate((scoring) => this.updateScoring(scoring));
 
@@ -35,6 +51,7 @@ class RoomSessionStore {
 			this.connectionState = state;
 			if (state === 'connected') {
 				if (!this.intentionalDisconnect) {
+					// Prefer resync when we already had a room; otherwise finish a never-completed handshake.
 					if (this.pendingRoomResync && this.roomId) {
 						void this.resyncAfterReconnect();
 					} else if (this.pendingConnectionParams && !this.kit && !this.handshakeInFlight) {
@@ -45,6 +62,7 @@ class RoomSessionStore {
 			} else if (
 				state === 'reconnecting' &&
 				this.wasConnectedOnce &&
+				// roomId is from kit; pendingConnectionParams covers the "server down on first join" case.
 				(this.roomId || this.pendingConnectionParams) &&
 				!this.intentionalDisconnect
 			) {
@@ -77,10 +95,12 @@ class RoomSessionStore {
 	applyRemoteState(state: RoomState): void {
 		if (!this.kit || !shouldApplyRemoteRevision(state.revision, this.lastAppliedRevision)) return;
 
+		// Drop unsent local scoring before applying a newer server revision.
 		this.scoringUpdate.cancel();
 		this.lastAppliedRevision = state.revision;
 		this.syncingFromServer = true;
 		this.kit = { ...this.kit, state };
+		// Clear after microtask so GameScreen's outbound $effect does not fire on this apply.
 		queueMicrotask(() => {
 			this.syncingFromServer = false;
 		});
@@ -109,36 +129,49 @@ class RoomSessionStore {
 		this.intentionalDisconnect = false;
 
 		const roomId = generateUUID();
-		const connection = await connectRoom(createConnectionParams(roomId, 'create'));
-		this.pendingConnectionParams = connection;
-		this.pendingCreateScenario = scenario;
-		this.handshakeInFlight = true;
-
-		try {
-			const kit = await this.callMutation(() => getRoomRpcClient().handshake.createRoom.mutation({ scenario }));
-			this.applyKit(kit, roomId, connection.clientId);
-		} finally {
-			this.handshakeInFlight = false;
-		}
+		await this.runHandshake(connectRoom(createConnectionParams(roomId, 'create')), scenario);
 	}
 
 	async joinRoom(roomId: string): Promise<void> {
 		this.clearError();
 		this.intentionalDisconnect = false;
 
-		const connection = await connectRoom(createConnectionParams(roomId, 'join'));
+		await this.runHandshake(connectRoom(createConnectionParams(roomId, 'join')));
+	}
+
+	private async runHandshake(connection: RoomConnectionParams, createScenario?: ScenarioSnapshot): Promise<void> {
+		// Stash params before mutation so completePendingHandshake can retry if the server is unreachable.
 		this.pendingConnectionParams = connection;
-		this.pendingCreateScenario = null;
+		this.pendingCreateScenario = createScenario ?? null;
 		this.handshakeInFlight = true;
 
 		try {
-			const kit = await this.callMutation(() => getRoomRpcClient().handshake.joinRoom.mutation({}));
-			this.applyKit(kit, roomId, connection.clientId);
+			const kit = await this.callHandshakeMutation(connection);
+			this.applyKit(kit, connection.roomId, connection.clientId);
 		} finally {
 			this.handshakeInFlight = false;
 		}
 	}
 
+	private async callHandshakeMutation(params: RoomConnectionParams): Promise<JoiningKit> {
+		if (params.action === 'create') {
+			if (!this.pendingCreateScenario) {
+				throw new Error('Missing scenario for room creation');
+			}
+			return this.callMutation(() => getRoomRpcClient().handshake.createRoom.mutation({ scenario: this.pendingCreateScenario! }));
+		}
+
+		return this.callJoinMutation();
+	}
+
+	private callJoinMutation(): Promise<JoiningKit> {
+		return this.callMutation(() => getRoomRpcClient().handshake.joinRoom.mutation({}));
+	}
+
+	/**
+	 * Finish join/create after wrpc connects when the initial handshake mutation never succeeded.
+	 * Uses the same clientId from pendingConnectionParams (wrpc reconnect keeps that id).
+	 */
 	private async completePendingHandshake(): Promise<void> {
 		const params = this.pendingConnectionParams;
 		if (!params || this.kit || this.resyncInFlight || this.intentionalDisconnect) return;
@@ -147,15 +180,7 @@ class RoomSessionStore {
 
 		try {
 			this.clearError();
-			const kit =
-				params.action === 'create'
-					? await this.callMutation(() => {
-							if (!this.pendingCreateScenario) {
-								throw new Error('Missing scenario for room creation');
-							}
-							return getRoomRpcClient().handshake.createRoom.mutation({ scenario: this.pendingCreateScenario });
-						})
-					: await this.callMutation(() => getRoomRpcClient().handshake.joinRoom.mutation({}));
+			const kit = await this.callHandshakeMutation(params);
 			this.applyKit(kit, params.roomId, params.clientId);
 		} catch (error) {
 			console.error('Pending room handshake failed:', error);
@@ -164,6 +189,10 @@ class RoomSessionStore {
 		}
 	}
 
+	/**
+	 * Re-join after a transport drop when we already had a kit. Server removes participants on
+	 * webSocketClose; joinRoom returns a fresh snapshot and re-adds this tab (idempotent on server).
+	 */
 	private async resyncAfterReconnect(): Promise<void> {
 		const roomId = this.roomId;
 		const clientId = this.clientId;
@@ -174,7 +203,7 @@ class RoomSessionStore {
 
 		try {
 			this.clearError();
-			const kit = await this.callMutation(() => getRoomRpcClient().handshake.joinRoom.mutation({}));
+			const kit = await this.callJoinMutation();
 			this.applyKit(kit, roomId, clientId);
 		} catch (error) {
 			console.error('Room resync after reconnect failed:', error);
@@ -196,6 +225,7 @@ class RoomSessionStore {
 	async updateScoring(scoring: RoomState['scoring']): Promise<void> {
 		if (this.syncingFromServer || !this.kit || this.connectionState !== 'connected') return;
 		const next = await this.callMutation(() => getRoomRpcClient().room.updateScoring.mutation(scoring));
+		// Apply mutation response locally; broadcast may arrive with the same revision.
 		this.applyRemoteState(next);
 	}
 
@@ -226,6 +256,7 @@ class RoomSessionStore {
 
 	disconnect(): void {
 		this.intentionalDisconnect = true;
+		// Clear recovery flags before resetRoomClient so a late 'connected' does not re-join.
 		this.pendingRoomResync = false;
 		this.pendingConnectionParams = null;
 		this.pendingCreateScenario = null;

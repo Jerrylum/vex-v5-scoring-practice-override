@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Dialog from './Dialog.svelte';
+	import { generateUUID } from '$lib/utils';
 
 	type ConfirmTone = 'danger' | 'primary';
 
@@ -26,7 +27,7 @@
 	});
 
 	// Unique id so multiple confirm dialogs never share an aria-labelledby target.
-	const titleId = `confirm-dialog-title-${crypto.randomUUID()}`;
+	const titleId = `confirm-dialog-title-${generateUUID()}`;
 
 	const buttonDisabledClass = 'disabled:cursor-not-allowed disabled:opacity-50';
 

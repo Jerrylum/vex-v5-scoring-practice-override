@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { ScoringTabId } from './userScoring';
 
+/** Local-only camera/scoring-tab presets per tab (sessionStorage). Not synced to the room. */
 export type RefereeViewPreset = 'southWest' | 'southEast' | 'headRef' | 'observer';
 
 const STORAGE_KEY = 'refereeViewPreset';
