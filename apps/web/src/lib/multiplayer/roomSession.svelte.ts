@@ -1,15 +1,21 @@
 import type { JoiningKit, Level, RoomPhase, RoomState, ScenarioSnapshot } from '@vex-v5-override/protocol';
 import type { ConnectionState } from '@vex-v5-override/wrpc/client';
 import { setOnRoomStateUpdateHandler } from './client-router';
-import { connectRoom, getConnectionState, getRoomRpcClient, resetRoomClient, setConnectionStateListener } from './roomClient';
-import { buildRoomUrl, clearRoomUrl, generateUUID, getDefaultDisplayName, getOrCreateClientId, saveDisplayName, setRoomUrl } from './identity';
+import {
+	connectRoom,
+	createConnectionParams,
+	getConnectionState,
+	getRoomRpcClient,
+	resetRoomClient,
+	setConnectionStateListener
+} from './roomClient';
+import { buildRoomUrl, clearRoomUrl, generateUUID, setRoomUrl } from './identity';
 
 class RoomSessionStore {
 	kit = $state<JoiningKit | null>(null);
 	connectionState = $state<ConnectionState>('offline');
 	error = $state<string | null>(null);
-	displayName = $state(getDefaultDisplayName());
-	isHost = $state(false);
+	clientId = $state<string | null>(null);
 	syncingFromServer = $state(false);
 
 	constructor() {
@@ -31,10 +37,6 @@ class RoomSessionStore {
 		return this.kit?.state.phase ?? null;
 	}
 
-	get clientId(): string {
-		return getOrCreateClientId();
-	}
-
 	setError(message: string | null): void {
 		this.error = message;
 	}
@@ -44,7 +46,6 @@ class RoomSessionStore {
 
 		this.syncingFromServer = true;
 		this.kit = { ...this.kit, state };
-		this.isHost = state.hostClientId === this.clientId;
 		queueMicrotask(() => {
 			this.syncingFromServer = false;
 		});
@@ -52,47 +53,26 @@ class RoomSessionStore {
 
 	async createRoom(difficulty: Level, scenario: ScenarioSnapshot): Promise<void> {
 		this.error = null;
-		saveDisplayName(this.displayName);
 
 		const roomId = generateUUID();
-		await connectRoom({ roomId, displayName: this.displayName, action: 'create' });
+		const connection = await connectRoom(createConnectionParams(roomId, 'create'));
+		this.clientId = connection.clientId;
 
-		const kit = await getRoomRpcClient().handshake.createRoom.mutation({
-			scenario,
-			displayName: this.displayName
-		});
+		const kit = await getRoomRpcClient().handshake.createRoom.mutation({ scenario });
 
 		this.kit = kit;
-		this.isHost = true;
 		setRoomUrl(roomId);
 	}
 
 	async joinRoom(roomId: string): Promise<void> {
 		this.error = null;
-		saveDisplayName(this.displayName);
 
-		await connectRoom({ roomId, displayName: this.displayName, action: 'join' });
+		const connection = await connectRoom(createConnectionParams(roomId, 'join'));
+		this.clientId = connection.clientId;
 
-		const kit = await getRoomRpcClient().handshake.joinRoom.mutation({
-			displayName: this.displayName
-		});
+		const kit = await getRoomRpcClient().handshake.joinRoom.mutation({});
 
 		this.kit = kit;
-		this.isHost = kit.state.hostClientId === this.clientId;
-		setRoomUrl(roomId);
-	}
-
-	async rejoinRoom(roomId: string): Promise<void> {
-		this.error = null;
-		saveDisplayName(this.displayName);
-		await connectRoom({ roomId, displayName: this.displayName, action: 'rejoin' });
-
-		const kit = await getRoomRpcClient().handshake.joinRoom.mutation({
-			displayName: this.displayName
-		});
-
-		this.kit = kit;
-		this.isHost = kit.state.hostClientId === this.clientId;
 		setRoomUrl(roomId);
 	}
 
@@ -102,22 +82,22 @@ class RoomSessionStore {
 	}
 
 	async regenerateScenario(scenario: ScenarioSnapshot): Promise<void> {
-		if (!this.isHost || !this.kit || this.connectionState !== 'connected') return;
+		if (!this.kit || this.connectionState !== 'connected') return;
 		await getRoomRpcClient().room.regenerateScenario.mutation({ scenario });
 	}
 
 	async resetScoring(): Promise<void> {
-		if (!this.isHost) return;
+		if (!this.kit || this.connectionState !== 'connected') return;
 		await getRoomRpcClient().room.resetScoring.mutation();
 	}
 
 	async setShowAnswer(showAnswer: boolean): Promise<void> {
-		if (!this.isHost) return;
+		if (!this.kit || this.connectionState !== 'connected') return;
 		await getRoomRpcClient().room.setShowAnswer.mutation({ showAnswer });
 	}
 
 	async startScoring(): Promise<void> {
-		if (!this.isHost) return;
+		if (!this.kit || this.connectionState !== 'connected') return;
 		await getRoomRpcClient().room.setPhase.mutation({ phase: 'scoring' });
 	}
 
@@ -130,7 +110,7 @@ class RoomSessionStore {
 		setOnRoomStateUpdateHandler(null);
 		resetRoomClient();
 		this.kit = null;
-		this.isHost = false;
+		this.clientId = null;
 		this.connectionState = getConnectionState();
 		clearRoomUrl();
 		setOnRoomStateUpdateHandler((state) => this.applyRemoteState(state));

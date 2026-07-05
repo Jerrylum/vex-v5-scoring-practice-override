@@ -52,14 +52,13 @@ const sampleScenario = {
 const sampleRoomState = {
 	revision: 0,
 	phase: 'lobby' as const,
-	hostClientId: '550e8400-e29b-41d4-a716-446655440000',
 	scenario: sampleScenario,
 	scoring: emptyUserScenarioScoring(),
 	participants: [
 		{
 			clientId: '550e8400-e29b-41d4-a716-446655440001',
-			deviceId: '550e8400-e29b-41d4-a716-446655440002',
-			displayName: 'Ref 1',
+			deviceId: '550e8400-e29b-41d4-a716-446655440001',
+			displayName: 'Mac-7f3a',
 			role: 'southWest' as const,
 			joinedAt: '2026-07-05T00:00:00.000Z'
 		}
@@ -94,8 +93,8 @@ describe('ConnectionIntentionSchema', () => {
 		const intention = {
 			roomId: '550e8400-e29b-41d4-a716-446655440010',
 			clientId: '550e8400-e29b-41d4-a716-446655440001',
-			deviceId: '550e8400-e29b-41d4-a716-446655440002',
-			displayName: 'Ref 1',
+			deviceId: '550e8400-e29b-41d4-a716-446655440001',
+			displayName: 'Mac-7f3a',
 			action: 'create' as const
 		};
 		expect(ConnectionIntentionSchema.parse(intention)).toEqual(intention);
@@ -105,11 +104,8 @@ describe('ConnectionIntentionSchema', () => {
 
 describe('room RPC inputs', () => {
 	it('parses create, join, and regenerate inputs', () => {
-		expect(CreateRoomInputSchema.parse({ scenario: sampleScenario, displayName: 'Host' })).toEqual({
-			scenario: sampleScenario,
-			displayName: 'Host'
-		});
-		expect(JoinRoomInputSchema.parse({ displayName: 'Guest' })).toEqual({ displayName: 'Guest' });
+		expect(CreateRoomInputSchema.parse({ scenario: sampleScenario })).toEqual({ scenario: sampleScenario });
+		expect(JoinRoomInputSchema.parse({})).toEqual({});
 		expect(RegenerateScenarioInputSchema.parse({ scenario: sampleScenario })).toEqual({ scenario: sampleScenario });
 	});
 });

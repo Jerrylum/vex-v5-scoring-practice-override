@@ -1,22 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { SNAPSHOT_VERSION } from '@vex-v5-override/protocol';
 import {
-	NotHostError,
 	RoomAlreadyExistsError,
 	RoomNotFoundError,
 	createRoom,
 	joinRoom,
 	regenerateScenario,
+	removeClient,
 	resetScoring,
 	setPhase,
 	updateScoring,
 	type RoomStoreData
 } from './room-store';
 
-const hostClientId = '550e8400-e29b-41d4-a716-446655440000';
-const guestClientId = '550e8400-e29b-41d4-a716-446655440001';
-const hostDeviceId = '550e8400-e29b-41d4-a716-446655440010';
-const guestDeviceId = '550e8400-e29b-41d4-a716-446655440011';
+const clientOneId = '550e8400-e29b-41d4-a716-446655440000';
+const clientTwoId = '550e8400-e29b-41d4-a716-446655440001';
 const roomId = '550e8400-e29b-41d4-a716-446655440020';
 
 const sampleScenario = {
@@ -62,49 +60,61 @@ function emptyStore(): RoomStoreData {
 describe('room-store', () => {
 	it('creates a room and rejects duplicate create', () => {
 		const data = emptyStore();
-		const created = createRoom(data, roomId, hostClientId, hostDeviceId, {
-			scenario: sampleScenario,
-			displayName: 'Host'
+		const created = createRoom(data, roomId, clientOneId, 'Mac-7f3a', {
+			scenario: sampleScenario
 		});
 
 		expect(created.state.phase).toBe('lobby');
-		expect(created.state.hostClientId).toBe(hostClientId);
+		expect(created.state.participants).toHaveLength(1);
 		expect(created.kit.room.roomId).toBe(roomId);
 
 		data.meta = created.meta;
 		data.state = created.state;
 
 		expect(() =>
-			createRoom(data, roomId, hostClientId, hostDeviceId, {
-				scenario: sampleScenario,
-				displayName: 'Host'
+			createRoom(data, roomId, clientOneId, 'Mac-7f3a', {
+				scenario: sampleScenario
 			})
 		).toThrow(RoomAlreadyExistsError);
 	});
 
-	it('joins a room and rejoins an existing participant', () => {
+	it('joins a room with a new client each time', () => {
 		const data = emptyStore();
-		const created = createRoom(data, roomId, hostClientId, hostDeviceId, {
-			scenario: sampleScenario,
-			displayName: 'Host'
+		const created = createRoom(data, roomId, clientOneId, 'Mac-7f3a', {
+			scenario: sampleScenario
 		});
 		data.meta = created.meta;
 		data.state = created.state;
 
-		const joined = joinRoom(data, guestClientId, guestDeviceId, { displayName: 'Guest' });
+		const joined = joinRoom(data, clientTwoId, 'Windows-b2c1', {});
 		expect(joined.state.participants).toHaveLength(2);
 
 		data.state = joined.state;
-		const rejoined = joinRoom(data, guestClientId, guestDeviceId, { displayName: 'Guest Renamed' });
-		expect(rejoined.state.participants).toHaveLength(2);
-		expect(rejoined.state.participants[1]?.displayName).toBe('Guest Renamed');
+		const clientThreeId = '550e8400-e29b-41d4-a716-446655440002';
+		const joinedAgain = joinRoom(data, clientThreeId, 'iOS-c4d5', {});
+		expect(joinedAgain.state.participants).toHaveLength(3);
+	});
+
+	it('removes a disconnected client', () => {
+		const data = emptyStore();
+		const created = createRoom(data, roomId, clientOneId, 'Mac-7f3a', {
+			scenario: sampleScenario
+		});
+		data.meta = created.meta;
+		data.state = created.state;
+
+		const joined = joinRoom(data, clientTwoId, 'Windows-b2c1', {});
+		data.state = joined.state;
+
+		const next = removeClient(data, clientTwoId);
+		expect(next?.participants).toHaveLength(1);
+		expect(next?.revision).toBe(1);
 	});
 
 	it('updates scoring with revision bump', () => {
 		const data = emptyStore();
-		const created = createRoom(data, roomId, hostClientId, hostDeviceId, {
-			scenario: sampleScenario,
-			displayName: 'Host'
+		const created = createRoom(data, roomId, clientOneId, 'Mac-7f3a', {
+			scenario: sampleScenario
 		});
 		data.meta = created.meta;
 		data.state = created.state;
@@ -115,48 +125,33 @@ describe('room-store', () => {
 		expect(next.scoring.midfieldGoal.red).toBe(1);
 	});
 
-	it('restricts host-only actions', () => {
+	it('allows any client to change phase and regenerate scenario', () => {
 		const data = emptyStore();
-		const created = createRoom(data, roomId, hostClientId, hostDeviceId, {
-			scenario: sampleScenario,
-			displayName: 'Host'
+		const created = createRoom(data, roomId, clientOneId, 'Mac-7f3a', {
+			scenario: sampleScenario
 		});
 		data.meta = created.meta;
 		data.state = created.state;
 
-		expect(() => resetScoring(data, guestClientId)).toThrow(NotHostError);
-		expect(() => setPhase(data, guestClientId, 'scoring')).toThrow(NotHostError);
+		const joined = joinRoom(data, clientTwoId, 'Windows-b2c1', {});
+		data.state = joined.state;
 
-		const next = setPhase(data, hostClientId, 'scoring');
+		const next = setPhase(data, clientTwoId, 'scoring');
+		data.state = next;
 		expect(next.phase).toBe('scoring');
 		expect(next.revision).toBe(1);
-	});
 
-	it('regenerates scenario and resets scoring for host', () => {
-		const data = emptyStore();
-		const created = createRoom(data, roomId, hostClientId, hostDeviceId, {
-			scenario: sampleScenario,
-			displayName: 'Host'
-		});
-		data.meta = created.meta;
-		data.state = {
-			...created.state,
-			scoring: {
-				...created.state.scoring,
-				midfieldGoal: { red: 2, blue: 0, yellow: 0 }
-			}
-		};
+		const reset = resetScoring(data, clientTwoId);
+		data.state = reset;
+		expect(reset.revision).toBe(2);
 
 		const nextScenario = { ...sampleScenario, difficulty: 'hard' as const };
-		const next = regenerateScenario(data, hostClientId, { scenario: nextScenario });
-		expect(next.scenario.difficulty).toBe('hard');
-		expect(next.scoring.midfieldGoal.red).toBe(0);
-		expect(next.revision).toBe(1);
+		const regenerated = regenerateScenario(data, clientTwoId, { scenario: nextScenario });
+		expect(regenerated.scenario.difficulty).toBe('hard');
+		expect(regenerated.revision).toBe(3);
 	});
 
 	it('throws when room is missing', () => {
-		expect(() => joinRoom({ meta: null, state: null }, guestClientId, guestDeviceId, { displayName: 'Guest' })).toThrow(
-			RoomNotFoundError
-		);
+		expect(() => joinRoom({ meta: null, state: null }, clientTwoId, 'Guest', {})).toThrow(RoomNotFoundError);
 	});
 });

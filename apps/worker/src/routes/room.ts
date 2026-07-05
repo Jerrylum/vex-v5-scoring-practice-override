@@ -7,7 +7,7 @@ import {
 } from '@vex-v5-override/protocol';
 import type { WRPCRootObject } from '@vex-v5-override/wrpc/server';
 import { WRPCError } from '@vex-v5-override/wrpc/server';
-import { NotHostError, RoomNotFoundError, regenerateScenario, resetScoring, setPhase, setShowAnswer, updateScoring } from '../room-store';
+import { RoomNotFoundError, regenerateScenario, resetScoring, setPhase, setShowAnswer, updateScoring } from '../room-store';
 import type { ServerContext } from '../server-router';
 import { broadcastRoomState } from './broadcast';
 
@@ -16,7 +16,7 @@ export function buildRoomRoute(w: WRPCRootObject<object, ServerContext, Record<s
 		updateScoring: w.procedure
 			.input(UpdateScoringInputSchema)
 			.output(RoomStateSchema)
-			.mutation(async ({ ctx, input, session }) => {
+			.mutation(async ({ ctx, input }) => {
 				try {
 					const next = updateScoring(ctx.store, input);
 					ctx.store.state = next;
@@ -45,9 +45,6 @@ export function buildRoomRoute(w: WRPCRootObject<object, ServerContext, Record<s
 					if (error instanceof RoomNotFoundError) {
 						throw new WRPCError(error.message, 'NOT_FOUND');
 					}
-					if (error instanceof NotHostError) {
-						throw new WRPCError(error.message, 'FORBIDDEN');
-					}
 					throw error;
 				}
 			}),
@@ -62,9 +59,6 @@ export function buildRoomRoute(w: WRPCRootObject<object, ServerContext, Record<s
 			} catch (error) {
 				if (error instanceof RoomNotFoundError) {
 					throw new WRPCError(error.message, 'NOT_FOUND');
-				}
-				if (error instanceof NotHostError) {
-					throw new WRPCError(error.message, 'FORBIDDEN');
 				}
 				throw error;
 			}
@@ -84,9 +78,6 @@ export function buildRoomRoute(w: WRPCRootObject<object, ServerContext, Record<s
 					if (error instanceof RoomNotFoundError) {
 						throw new WRPCError(error.message, 'NOT_FOUND');
 					}
-					if (error instanceof NotHostError) {
-						throw new WRPCError(error.message, 'FORBIDDEN');
-					}
 					throw error;
 				}
 			}),
@@ -104,9 +95,6 @@ export function buildRoomRoute(w: WRPCRootObject<object, ServerContext, Record<s
 				} catch (error) {
 					if (error instanceof RoomNotFoundError) {
 						throw new WRPCError(error.message, 'NOT_FOUND');
-					}
-					if (error instanceof NotHostError) {
-						throw new WRPCError(error.message, 'FORBIDDEN');
 					}
 					throw error;
 				}

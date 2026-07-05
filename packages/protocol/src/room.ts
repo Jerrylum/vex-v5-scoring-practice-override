@@ -8,7 +8,7 @@ export type RefereeRole = z.infer<typeof RefereeRoleSchema>;
 export const RoomPhaseSchema = z.enum(['lobby', 'scoring', 'review', 'closed']);
 export type RoomPhase = z.infer<typeof RoomPhaseSchema>;
 
-export const RoomActionSchema = z.enum(['create', 'join', 'rejoin']);
+export const RoomActionSchema = z.enum(['create', 'join']);
 export type RoomAction = z.infer<typeof RoomActionSchema>;
 
 export const ParticipantSchema = z.object({
@@ -29,9 +29,9 @@ export type RoomMeta = z.infer<typeof RoomMetaSchema>;
 export const RoomStateSchema = z.object({
 	revision: z.number().int().nonnegative(),
 	phase: RoomPhaseSchema,
-	hostClientId: z.uuid(),
 	scenario: ScenarioSnapshotSchema,
 	scoring: UserScenarioScoringSchema,
+	/** Currently connected clients only. */
 	participants: z.array(ParticipantSchema),
 	showAnswer: z.boolean().optional()
 });
@@ -61,14 +61,11 @@ export const ConnectionIntentionSchema = z.object({
 export type ConnectionIntention = z.infer<typeof ConnectionIntentionSchema>;
 
 export const CreateRoomInputSchema = z.object({
-	scenario: ScenarioSnapshotSchema,
-	displayName: z.string().min(1).max(32)
+	scenario: ScenarioSnapshotSchema
 });
 export type CreateRoomInput = z.infer<typeof CreateRoomInputSchema>;
 
-export const JoinRoomInputSchema = z.object({
-	displayName: z.string().min(1).max(32)
-});
+export const JoinRoomInputSchema = z.object({});
 export type JoinRoomInput = z.infer<typeof JoinRoomInputSchema>;
 
 export const UpdateScoringInputSchema = UserScenarioScoringSchema;

@@ -2,7 +2,9 @@ import { DurableObject } from 'cloudflare:workers';
 import { createWebSocketHandler } from '@vex-v5-override/wrpc/server';
 import type { RoomMeta, RoomState } from '@vex-v5-override/protocol';
 import type { RoomStoreData } from './room-store';
+import { removeClient } from './room-store';
 import { serverRouter, type ServerContext } from './server-router';
+import { broadcastRoomState } from './routes/broadcast';
 
 const ROOM_META_KEY = 'room-meta';
 const ROOM_STATE_KEY = 'room-state';
@@ -114,7 +116,16 @@ export class RoomDurableObject extends DurableObject<Env> {
 	}
 
 	async webSocketClose(ws: WebSocket, code: number, reason: string): Promise<void> {
-		await this.wsHandler.handleClose(ws, code, reason);
+		const clientId = await this.wsHandler.handleClose(ws, code, reason);
+		if (!clientId || !this.activeRoomId) return;
+
+		await this.loadStore();
+		const next = removeClient(this.store, clientId);
+		if (next && next !== this.store.state) {
+			this.store.state = next;
+			await this.persistStore();
+			broadcastRoomState(this.wsHandler.connectionManager, next);
+		}
 	}
 
 	async webSocketError(ws: WebSocket, error: unknown): Promise<void> {

@@ -220,7 +220,6 @@
 
 		try {
 			if (isMultiplayer) {
-				if (!roomSession.isHost) return;
 				const scenario = scenarioToSnapshot(
 					generateScenario({ difficulty: currentDifficulty, masterSeed: randomMasterSeed() }),
 					currentDifficulty
@@ -263,7 +262,7 @@
 
 	async function handleShowAnswerChange(next: boolean) {
 		showAnswer = next;
-		if (isMultiplayer && roomSession.isHost) {
+		if (isMultiplayer) {
 			await roomSession.setShowAnswer(next);
 		}
 	}
@@ -343,8 +342,8 @@
 					{linkMessage}
 					{isLoading}
 					{isReloading}
-					allowReload={!isMultiplayer || roomSession.isHost}
-					allowDifficultyChange={!isMultiplayer || roomSession.isHost}
+					allowReload={true}
+					allowDifficultyChange={true}
 					copyLinkDisabled={isMultiplayer ? !roomSession.roomId : currentSeed === null}
 					shareRoomMode={isMultiplayer}
 					onShowAnswerChange={handleShowAnswerChange}

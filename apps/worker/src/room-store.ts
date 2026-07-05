@@ -26,13 +26,6 @@ export class RoomAlreadyExistsError extends Error {
 	}
 }
 
-export class NotHostError extends Error {
-	constructor() {
-		super('Only the host can perform this action');
-		this.name = 'NotHostError';
-	}
-}
-
 export interface RoomStoreData {
 	meta: RoomMeta | null;
 	state: RoomState | null;
@@ -45,41 +38,29 @@ export function createRoomMeta(roomId: string): RoomMeta {
 	};
 }
 
-function createParticipant(clientId: string, deviceId: string, displayName: string): Participant {
+function createParticipant(clientId: string, displayName: string): Participant {
 	return {
 		clientId,
-		deviceId,
+		deviceId: clientId,
 		displayName,
 		role: null,
 		joinedAt: new Date().toISOString()
 	};
 }
 
-export function createInitialRoomState(
-	hostClientId: string,
-	deviceId: string,
-	displayName: string,
-	scenario: ScenarioSnapshot
-): RoomState {
+export function createInitialRoomState(displayName: string, scenario: ScenarioSnapshot, clientId: string): RoomState {
 	return {
 		revision: 0,
 		phase: 'lobby',
-		hostClientId,
 		scenario,
 		scoring: emptyUserScenarioScoring(),
-		participants: [createParticipant(hostClientId, deviceId, displayName)],
+		participants: [createParticipant(clientId, displayName)],
 		showAnswer: false
 	};
 }
 
 export function buildJoiningKit(meta: RoomMeta, state: RoomState): JoiningKit {
 	return { room: meta, state };
-}
-
-export function assertHost(state: RoomState, clientId: string): void {
-	if (state.hostClientId !== clientId) {
-		throw new NotHostError();
-	}
 }
 
 export function bumpRevision(state: RoomState): RoomState {
@@ -90,7 +71,7 @@ export function createRoom(
 	data: RoomStoreData,
 	roomId: string,
 	clientId: string,
-	deviceId: string,
+	displayName: string,
 	input: CreateRoomInput
 ): { meta: RoomMeta; state: RoomState; kit: JoiningKit } {
 	if (data.meta !== null || data.state !== null) {
@@ -98,38 +79,37 @@ export function createRoom(
 	}
 
 	const meta = createRoomMeta(roomId);
-	const state = createInitialRoomState(clientId, deviceId, input.displayName, input.scenario);
+	const state = createInitialRoomState(displayName, input.scenario, clientId);
 	return { meta, state, kit: buildJoiningKit(meta, state) };
 }
 
-export function joinRoom(
-	data: RoomStoreData,
-	clientId: string,
-	deviceId: string,
-	input: JoinRoomInput
-): { state: RoomState; kit: JoiningKit } {
+export function joinRoom(data: RoomStoreData, clientId: string, displayName: string, _input: JoinRoomInput): {
+	state: RoomState;
+	kit: JoiningKit;
+} {
 	if (data.meta === null || data.state === null) {
 		throw new RoomNotFoundError();
 	}
 
-	const existing = data.state.participants.find((p) => p.clientId === clientId);
-	let state: RoomState;
-
-	if (existing) {
-		state = {
-			...data.state,
-			participants: data.state.participants.map((p) =>
-				p.clientId === clientId ? { ...p, displayName: input.displayName, deviceId } : p
-			)
-		};
-	} else {
-		state = {
-			...data.state,
-			participants: [...data.state.participants, createParticipant(clientId, deviceId, input.displayName)]
-		};
-	}
+	const state: RoomState = {
+		...data.state,
+		participants: [...data.state.participants, createParticipant(clientId, displayName)]
+	};
 
 	return { state, kit: buildJoiningKit(data.meta, state) };
+}
+
+export function removeClient(data: RoomStoreData, clientId: string): RoomState | null {
+	if (data.state === null) {
+		return null;
+	}
+
+	const participants = data.state.participants.filter((p) => p.clientId !== clientId);
+	if (participants.length === data.state.participants.length) {
+		return data.state;
+	}
+
+	return bumpRevision({ ...data.state, participants });
 }
 
 export function updateScoring(data: RoomStoreData, scoring: UpdateScoringInput): RoomState {
@@ -140,12 +120,10 @@ export function updateScoring(data: RoomStoreData, scoring: UpdateScoringInput):
 	return bumpRevision({ ...data.state, scoring });
 }
 
-export function regenerateScenario(data: RoomStoreData, clientId: string, input: RegenerateScenarioInput): RoomState {
+export function regenerateScenario(data: RoomStoreData, _clientId: string, input: RegenerateScenarioInput): RoomState {
 	if (data.state === null) {
 		throw new RoomNotFoundError();
 	}
-
-	assertHost(data.state, clientId);
 
 	return bumpRevision({
 		...data.state,
@@ -155,12 +133,10 @@ export function regenerateScenario(data: RoomStoreData, clientId: string, input:
 	});
 }
 
-export function resetScoring(data: RoomStoreData, clientId: string): RoomState {
+export function resetScoring(data: RoomStoreData, _clientId: string): RoomState {
 	if (data.state === null) {
 		throw new RoomNotFoundError();
 	}
-
-	assertHost(data.state, clientId);
 
 	return bumpRevision({
 		...data.state,
@@ -169,22 +145,18 @@ export function resetScoring(data: RoomStoreData, clientId: string): RoomState {
 	});
 }
 
-export function setShowAnswer(data: RoomStoreData, clientId: string, showAnswer: boolean): RoomState {
+export function setShowAnswer(data: RoomStoreData, _clientId: string, showAnswer: boolean): RoomState {
 	if (data.state === null) {
 		throw new RoomNotFoundError();
 	}
-
-	assertHost(data.state, clientId);
 
 	return bumpRevision({ ...data.state, showAnswer });
 }
 
-export function setPhase(data: RoomStoreData, clientId: string, phase: RoomPhase): RoomState {
+export function setPhase(data: RoomStoreData, _clientId: string, phase: RoomPhase): RoomState {
 	if (data.state === null) {
 		throw new RoomNotFoundError();
 	}
-
-	assertHost(data.state, clientId);
 
 	return bumpRevision({ ...data.state, phase });
 }

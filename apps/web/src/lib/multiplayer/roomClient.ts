@@ -1,7 +1,7 @@
 import { ConnectionCloseCode, createClientManager, type ClientOptions, type ConnectionState } from '@vex-v5-override/wrpc/client';
 import type { ServerRouter } from '@vex-v5-override/worker/src/server-router';
 import { clientRouter, type ClientRouter } from './client-router';
-import { getOrCreateClientId, getOrCreateDeviceId } from './identity';
+import { generateClientName, generateUUID } from './identity';
 
 const isDevelopment = import.meta.env.DEV;
 
@@ -12,10 +12,11 @@ export function getWsUrl(): string {
 	return `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`;
 }
 
-export type RoomConnectionAction = 'create' | 'join' | 'rejoin';
+export type RoomConnectionAction = 'create' | 'join';
 
 export interface RoomConnectionParams {
 	roomId: string;
+	clientId: string;
 	displayName: string;
 	action: RoomConnectionAction;
 }
@@ -42,8 +43,8 @@ function createClientOptions(): ClientOptions<ClientRouter> {
 	return {
 		wsUrl: getWsUrl(),
 		roomId: pending.roomId,
-		clientId: getOrCreateClientId(),
-		deviceId: getOrCreateDeviceId(),
+		clientId: pending.clientId,
+		deviceId: pending.clientId,
 		deviceName: pending.displayName,
 		action: pending.action,
 		onContext: async () => ({}),
@@ -79,7 +80,17 @@ export function getRoomRpcClient(): ReturnType<typeof clientManager.getClient>[1
 	return clientManager.getClient()[1];
 }
 
-export async function connectRoom(params: RoomConnectionParams): Promise<void> {
+export function createConnectionParams(roomId: string, action: RoomConnectionAction): RoomConnectionParams {
+	return {
+		roomId,
+		clientId: generateUUID(),
+		displayName: generateClientName(),
+		action
+	};
+}
+
+export async function connectRoom(params: RoomConnectionParams): Promise<RoomConnectionParams> {
 	prepareConnection(params);
 	clientManager.getClient();
+	return params;
 }

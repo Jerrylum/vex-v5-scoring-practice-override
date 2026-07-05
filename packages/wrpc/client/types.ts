@@ -15,7 +15,7 @@ export interface ClientOptions<TRouter extends AnyRouter> {
 	clientId: string;
 	deviceId: string;
 	deviceName?: string;
-	action?: 'create' | 'join' | 'rejoin';
+	action?: 'create' | 'join';
 	onContext: (request: WRPCRequest) => Promise<InferRouterContext<TRouter>>;
 	onOpen: () => void;
 	onClosed: (code: number, reason: string) => void;

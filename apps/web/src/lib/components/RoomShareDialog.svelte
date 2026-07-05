@@ -56,7 +56,7 @@
 			{/if}
 
 			<p class="text-xs tracking-wide text-gray-500 uppercase">
-				Participants ({roomSession.roomState?.participants.length ?? 0})
+				Connected ({roomSession.roomState?.participants.length ?? 0})
 			</p>
 			<ul class="space-y-1 text-sm">
 				{#each roomSession.roomState?.participants ?? [] as participant (participant.clientId)}
@@ -67,9 +67,6 @@
 								<span class="text-gray-500"> (You)</span>
 							{/if}
 						</span>
-						{#if participant.clientId === roomSession.roomState?.hostClientId}
-							<span class="text-xs text-[#007fff]">Host</span>
-						{/if}
 					</li>
 				{/each}
 			</ul>

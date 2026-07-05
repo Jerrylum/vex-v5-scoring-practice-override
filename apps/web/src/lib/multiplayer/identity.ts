@@ -1,53 +1,29 @@
-const CLIENT_ID_KEY = 'vex-v5-override:clientId';
-const DEVICE_ID_KEY = 'vex-v5-override:deviceId';
-const DISPLAY_NAME_KEY = 'vex-v5-override:displayName';
+const CLIENT_NAME_SUFFIX_LENGTH = 4;
 
 export function generateUUID(): string {
 	return crypto.randomUUID();
 }
 
-export function getOrCreateClientId(): string {
-	return getOrCreateStoredId(CLIENT_ID_KEY);
+function randomSuffix(length: number): string {
+	const bytes = new Uint8Array(Math.ceil(length / 2));
+	crypto.getRandomValues(bytes);
+	return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0'))
+		.join('')
+		.slice(0, length);
 }
 
-export function getOrCreateDeviceId(): string {
-	return getOrCreateStoredId(DEVICE_ID_KEY);
-}
-
-function getOrCreateStoredId(key: string): string {
-	try {
-		const existing = localStorage.getItem(key);
-		if (existing) return existing;
-		const id = generateUUID();
-		localStorage.setItem(key, id);
-		return id;
-	} catch {
-		return generateUUID();
-	}
-}
-
-export function getDefaultDisplayName(): string {
-	try {
-		const saved = localStorage.getItem(DISPLAY_NAME_KEY);
-		if (saved) return saved;
-	} catch {
-		// ignore
-	}
-
+function getDeviceBaseName(): string {
 	const ua = navigator.userAgent;
-	if (/iPhone|iPad|iPod/.test(ua)) return 'iOS Device';
-	if (/Android/.test(ua)) return 'Android Device';
+	if (/iPhone|iPad|iPod/.test(ua)) return 'iOS';
+	if (/Android/.test(ua)) return 'Android';
 	if (/Mac/.test(ua)) return 'Mac';
-	if (/Windows/.test(ua)) return 'Windows PC';
+	if (/Windows/.test(ua)) return 'Windows';
 	return 'Referee';
 }
 
-export function saveDisplayName(name: string): void {
-	try {
-		localStorage.setItem(DISPLAY_NAME_KEY, name);
-	} catch {
-		// ignore
-	}
+/** Auto-generated per-tab client label, e.g. Mac-7f3a. */
+export function generateClientName(): string {
+	return `${getDeviceBaseName()}-${randomSuffix(CLIENT_NAME_SUFFIX_LENGTH)}`;
 }
 
 export function buildRoomUrl(roomId: string): string {

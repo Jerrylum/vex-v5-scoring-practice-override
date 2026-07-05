@@ -16,11 +16,12 @@ export function buildHandshakeRoute(w: WRPCRootObject<object, ServerContext, Rec
 			.output(JoiningKitSchema)
 			.mutation(async ({ ctx, input, session }) => {
 				try {
+					const displayName = session.currentClient.deviceName;
 					const result = createRoom(
 						ctx.store,
 						ctx.roomId,
 						session.currentClient.clientId,
-						session.currentClient.deviceId,
+						displayName,
 						input
 					);
 					ctx.store.meta = result.meta;
@@ -41,7 +42,8 @@ export function buildHandshakeRoute(w: WRPCRootObject<object, ServerContext, Rec
 			.output(JoiningKitSchema)
 			.mutation(async ({ ctx, input, session }) => {
 				try {
-					const result = joinRoom(ctx.store, session.currentClient.clientId, session.currentClient.deviceId, input);
+					const displayName = session.currentClient.deviceName;
+					const result = joinRoom(ctx.store, session.currentClient.clientId, displayName, input);
 					ctx.store.state = result.state;
 					await ctx.persist();
 					broadcastRoomState(ctx.network, result.state);

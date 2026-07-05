@@ -42,18 +42,18 @@
 		}
 	}
 
-	async function handleRejoinRoom() {
+	async function handleJoinRoom() {
 		if (isBusy || !roomId) return;
 		isBusy = true;
 		statusMessage = null;
 		roomSession.setError(null);
 
 		try {
-			await roomSession.rejoinRoom(roomId);
-			statusMessage = 'Rejoined room.';
+			await roomSession.joinRoom(roomId);
+			statusMessage = 'Joined room.';
 		} catch (error) {
-			console.error('Failed to rejoin room:', error);
-			roomSession.setError(error instanceof Error ? error.message : 'Failed to rejoin room');
+			console.error('Failed to join room:', error);
+			roomSession.setError(error instanceof Error ? error.message : 'Failed to join room');
 		} finally {
 			isBusy = false;
 		}
@@ -72,7 +72,7 @@
 	}
 
 	async function handleStartScoring() {
-		if (!roomSession.isHost || isBusy) return;
+		if (isBusy) return;
 		isBusy = true;
 		try {
 			await roomSession.startScoring();
@@ -102,7 +102,7 @@
 		if (roomSession.kit || isBusy || autoConnectAttempted) return;
 		autoConnectAttempted = true;
 		if (roomId) {
-			void handleRejoinRoom();
+			void handleJoinRoom();
 		} else {
 			void handleCreateRoom();
 		}
@@ -115,7 +115,7 @@
 		<p class="mb-6 text-sm text-gray-400">{connectionLabel}</p>
 
 		{#if !roomSession.kit && isBusy}
-			<p class="text-center text-sm text-gray-400">{roomId ? 'Rejoining room…' : 'Creating room…'}</p>
+			<p class="text-center text-sm text-gray-400">{roomId ? 'Joining room…' : 'Creating room…'}</p>
 		{/if}
 
 		{#if roomSession.kit}
@@ -139,7 +139,7 @@
 					Copy room link
 				</button>
 
-				<p class="mb-2 text-xs tracking-wide text-gray-500 uppercase">Participants ({roomSession.roomState?.participants.length ?? 0})</p>
+				<p class="mb-2 text-xs tracking-wide text-gray-500 uppercase">Connected ({roomSession.roomState?.participants.length ?? 0})</p>
 				<ul class="space-y-1 text-sm">
 					{#each roomSession.roomState?.participants ?? [] as participant (participant.clientId)}
 						<li class="flex items-center justify-between rounded px-2 py-1 hover:bg-black/40">
@@ -149,15 +149,12 @@
 									<span class="text-gray-500"> (You)</span>
 								{/if}
 							</span>
-							{#if participant.clientId === roomSession.roomState?.hostClientId}
-								<span class="text-xs text-[#007fff]">Host</span>
-							{/if}
 						</li>
 					{/each}
 				</ul>
 			</div>
 
-			{#if roomSession.isHost && roomSession.phase === 'lobby'}
+			{#if roomSession.phase === 'lobby'}
 				<button
 					type="button"
 					class="w-full cursor-pointer rounded-full bg-[#007fff] px-6 py-3 text-sm font-semibold text-white hover:bg-[#0066cc] disabled:cursor-not-allowed disabled:opacity-50"
@@ -166,8 +163,6 @@
 				>
 					{isBusy ? 'Starting…' : 'Start scoring'}
 				</button>
-			{:else if !roomSession.isHost && roomSession.phase === 'lobby'}
-				<p class="text-center text-sm text-gray-400">Waiting for host to start scoring…</p>
 			{/if}
 		{/if}
 
