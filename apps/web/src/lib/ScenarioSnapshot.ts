@@ -14,8 +14,4 @@ export type {
 	ToggleColor
 } from '@vex-v5-override/protocol';
 
-export {
-	ScenarioSnapshotSchema,
-	ScenarioProvenanceSchema,
-	parseScenarioSnapshot
-} from '@vex-v5-override/protocol';
+export { ScenarioSnapshotSchema, ScenarioProvenanceSchema, parseScenarioSnapshot } from '@vex-v5-override/protocol';

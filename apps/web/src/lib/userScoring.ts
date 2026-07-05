@@ -1,11 +1,7 @@
 import type { QuadrantId } from './structure/QuadrantDefinition';
 import type { MidfieldCounts, PinHalfCounts, QuadrantGoalPairScoring, ScenarioScoring, ToggleColor } from './Scoring';
 import { emptyPinHalfCounts } from './Scoring';
-import {
-	emptyUserScenarioScoring,
-	type UserQuadrantScoring,
-	type UserScenarioScoring
-} from '@vex-v5-override/protocol';
+import { emptyUserScenarioScoring, type UserQuadrantScoring, type UserScenarioScoring } from '@vex-v5-override/protocol';
 
 export type { UserQuadrantScoring, UserScenarioScoring };
 export { emptyUserScenarioScoring };

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import ts from 'typescript-eslint';
 
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
-const prettierIgnorePath = fileURLToPath(new URL('./.prettierignore', import.meta.url));
+const prettierIgnorePath = fileURLToPath(new URL('../../.prettierignore', import.meta.url));
 
 export default ts.config(
 	includeIgnoreFile(gitignorePath, 'gitignore'),

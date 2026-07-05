@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-	ScenarioSnapshotSchema,
-	SNAPSHOT_VERSION,
-	StackItemSchema,
-	parseScenarioSnapshot
-} from './scenario';
+import { ScenarioSnapshotSchema, SNAPSHOT_VERSION, StackItemSchema, parseScenarioSnapshot } from './scenario';
 
 const minimalSnapshot = {
 	version: SNAPSHOT_VERSION,
