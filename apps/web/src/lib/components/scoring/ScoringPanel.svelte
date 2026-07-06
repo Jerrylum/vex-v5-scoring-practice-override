@@ -101,7 +101,7 @@
 	}
 </script>
 
-<div class="flex h-full flex-col bg-[#0a0a0a] text-[#CDD7E1]">
+<div class="scoring-panel-no-select flex h-full flex-col bg-[#0a0a0a] text-[#CDD7E1]">
 	<div class="flex-none border-b border-gray-800 p-3">
 		<div class="flex items-center justify-between gap-2">
 			<h2 class="text-lg font-bold text-[#CDD7E1]">Scoring Panel</h2>

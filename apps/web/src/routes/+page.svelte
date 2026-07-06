@@ -11,6 +11,7 @@
 	import LobbyScreen from '$lib/screens/LobbyScreen.svelte';
 	import MenuScreen from '$lib/screens/MenuScreen.svelte';
 	import { loadGraphicProfileSetting, resolveGraphicProfile, type GraphicProfileSetting } from '$lib/graphicProfile';
+	import { loadScenarioDefaultViewSetting, type ScenarioDefaultViewSetting } from '$lib/scenarioDefaultView';
 	import { ModelLoader } from '$lib/ModelLoader';
 	import { parseRoomIdFromUrl } from '$lib/multiplayer/identity';
 	import { roomSession } from '$lib/multiplayer/roomSession.svelte';
@@ -34,9 +35,9 @@
 	let confirmResolver = $state<((accepted: boolean) => void) | null>(null);
 	let confirmOnConfirm = $state<(() => void | Promise<void>) | null>(null);
 	let graphicProfileSetting = $state<GraphicProfileSetting>('auto');
+	let scenarioDefaultViewSetting = $state<ScenarioDefaultViewSetting>(null);
 	let modelLoader = $state<ModelLoader | null>(null);
 	let initError = $state<string | null>(null);
-	let viewPresetHandler = $state<((preset: import('$lib/refereeView').RefereeViewPreset) => void) | null>(null);
 
 	function openSettings() {
 		dismissConfirm(false);
@@ -120,6 +121,10 @@
 		graphicProfileSetting = setting;
 	}
 
+	function handleScenarioDefaultViewChange(setting: ScenarioDefaultViewSetting) {
+		scenarioDefaultViewSetting = setting;
+	}
+
 	function startSingleplayer() {
 		gameMode = 'singleplayer';
 		screen = 'game';
@@ -179,6 +184,7 @@
 		const init = async () => {
 			try {
 				graphicProfileSetting = loadGraphicProfileSetting();
+				scenarioDefaultViewSetting = loadScenarioDefaultViewSetting();
 				const profile = resolveGraphicProfile(graphicProfileSetting);
 				const loader = new ModelLoader(profile);
 				await preloadGameAssets(loader, (message) => {
@@ -230,9 +236,6 @@
 			onOpenPauseMenu={openPauseMenu}
 			onOpenShareDialog={openShareDialog}
 			{requestConfirm}
-			registerViewPreset={(handler) => {
-				viewPresetHandler = handler;
-			}}
 		/>
 	{/if}
 </div>
@@ -244,9 +247,6 @@
 	onOpenSettings={openSettings}
 	onOpenShareDialog={gameMode === 'multiplayer' ? openShareDialog : undefined}
 	onBackToMenu={handleBackToMenu}
-	onViewPresetChange={(preset) => {
-		viewPresetHandler?.(preset);
-	}}
 />
 
 <RoomShareDialog open={openDialog === 'share'} onClose={closeDialog} />
@@ -254,8 +254,10 @@
 <SettingsDialog
 	open={openDialog === 'settings'}
 	profileSetting={graphicProfileSetting}
+	scenarioDefaultViewSetting={scenarioDefaultViewSetting}
 	onClose={closeDialog}
 	onChange={handleProfileChange}
+	onScenarioDefaultViewChange={handleScenarioDefaultViewChange}
 />
 
 {#if isConfirmDialog(openDialog)}

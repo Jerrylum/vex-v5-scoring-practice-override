@@ -41,7 +41,7 @@
 	};
 </script>
 
-<Dialog {open} onClose={onCancel} ariaLabelledBy={titleId} contentClass="max-w-md">
+<Dialog {open} onClose={onCancel} ariaLabelledBy={titleId} contentClass="max-w-md!">
 	<div class="space-y-4">
 		<h2 id={titleId} class="text-lg font-bold text-white">{title}</h2>
 		{#if message}

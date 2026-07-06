@@ -11,10 +11,12 @@
 	import {
 		defaultTabForPreset,
 		getRefereeViewPreset,
+		KEYBOARD_VIEW_SHORTCUTS,
 		setRefereeViewPreset,
 		shouldCollapsePanelForPreset,
 		type RefereeViewPreset
 	} from '$lib/refereeView';
+	import { loadScenarioDefaultViewSetting } from '$lib/scenarioDefaultView';
 	import { Scene } from '$lib/Scene';
 	import { GENERATOR_VERSION } from '$lib/generatorVersion';
 	import { emptyScenarioScoring, type ScenarioScoring } from '$lib/Scoring';
@@ -45,18 +47,9 @@
 		onOpenPauseMenu: () => void;
 		onOpenShareDialog: () => void;
 		requestConfirm: (options: ConfirmRequestOptions) => Promise<boolean>;
-		registerViewPreset?: (handler: (preset: RefereeViewPreset) => void) => void;
 	}
 
-	let {
-		modelLoader,
-		mode = 'singleplayer',
-		onOpenSettings,
-		onOpenPauseMenu,
-		onOpenShareDialog,
-		requestConfirm,
-		registerViewPreset
-	}: Props = $props();
+	let { modelLoader, mode = 'singleplayer', onOpenSettings, onOpenPauseMenu, onOpenShareDialog, requestConfirm }: Props = $props();
 
 	const isMultiplayer = $derived(mode === 'multiplayer');
 
@@ -81,6 +74,7 @@
 	let lastAppliedScoringRevision = $state(-1);
 	let scoringTab = $state<ScoringTabId>(defaultTabForPreset(getRefereeViewPreset()));
 	let viewPreset = $state<RefereeViewPreset>(getRefereeViewPreset());
+	let showViewControls = $state(false);
 
 	const isScoringConnected = $derived(!isMultiplayer || roomSession.connectionState === 'connected');
 
@@ -92,6 +86,32 @@
 		scoringTab = defaultTabForPreset(preset);
 		isPanelCollapsed = shouldCollapsePanelForPreset(preset);
 		scene?.applyViewPreset(preset);
+	}
+
+	function maybeApplyScenarioDefaultView() {
+		const defaultView = loadScenarioDefaultViewSetting();
+		if (defaultView !== null) {
+			applyViewPreset(defaultView);
+		}
+	}
+
+	function isEditableKeyTarget(target: EventTarget | null): boolean {
+		return target instanceof HTMLInputElement || target instanceof HTMLSelectElement || target instanceof HTMLTextAreaElement;
+	}
+
+	function handleViewKeyboard(event: KeyboardEvent) {
+		if (event.metaKey || event.ctrlKey || event.altKey) return;
+		if (isEditableKeyTarget(event.target)) return;
+
+		if (event.key === '[') {
+			showViewControls = !showViewControls;
+			return;
+		}
+
+		const shortcut = KEYBOARD_VIEW_SHORTCUTS.find((entry) => entry.key === event.key);
+		if (shortcut) {
+			applyViewPreset(shortcut.preset);
+		}
 	}
 
 	function togglePanel() {
@@ -196,6 +216,8 @@
 		if (!isMultiplayer && options?.updateUrl !== false && scenario.provenance) {
 			updateShareUrl(scenario, currentDifficulty);
 		}
+
+		maybeApplyScenarioDefaultView();
 	}
 
 	async function applySnapshot(activeScene: Scene, difficulty: Level, snapshot: ScenarioSnapshot) {
@@ -372,7 +394,9 @@
 		};
 		init();
 		focusGameRoot();
-		registerViewPreset?.(applyViewPreset);
+
+		document.addEventListener('keydown', handleViewKeyboard);
+		return () => document.removeEventListener('keydown', handleViewKeyboard);
 	});
 </script>
 
@@ -388,6 +412,24 @@
 			<div class="pointer-events-auto absolute top-3 right-3 z-40 max-w-xs rounded-lg bg-red-950 px-3 py-2 text-xs text-red-200">
 				{roomSession.error}
 				<button type="button" class="ml-2 underline" onclick={() => roomSession.clearError()}>Dismiss</button>
+			</div>
+		{/if}
+
+		{#if showViewControls}
+			<div
+				class="pointer-events-none absolute bottom-4 left-4 z-40 rounded-lg border border-gray-800/80 bg-black/70 px-5 py-3 font-mono text-xs text-gray-300 backdrop-blur-sm"
+				aria-hidden="true"
+			>
+				{#each KEYBOARD_VIEW_SHORTCUTS as shortcut (shortcut.key)}
+					<div class="flex flex-row gap-4">
+						<div class="font-mono font-bold">{shortcut.key}</div>
+						<div>{shortcut.label}</div>
+					</div>
+				{/each}
+				<div class="flex flex-row gap-4">
+					<div class="font-mono font-bold">[</div>
+					<div>hide controls</div>
+				</div>
 			</div>
 		{/if}
 
