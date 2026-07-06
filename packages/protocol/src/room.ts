@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ScenarioSnapshotSchema } from './scenario';
-import { UserScenarioScoringSchema } from './scoring';
+import { ScoringPatchSchema, UserScenarioScoringSchema } from './scoring';
 
 export const RefereeRoleSchema = z.enum(['southWest', 'southEast', 'headRef', 'observer']);
 export type RefereeRole = z.infer<typeof RefereeRoleSchema>;
@@ -68,7 +68,7 @@ export type CreateRoomInput = z.infer<typeof CreateRoomInputSchema>;
 export const JoinRoomInputSchema = z.object({});
 export type JoinRoomInput = z.infer<typeof JoinRoomInputSchema>;
 
-export const UpdateScoringInputSchema = UserScenarioScoringSchema;
+export const UpdateScoringInputSchema = ScoringPatchSchema;
 export type UpdateScoringInput = z.infer<typeof UpdateScoringInputSchema>;
 
 export const RegenerateScenarioInputSchema = z.object({

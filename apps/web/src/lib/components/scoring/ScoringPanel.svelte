@@ -17,6 +17,13 @@
 		type ScoringTabId,
 		type UserScenarioScoring
 	} from '$lib/userScoring';
+	import type { ScoringPatch } from '@vex-v5-override/protocol';
+	import {
+		diffMidfieldGoalPatch,
+		diffMidfieldRobotsPatch,
+		diffQuadrantSectionPatch,
+		mergeScoringPatches
+	} from '@vex-v5-override/protocol';
 
 	interface Props {
 		userScoring?: UserScenarioScoring;
@@ -41,6 +48,7 @@
 		onOpenSettings: () => void;
 		onOpenPauseMenu: () => void;
 		onDifficultyChange?: (next: Level) => boolean | Promise<boolean>;
+		onScoringPatch?: (patch: ScoringPatch) => void;
 	}
 
 	let {
@@ -65,7 +73,8 @@
 		onGoToSimulator,
 		onOpenSettings,
 		onOpenPauseMenu,
-		onDifficultyChange
+		onDifficultyChange,
+		onScoringPatch
 	}: Props = $props();
 
 	const userPoints = $derived(calculateUserAlliancePoints(userScoring));
@@ -82,8 +91,25 @@
 		onShowAnswerChange?.(next);
 	}
 
+	function emitScoringPatch(patch: ScoringPatch | null) {
+		if (patch) onScoringPatch?.(patch);
+	}
+
 	function updateQuadrant(key: (typeof QUADRANT_TAB_CONFIG)[number]['key'], quadrant: UserScenarioScoring[typeof key]) {
+		const patch = diffQuadrantSectionPatch(key, userScoring[key], quadrant);
 		userScoring = { ...userScoring, [key]: quadrant };
+		emitScoringPatch(patch);
+	}
+
+	function updateMidfield(next: UserScenarioScoring) {
+		const goalPatch = diffMidfieldGoalPatch(userScoring.midfieldGoal, next.midfieldGoal);
+		const robotsPatch = diffMidfieldRobotsPatch(userScoring.midfieldRobots, next.midfieldRobots);
+		const patch =
+			goalPatch && robotsPatch
+				? mergeScoringPatches(goalPatch, robotsPatch)
+				: (goalPatch ?? robotsPatch);
+		userScoring = next;
+		emitScoringPatch(patch);
 	}
 
 	async function handleDifficultyChange(event: Event) {
@@ -184,7 +210,7 @@
 		{#if activeTab === 'overview'}
 			<OverviewTab {userScoring} />
 		{:else if activeTab === 'midfield'}
-			<MidfieldTab {userScoring} {actualCounts} {midfieldCounts} {showAnswer} {readOnly} onUpdate={(next) => (userScoring = next)} />
+			<MidfieldTab {userScoring} {actualCounts} {midfieldCounts} {showAnswer} {readOnly} onUpdate={updateMidfield} />
 		{:else}
 			{#each QUADRANT_TAB_CONFIG as config (config.tabId)}
 				{#if activeTab === config.tabId}

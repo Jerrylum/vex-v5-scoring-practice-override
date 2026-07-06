@@ -1,6 +1,7 @@
-import type { JoiningKit, RoomPhase, RoomState, ScenarioSnapshot } from '@vex-v5-override/protocol';
+import type { JoiningKit, RoomPhase, RoomState, ScenarioSnapshot, ScoringPatch, ScoringUpdateEvent } from '@vex-v5-override/protocol';
+import { mergeScoringPatch } from '@vex-v5-override/protocol';
 import type { ConnectionState } from '@vex-v5-override/wrpc/client';
-import { setOnRoomStateUpdateHandler } from './client-router';
+import { setOnRoomStateUpdateHandler, setOnScoringPatchHandler } from './client-router';
 import {
 	connectRoom,
 	createConnectionParams,
@@ -11,7 +12,7 @@ import {
 	type RoomConnectionParams
 } from './roomClient';
 import { buildRoomUrl, clearRoomUrl, generateUUID, setRoomUrl } from './identity';
-import { createDebouncedScoringUpdate, shouldApplyRemoteRevision } from './roomSync';
+import { createDebouncedScoringPatchUpdate, shouldApplyRemoteRevision } from './roomSync';
 
 /**
  * Client-side multiplayer session: room kit, connection state, and sync to the worker.
@@ -44,7 +45,7 @@ class RoomSessionStore {
 	private resyncInFlight = false;
 	/** User clicked Leave; suppresses auto re-join if wrpc fires connected during teardown. */
 	private intentionalDisconnect = false;
-	private scoringUpdate = createDebouncedScoringUpdate((scoring) => this.updateScoring(scoring));
+	private scoringUpdate = createDebouncedScoringPatchUpdate((patch) => this.updateScoringPatch(patch));
 
 	constructor() {
 		setConnectionStateListener((state) => {
@@ -70,6 +71,7 @@ class RoomSessionStore {
 			}
 		});
 		setOnRoomStateUpdateHandler((state) => this.applyRemoteState(state));
+		setOnScoringPatchHandler((event) => this.applyScoringPatch(event));
 	}
 
 	get roomState(): RoomState | null {
@@ -95,12 +97,30 @@ class RoomSessionStore {
 	applyRemoteState(state: RoomState): void {
 		if (!this.kit || !shouldApplyRemoteRevision(state.revision, this.lastAppliedRevision)) return;
 
-		// Drop unsent local scoring before applying a newer server revision.
+		// Full state replaces scoring — drop all unsent local patches.
 		this.scoringUpdate.cancel();
 		this.lastAppliedRevision = state.revision;
 		this.syncingFromServer = true;
 		this.kit = { ...this.kit, state };
-		// Clear after microtask so GameScreen's outbound $effect does not fire on this apply.
+		queueMicrotask(() => {
+			this.syncingFromServer = false;
+		});
+	}
+
+	applyScoringPatch(event: ScoringUpdateEvent): void {
+		if (!this.kit || !shouldApplyRemoteRevision(event.revision, this.lastAppliedRevision)) return;
+
+		this.scoringUpdate.removeOverlapping(event.patch);
+		this.lastAppliedRevision = event.revision;
+		this.syncingFromServer = true;
+		this.kit = {
+			...this.kit,
+			state: {
+				...this.kit.state,
+				revision: event.revision,
+				scoring: mergeScoringPatch(this.kit.state.scoring, event.patch)
+			}
+		};
 		queueMicrotask(() => {
 			this.syncingFromServer = false;
 		});
@@ -115,9 +135,9 @@ class RoomSessionStore {
 		setRoomUrl(roomId);
 	}
 
-	scheduleScoringUpdate(scoring: RoomState['scoring']): void {
+	scheduleScoringPatch(patch: ScoringPatch): void {
 		if (this.syncingFromServer || !this.kit || this.connectionState !== 'connected') return;
-		this.scoringUpdate.schedule(scoring);
+		this.scoringUpdate.schedule(patch);
 	}
 
 	async flushScoringUpdate(): Promise<void> {
@@ -222,11 +242,9 @@ class RoomSessionStore {
 		}
 	}
 
-	async updateScoring(scoring: RoomState['scoring']): Promise<void> {
+	async updateScoringPatch(patch: ScoringPatch): Promise<void> {
 		if (this.syncingFromServer || !this.kit || this.connectionState !== 'connected') return;
-		const next = await this.callMutation(() => getRoomRpcClient().room.updateScoring.mutation(scoring));
-		// Apply mutation response locally; broadcast may arrive with the same revision.
-		this.applyRemoteState(next);
+		await this.callMutation(() => getRoomRpcClient().room.updateScoring.mutation(patch));
 	}
 
 	async regenerateScenario(scenario: ScenarioSnapshot): Promise<void> {
@@ -262,6 +280,7 @@ class RoomSessionStore {
 		this.pendingCreateScenario = null;
 		this.scoringUpdate.cancel();
 		setOnRoomStateUpdateHandler(null);
+		setOnScoringPatchHandler(null);
 		resetRoomClient();
 		this.kit = null;
 		this.clientId = null;
@@ -270,6 +289,7 @@ class RoomSessionStore {
 		this.connectionState = getConnectionState();
 		clearRoomUrl();
 		setOnRoomStateUpdateHandler((state) => this.applyRemoteState(state));
+		setOnScoringPatchHandler((event) => this.applyScoringPatch(event));
 	}
 }
 

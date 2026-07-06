@@ -123,7 +123,7 @@ describe('room-store', () => {
 		expect(next?.revision).toBe(1);
 	});
 
-	it('updates scoring with revision bump', () => {
+	it('updates scoring with revision bump via patch merge', () => {
 		const data = emptyStore();
 		const created = createRoom(data, roomId, clientOneId, 'Mac-7f3a', {
 			scenario: sampleScenario
@@ -131,10 +131,27 @@ describe('room-store', () => {
 		data.meta = created.meta;
 		data.state = created.state;
 
-		const scoring = { ...created.state.scoring, midfieldGoal: { red: 1, blue: 0, yellow: 0 } };
-		const next = updateScoring(data, scoring);
+		const next = updateScoring(data, { midfieldGoal: { red: 1 } });
 		expect(next.revision).toBe(1);
 		expect(next.scoring.midfieldGoal.red).toBe(1);
+		expect(next.scoring.midfieldGoal.blue).toBe(0);
+	});
+
+	it('merges concurrent quadrant field patches without clobbering other fields', () => {
+		const data = emptyStore();
+		const created = createRoom(data, roomId, clientOneId, 'Mac-7f3a', {
+			scenario: sampleScenario
+		});
+		data.meta = created.meta;
+		data.state = created.state;
+
+		const afterRed = updateScoring(data, { redQuadrantOne: { red: 1 } });
+		data.state = afterRed;
+		const afterBlue = updateScoring(data, { redQuadrantOne: { blue: 2 } });
+
+		expect(afterBlue.scoring.redQuadrantOne.red).toBe(1);
+		expect(afterBlue.scoring.redQuadrantOne.blue).toBe(2);
+		expect(afterBlue.revision).toBe(2);
 	});
 
 	it('allows any client to change phase and regenerate scenario', () => {

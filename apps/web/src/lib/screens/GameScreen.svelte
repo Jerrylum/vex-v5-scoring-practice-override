@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { onMount, untrack } from 'svelte';
+	import { onMount } from 'svelte';
 	import ChevronLeftIcon from '$lib/components/icons/ChevronLeftIcon.svelte';
 	import ChevronRightIcon from '$lib/components/icons/ChevronRightIcon.svelte';
 	import ConnectionLabel from '$lib/components/multiplayer/ConnectionLabel.svelte';
@@ -37,7 +37,7 @@
 	} from '$lib/scenarioLink';
 	import { emptyUserScenarioScoring, type UserScenarioScoring } from '$lib/userScoring';
 	import type { ScoringTabId } from '$lib/userScoring';
-	import type { ScenarioSnapshot } from '@vex-v5-override/protocol';
+	import type { ScenarioSnapshot, ScoringPatch } from '@vex-v5-override/protocol';
 	import { randomMasterSeed } from '$lib/utils';
 
 	interface Props {
@@ -151,18 +151,10 @@
 		});
 	});
 
-	// Outbound: react only to local userScoring changes. untrack() avoids subscribing to roomState
-	// (which would re-run while syncingFromServer and skip sending after the flag clears).
-	$effect(() => {
-		if (!isMultiplayer || !isScoringConnected) return;
-
-		const local = userScoring;
-		untrack(() => {
-			const remote = roomSession.roomState?.scoring;
-			if (!remote || JSON.stringify(local) === JSON.stringify(remote)) return;
-			roomSession.scheduleScoringUpdate(local);
-		});
-	});
+	function handleScoringPatch(patch: ScoringPatch) {
+		if (!isMultiplayer || applyingRemoteState) return;
+		roomSession.scheduleScoringPatch(patch);
+	}
 
 	function scenarioKeyFromState(state: NonNullable<typeof roomSession.roomState>): string {
 		return JSON.stringify(state.scenario);
@@ -484,6 +476,7 @@
 					onGoToSimulator={togglePanel}
 					{onOpenSettings}
 					{onOpenPauseMenu}
+					onScoringPatch={isMultiplayer ? handleScoringPatch : undefined}
 				/>
 			{/key}
 		</div>

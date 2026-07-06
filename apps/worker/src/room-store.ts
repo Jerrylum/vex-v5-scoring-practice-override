@@ -10,7 +10,7 @@ import type {
 	ScenarioSnapshot,
 	UpdateScoringInput
 } from '@vex-v5-override/protocol';
-import { emptyUserScenarioScoring } from '@vex-v5-override/protocol';
+import { emptyUserScenarioScoring, mergeScoringPatch } from '@vex-v5-override/protocol';
 
 export class RoomNotFoundError extends Error {
 	constructor() {
@@ -117,12 +117,12 @@ export function removeClient(data: RoomStoreData, clientId: string): RoomState |
 	return bumpRevision({ ...data.state, participants });
 }
 
-export function updateScoring(data: RoomStoreData, scoring: UpdateScoringInput): RoomState {
+export function updateScoring(data: RoomStoreData, patch: UpdateScoringInput): RoomState {
 	if (data.state === null) {
 		throw new RoomNotFoundError();
 	}
 
-	return bumpRevision({ ...data.state, scoring });
+	return bumpRevision({ ...data.state, scoring: mergeScoringPatch(data.state.scoring, patch) });
 }
 
 export function regenerateScenario(data: RoomStoreData, _clientId: string, input: RegenerateScenarioInput): RoomState {
