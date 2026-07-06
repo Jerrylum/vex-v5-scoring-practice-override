@@ -12,6 +12,7 @@ import {
   joinRoom,
 } from "../room-store";
 import type { ServerContext } from "../server-router";
+import type { ClientRouter } from "@vex-v5-override/web/src/lib/multiplayer/client-router";
 import { broadcastRoomState } from "./broadcast";
 
 export function buildHandshakeRoute(
@@ -34,7 +35,8 @@ export function buildHandshakeRoute(
           ctx.store.meta = result.meta;
           ctx.store.state = result.state;
           await ctx.persist();
-          broadcastRoomState(ctx.network, result.state);
+
+          broadcastRoomState(session.broadcast<ClientRouter>(), result.state);
           return result.kit;
         } catch (error) {
           if (error instanceof RoomAlreadyExistsError) {
@@ -58,7 +60,8 @@ export function buildHandshakeRoute(
           );
           ctx.store.state = result.state;
           await ctx.persist();
-          broadcastRoomState(ctx.network, result.state);
+
+          broadcastRoomState(session.broadcast<ClientRouter>(), result.state);
           return result.kit;
         } catch (error) {
           if (error instanceof RoomNotFoundError) {

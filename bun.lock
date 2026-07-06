@@ -56,6 +56,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@vex-v5-override/protocol": "workspace:*",
+        "@vex-v5-override/web": "workspace:*",
         "@vex-v5-override/wrpc": "workspace:*",
         "zod": "^4.0.15",
       },

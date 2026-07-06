@@ -5,6 +5,7 @@ import type { RoomStoreData } from "./room-store";
 import { removeClient } from "./room-store";
 import { serverRouter, type ServerContext } from "./server-router";
 import { broadcastRoomState } from "./routes/broadcast";
+import type { ClientRouter } from "@vex-v5-override/web/src/lib/multiplayer/client-router";
 
 const ROOM_META_KEY = "room-meta";
 const ROOM_STATE_KEY = "room-state";
@@ -142,7 +143,8 @@ export class RoomDurableObject extends DurableObject<Env> {
     if (next && next !== this.store.state) {
       this.store.state = next;
       await this.persistStore();
-      broadcastRoomState(this.wsHandler.connectionManager, next);
+
+      broadcastRoomState(this.wsHandler.broadcast<ClientRouter>(), next);
     }
   }
 
