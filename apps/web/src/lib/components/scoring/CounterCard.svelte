@@ -1,6 +1,7 @@
 <script lang="ts">
 	import PinShapeIcon from './PinShapeIcon.svelte';
 	import type { ToggleColor } from '$lib/Scoring';
+	import { MAX_SCORING_COUNT } from '@vex-v5-override/protocol';
 
 	interface Props {
 		title: string;
@@ -12,6 +13,7 @@
 		showAnswer?: boolean;
 		compact?: boolean;
 		disabled?: boolean;
+		max?: number;
 	}
 
 	let {
@@ -23,8 +25,11 @@
 		correctValue = null,
 		showAnswer = false,
 		compact = false,
-		disabled = false
+		disabled = false,
+		max = MAX_SCORING_COUNT
 	}: Props = $props();
+
+	const incrementDisabled = $derived(disabled || value >= max);
 
 	const borderClass = $derived(color === 'red' ? 'border-red-700' : color === 'blue' ? 'border-blue-700' : 'border-yellow-700');
 
@@ -92,10 +97,10 @@
 					class:h-6={compact}
 					class:w-6={compact}
 					class:text-sm={compact}
-					class:cursor-not-allowed={disabled}
-					class:opacity-50={disabled}
+					class:cursor-not-allowed={incrementDisabled}
+					class:opacity-50={incrementDisabled}
 					onclick={onIncrement}
-					{disabled}
+					disabled={incrementDisabled}
 					aria-label="Increase {title}"
 				>
 					+

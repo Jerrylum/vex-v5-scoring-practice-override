@@ -2,6 +2,7 @@
 	import CounterCard from './CounterCard.svelte';
 	import type { MidfieldCounts, PinHalfCounts, ScenarioScoring } from '$lib/Scoring';
 	import type { UserScenarioScoring } from '$lib/userScoring';
+	import { MAX_SCORING_COUNT } from '@vex-v5-override/protocol';
 
 	interface Props {
 		userScoring: UserScenarioScoring;
@@ -15,6 +16,7 @@
 	let { userScoring, actualCounts, midfieldCounts, showAnswer, readOnly = false, onUpdate }: Props = $props();
 
 	function incrementGoal(field: keyof PinHalfCounts) {
+		if (userScoring.midfieldGoal[field] >= MAX_SCORING_COUNT) return;
 		onUpdate({
 			...userScoring,
 			midfieldGoal: {
@@ -37,6 +39,7 @@
 	}
 
 	function incrementRobot(alliance: 'red' | 'blue') {
+		if (userScoring.midfieldRobots[alliance] >= MAX_SCORING_COUNT) return;
 		onUpdate({
 			...userScoring,
 			midfieldRobots: {

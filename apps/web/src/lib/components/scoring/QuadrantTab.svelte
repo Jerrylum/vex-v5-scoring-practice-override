@@ -3,6 +3,7 @@
 	import ToggleSelector from './ToggleSelector.svelte';
 	import type { ScenarioScoring } from '$lib/Scoring';
 	import { getActualQuadrantCounts, getActualToggleColor, type QuadrantKey, type UserQuadrantScoring } from '$lib/userScoring';
+	import { MAX_SCORING_COUNT } from '@vex-v5-override/protocol';
 
 	interface Props {
 		label: string;
@@ -20,6 +21,7 @@
 	const actualToggle = $derived(getActualToggleColor(actualCounts, quadrantKey));
 
 	function increment(field: 'red' | 'blue' | 'yellow') {
+		if (quadrant[field] >= MAX_SCORING_COUNT) return;
 		onUpdate({ ...quadrant, [field]: quadrant[field] + 1 });
 	}
 

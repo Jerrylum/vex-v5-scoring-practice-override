@@ -2,7 +2,10 @@ import { z } from 'zod';
 import { diffSectionPatch } from './patch';
 import { ToggleColorSchema } from './scenario';
 
-const countSchema = z.number().int().min(0).max(100);
+/** Upper bound for pin/robot count fields in user scoring. */
+export const MAX_SCORING_COUNT = 100;
+
+const countSchema = z.number().int().min(0).max(MAX_SCORING_COUNT);
 
 export const PinHalfCountsSchema = z.object({
 	red: countSchema,
