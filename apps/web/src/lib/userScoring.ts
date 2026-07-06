@@ -154,22 +154,35 @@ function quadrantMatches(user: UserQuadrantScoring, actual: QuadrantGoalPairScor
 	return pinCountsMatch(user, aggregateQuadrantVisible(actual)) && user.toggleColor === actual.toggleColor;
 }
 
-export function isUserScoringCorrect(user: UserScenarioScoring, actual: ScenarioScoring, midfieldRobots: MidfieldCounts): boolean {
+/** Either tab order matches actual Q1/Q2, or the two tabs are swapped. */
+function allianceQuadrantsCorrect(
+	userOne: UserQuadrantScoring,
+	userTwo: UserQuadrantScoring,
+	actualOne: QuadrantGoalPairScoring | undefined,
+	actualTwo: QuadrantGoalPairScoring | undefined
+): boolean {
+	return (
+		(quadrantMatches(userOne, actualOne) && quadrantMatches(userTwo, actualTwo)) ||
+		(quadrantMatches(userTwo, actualOne) && quadrantMatches(userOne, actualTwo))
+	);
+}
+
+function midfieldMatches(user: UserScenarioScoring, actual: ScenarioScoring, midfieldRobots: MidfieldCounts): boolean {
 	if (!pinCountsMatch(user.midfieldGoal, actual.midfieldGoal.visible)) {
 		return false;
 	}
+	return user.midfieldRobots.red === midfieldRobots.red && user.midfieldRobots.blue === midfieldRobots.blue;
+}
 
-	if (user.midfieldRobots.red !== midfieldRobots.red || user.midfieldRobots.blue !== midfieldRobots.blue) {
+export function isUserScoringCorrect(user: UserScenarioScoring, actual: ScenarioScoring, midfieldRobots: MidfieldCounts): boolean {
+	if (!midfieldMatches(user, actual, midfieldRobots)) {
 		return false;
 	}
 
-	for (const { key } of QUADRANT_TAB_CONFIG) {
-		if (!quadrantMatches(user[key], actual[key])) {
-			return false;
-		}
-	}
-
-	return true;
+	return (
+		allianceQuadrantsCorrect(user.redQuadrantOne, user.redQuadrantTwo, actual.redQuadrantOne, actual.redQuadrantTwo) &&
+		allianceQuadrantsCorrect(user.blueQuadrantOne, user.blueQuadrantTwo, actual.blueQuadrantOne, actual.blueQuadrantTwo)
+	);
 }
 
 export function quadrantKeyFromId(id: QuadrantId): QuadrantKey {

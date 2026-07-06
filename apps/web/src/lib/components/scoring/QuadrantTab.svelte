@@ -1,24 +1,17 @@
 <script lang="ts">
 	import CounterCard from './CounterCard.svelte';
 	import ToggleSelector from './ToggleSelector.svelte';
-	import type { ScenarioScoring } from '$lib/Scoring';
-	import { getActualQuadrantCounts, getActualToggleColor, type QuadrantKey, type UserQuadrantScoring } from '$lib/userScoring';
+	import type { UserQuadrantScoring } from '$lib/userScoring';
 	import { MAX_SCORING_COUNT } from '@vex-v5-override/protocol';
 
 	interface Props {
 		label: string;
-		quadrantKey: QuadrantKey;
 		quadrant: UserQuadrantScoring;
-		actualCounts: ScenarioScoring;
-		showAnswer: boolean;
 		readOnly?: boolean;
 		onUpdate: (quadrant: UserQuadrantScoring) => void;
 	}
 
-	let { label, quadrantKey, quadrant, actualCounts, showAnswer, readOnly = false, onUpdate }: Props = $props();
-
-	const actualPinCounts = $derived(getActualQuadrantCounts(actualCounts, quadrantKey));
-	const actualToggle = $derived(getActualToggleColor(actualCounts, quadrantKey));
+	let { label, quadrant, readOnly = false, onUpdate }: Props = $props();
 
 	function increment(field: 'red' | 'blue' | 'yellow') {
 		if (quadrant[field] >= MAX_SCORING_COUNT) return;
@@ -40,8 +33,6 @@
 		value={quadrant.red}
 		onIncrement={() => increment('red')}
 		onDecrement={() => decrement('red')}
-		correctValue={actualPinCounts?.red ?? null}
-		{showAnswer}
 		disabled={readOnly}
 	/>
 	<CounterCard
@@ -50,8 +41,6 @@
 		value={quadrant.blue}
 		onIncrement={() => increment('blue')}
 		onDecrement={() => decrement('blue')}
-		correctValue={actualPinCounts?.blue ?? null}
-		{showAnswer}
 		disabled={readOnly}
 	/>
 	<CounterCard
@@ -60,15 +49,11 @@
 		value={quadrant.yellow}
 		onIncrement={() => increment('yellow')}
 		onDecrement={() => decrement('yellow')}
-		correctValue={actualPinCounts?.yellow ?? null}
-		{showAnswer}
 		disabled={readOnly}
 	/>
 	<ToggleSelector
 		value={quadrant.toggleColor}
 		onChange={(toggleColor) => onUpdate({ ...quadrant, toggleColor })}
-		correctValue={actualToggle}
-		{showAnswer}
 		disabled={readOnly}
 	/>
 </div>

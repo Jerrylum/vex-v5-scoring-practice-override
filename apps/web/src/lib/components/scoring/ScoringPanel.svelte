@@ -208,10 +208,7 @@
 				{#if activeTab === config.tabId}
 					<QuadrantTab
 						label={config.label}
-						quadrantKey={config.key}
 						quadrant={userScoring[config.key]}
-						{actualCounts}
-						{showAnswer}
 						{readOnly}
 						onUpdate={(next) => updateQuadrant(config.key, next)}
 					/>
