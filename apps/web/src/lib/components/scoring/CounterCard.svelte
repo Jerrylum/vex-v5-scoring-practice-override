@@ -69,7 +69,7 @@
 					class:cursor-not-allowed={disabled}
 					class:opacity-50={disabled}
 					onclick={onDecrement}
-					disabled={disabled}
+					{disabled}
 					aria-label="Decrease {title}"
 				>
 					−
@@ -95,7 +95,7 @@
 					class:cursor-not-allowed={disabled}
 					class:opacity-50={disabled}
 					onclick={onIncrement}
-					disabled={disabled}
+					{disabled}
 					aria-label="Increase {title}"
 				>
 					+

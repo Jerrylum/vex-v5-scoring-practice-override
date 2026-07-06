@@ -254,7 +254,7 @@
 <SettingsDialog
 	open={openDialog === 'settings'}
 	profileSetting={graphicProfileSetting}
-	scenarioDefaultViewSetting={scenarioDefaultViewSetting}
+	{scenarioDefaultViewSetting}
 	onClose={closeDialog}
 	onChange={handleProfileChange}
 	onScenarioDefaultViewChange={handleScenarioDefaultViewChange}

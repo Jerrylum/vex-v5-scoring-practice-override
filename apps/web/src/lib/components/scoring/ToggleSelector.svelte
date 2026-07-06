@@ -28,7 +28,7 @@
 						class:cursor-not-allowed={disabled}
 						class:opacity-50={disabled}
 						onclick={() => onChange(color)}
-						disabled={disabled}
+						{disabled}
 						aria-label="Set toggle to {color}"
 						aria-pressed={value === color}
 					>

@@ -28,10 +28,7 @@ describe('mergeNestedPatch', () => {
 	});
 
 	it('accumulates partial patches before flush', () => {
-		const merged = mergeNestedPatch<SampleDoc>(
-			{ sectionA: { x: 1 } },
-			{ sectionA: { y: 2 }, sectionB: { z: 1 } }
-		);
+		const merged = mergeNestedPatch<SampleDoc>({ sectionA: { x: 1 } }, { sectionA: { y: 2 }, sectionB: { z: 1 } });
 
 		expect(merged).toEqual({
 			sectionA: { x: 1, y: 2 },

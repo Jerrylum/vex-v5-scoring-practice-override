@@ -32,12 +32,8 @@
 	const buttonDisabledClass = 'disabled:cursor-not-allowed disabled:opacity-50';
 
 	const CONFIRM_TONE_CLASS: Record<ConfirmTone, string> = {
-		danger:
-			'cursor-pointer rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 ' +
-			buttonDisabledClass,
-		primary:
-			'cursor-pointer rounded-full bg-[#007fff] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0066cc] ' +
-			buttonDisabledClass
+		danger: 'cursor-pointer rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 ' + buttonDisabledClass,
+		primary: 'cursor-pointer rounded-full bg-[#007fff] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0066cc] ' + buttonDisabledClass
 	};
 </script>
 
@@ -50,22 +46,13 @@
 		<div class="flex items-center justify-end gap-2 pt-1">
 			<button
 				type="button"
-				class={[
-					'cursor-pointer rounded-full bg-[#32383E] px-4 py-2 text-sm text-[#CDD7E1] hover:bg-[#3d444b]',
-					buttonDisabledClass
-				]}
+				class={['cursor-pointer rounded-full bg-[#32383E] px-4 py-2 text-sm text-[#CDD7E1] hover:bg-[#3d444b]', buttonDisabledClass]}
 				disabled={busy}
 				onclick={onCancel}
 			>
 				{cancelLabel ?? 'Cancel'}
 			</button>
-			<button
-				type="button"
-				bind:this={confirmButton}
-				class={CONFIRM_TONE_CLASS[tone]}
-				disabled={busy}
-				onclick={onConfirm}
-			>
+			<button type="button" bind:this={confirmButton} class={CONFIRM_TONE_CLASS[tone]} disabled={busy} onclick={onConfirm}>
 				{confirmLabel ?? 'Confirm'}
 			</button>
 		</div>

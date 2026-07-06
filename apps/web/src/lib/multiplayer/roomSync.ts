@@ -1,9 +1,4 @@
-import {
-	mergeNestedPatch,
-	removeOverlappingPatch,
-	type ScoringPatch,
-	type UserScenarioScoring
-} from '@vex-v5-override/protocol';
+import { mergeNestedPatch, removeOverlappingPatch, type ScoringPatch, type UserScenarioScoring } from '@vex-v5-override/protocol';
 
 /** Ignore stale broadcasts (e.g. out-of-order or duplicate) after we already applied a newer revision. */
 export function shouldApplyRemoteRevision(incomingRevision: number, lastAppliedRevision: number): boolean {
@@ -11,10 +6,7 @@ export function shouldApplyRemoteRevision(incomingRevision: number, lastAppliedR
 }
 
 /** Coalesce rapid scoring patch edits before sending updateScoring mutations to the room. */
-export function createDebouncedScoringPatchUpdate(
-	flush: (patch: ScoringPatch) => Promise<void>,
-	delayMs = 200
-) {
+export function createDebouncedScoringPatchUpdate(flush: (patch: ScoringPatch) => Promise<void>, delayMs = 200) {
 	let timer: ReturnType<typeof setTimeout> | null = null;
 	let pending: ScoringPatch | null = null;
 

@@ -31,10 +31,7 @@
 		roomSession.setError(null);
 
 		try {
-			const scenario = scenarioToSnapshot(
-				generateScenario({ difficulty: 'medium', masterSeed: randomMasterSeed() }),
-				'medium'
-			);
+			const scenario = scenarioToSnapshot(generateScenario({ difficulty: 'medium', masterSeed: randomMasterSeed() }), 'medium');
 			await roomSession.createRoom(scenario);
 			statusMessage = 'Room created. Share the link with other referees.';
 		} catch (error) {

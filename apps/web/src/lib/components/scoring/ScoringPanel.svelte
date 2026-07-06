@@ -99,8 +99,7 @@
 	function updateMidfield(next: UserScenarioScoring) {
 		const goalPatch = diffScoringSectionPatch('midfieldGoal', userScoring.midfieldGoal, next.midfieldGoal);
 		const robotsPatch = diffScoringSectionPatch('midfieldRobots', userScoring.midfieldRobots, next.midfieldRobots);
-		const patch =
-			goalPatch && robotsPatch ? mergeNestedPatch(goalPatch, robotsPatch) : (goalPatch ?? robotsPatch);
+		const patch = goalPatch && robotsPatch ? mergeNestedPatch(goalPatch, robotsPatch) : (goalPatch ?? robotsPatch);
 		userScoring = next;
 		emitScoringPatch(patch);
 	}

@@ -6,13 +6,7 @@ export type RefereeViewPreset = 'southWest' | 'southEast' | 'headRef' | 'midfiel
 
 const STORAGE_KEY = 'refereeViewPreset';
 
-export const REFEREE_VIEW_PRESETS: RefereeViewPreset[] = [
-	'headRef',
-	'southWest',
-	'southEast',
-	'midfield',
-	'observer'
-];
+export const REFEREE_VIEW_PRESETS: RefereeViewPreset[] = ['headRef', 'southWest', 'southEast', 'midfield', 'observer'];
 
 export const REFEREE_VIEW_LABELS: Record<RefereeViewPreset, string> = {
 	headRef: 'Head Ref',
