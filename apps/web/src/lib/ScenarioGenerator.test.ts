@@ -51,6 +51,39 @@ describe('generateScenario determinism', () => {
 			expect(ScenarioSnapshotSchema.parse(snapshot)).toEqual(snapshot);
 		}
 	});
+
+	it('may include partialCover cups on hard but never on easy or medium', () => {
+		const hasPartialCover = (snapshot: ReturnType<typeof scenarioToSnapshot>) => {
+			const stacks = [
+				snapshot.midfield.stack,
+				...[
+					snapshot.redQuadrantOne,
+					snapshot.redQuadrantTwo,
+					snapshot.blueQuadrantOne,
+					snapshot.blueQuadrantTwo
+				].flatMap((q) => [q.allianceStack, q.neutralStack])
+			];
+			return stacks.some((stack) =>
+				stack.some((item) => item.kind === 'cup' && item.partialCover !== undefined)
+			);
+		};
+
+		expect(hasPartialCover(scenarioToSnapshot(generateScenario({ difficulty: 'easy', masterSeed: 482910374 }), 'easy'))).toBe(
+			false
+		);
+		expect(hasPartialCover(scenarioToSnapshot(generateScenario({ difficulty: 'medium', masterSeed: 482910374 }), 'medium'))).toBe(
+			false
+		);
+
+		let foundOnHard = false;
+		for (let seed = 0; seed < 200; seed++) {
+			if (hasPartialCover(scenarioToSnapshot(generateScenario({ difficulty: 'hard', masterSeed: seed }), 'hard'))) {
+				foundOnHard = true;
+				break;
+			}
+		}
+		expect(foundOnHard).toBe(true);
+	});
 });
 
 describe('scenarioLink', () => {

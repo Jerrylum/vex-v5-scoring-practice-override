@@ -8,11 +8,12 @@ import {
 	shouldScatterRemainingItems
 } from './Generator';
 import { FieldResourcePool } from './FieldResources';
-import { GENERATOR_VERSION } from './generatorVersion';
+import { GENERATOR_VERSION, SNAPSHOT_VERSION } from '@vex-v5-override/protocol';
 import { Scenario } from './Scenario';
 import type { ScenarioSnapshot, ScenarioProvenance } from './ScenarioSnapshot';
 import type { ToggleColor } from './Scoring';
 import { ALL_PIN_TYPES, generateGoalStack, pickStackLengthSeeded, shuffleSeeded, type StackLengthRange } from './stackGeneration';
+import { maybeApplyPartialCover, PARTIAL_COVER_SEED_OFFSET } from './partialCover';
 import { mulberry32 } from './utils';
 import {
 	ALL_QUADRANTS,
@@ -253,7 +254,7 @@ function emptyQuadrantStacks(): Record<QuadrantId, QuadrantStacks> {
 	};
 }
 
-function generateScenarioStacks(pool: FieldResourcePool, jobs: StackJob[]): GeneratedStacks {
+function generateScenarioStacks(pool: FieldResourcePool, jobs: StackJob[], difficulty: Level): GeneratedStacks {
 	const stacks: GeneratedStacks = {
 		midfield: [],
 		quadrants: emptyQuadrantStacks()
@@ -261,13 +262,17 @@ function generateScenarioStacks(pool: FieldResourcePool, jobs: StackJob[]): Gene
 
 	for (const job of jobs) {
 		const random = mulberry32(job.seed);
-		const stack = generateGoalStack({
-			targetLength: job.targetLength,
-			requiresYYBase: job.requiresYYBase,
-			allowedPinTypes: job.allowedPinTypes,
-			pool,
-			random
-		});
+		const stack = maybeApplyPartialCover(
+			generateGoalStack({
+				targetLength: job.targetLength,
+				requiresYYBase: job.requiresYYBase,
+				allowedPinTypes: job.allowedPinTypes,
+				pool,
+				random
+			}),
+			difficulty,
+			job.seed + PARTIAL_COVER_SEED_OFFSET
+		);
 
 		if (job.id === 'midfield') {
 			stacks.midfield = stack;
@@ -375,7 +380,7 @@ export function generateScenario(options: GenerateScenarioOptions): Scenario {
 		buildStackJobs(midfieldCaseType, quadrantCaseType, midfieldSeed, quadrantSeeds, planningSeed),
 		stackShuffleSeed
 	);
-	const stacks = generateScenarioStacks(pool, jobs);
+	const stacks = generateScenarioStacks(pool, jobs, difficulty);
 
 	const robots = buildRobotsStructure(robotsCaseType, robotsSeed);
 	const remainingItems = buildRemainingItemsStructure(pool, difficulty, robots, remainingItemsSeed);
@@ -404,7 +409,7 @@ export function generateScenario(options: GenerateScenarioOptions): Scenario {
 /** Wire payload for cross-device sync — explicit field state only. */
 export function scenarioToSnapshot(scenario: Scenario, difficulty: Level): ScenarioSnapshot {
 	return {
-		version: 6,
+		version: SNAPSHOT_VERSION,
 		difficulty,
 		robots: scenario.robots.toSnapshot(),
 		midfield: scenario.midfield.toSnapshot(),

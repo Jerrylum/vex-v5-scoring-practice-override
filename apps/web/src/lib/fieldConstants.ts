@@ -21,6 +21,11 @@ export const ROBOT_SIZE = ROBOT_MAX_SIZE;
 /** Vertical spacing between stacked pins/cups in a goal (mm). */
 export const PIN_STACK_STEP = 88;
 
+/** PartiallyCoveredCup pose defaults (Q&A 3175 training scenario). */
+export const PARTIAL_COVER_OFFSET_Y_MM = 45;
+export const PARTIAL_COVER_TILT_RAD = (160 * Math.PI) / 180;
+export const PARTIAL_COVER_PROBABILITY = 0.2;
+
 /** Keep-away distance from goal centers and fixed field elements (mm). */
 export const EXCLUSION_BUFFER = 200;
 

@@ -62,6 +62,17 @@ describe('StackItemSchema', () => {
 			kind: 'cup',
 			isFlipped: true
 		});
+		expect(
+			StackItemSchema.parse({
+				kind: 'cup',
+				isFlipped: true,
+				partialCover: { offsetY: 20, tiltRad: 0.5, rotationY: 1.2 }
+			})
+		).toEqual({
+			kind: 'cup',
+			isFlipped: true,
+			partialCover: { offsetY: 20, tiltRad: 0.5, rotationY: 1.2 }
+		});
 	});
 
 	it('rejects malformed stack items', () => {

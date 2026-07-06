@@ -31,6 +31,13 @@ export const RobotPlacementSchema = z.object({
 });
 export type RobotPlacement = z.infer<typeof RobotPlacementSchema>;
 
+export const PartialCoverPoseSchema = z.object({
+	offsetY: z.number(),
+	tiltRad: z.number(),
+	rotationY: z.number()
+});
+export type PartialCoverPose = z.infer<typeof PartialCoverPoseSchema>;
+
 export const StackItemSchema = z.discriminatedUnion('kind', [
 	z.object({
 		kind: z.literal('pin'),
@@ -39,7 +46,8 @@ export const StackItemSchema = z.discriminatedUnion('kind', [
 	}),
 	z.object({
 		kind: z.literal('cup'),
-		isFlipped: z.boolean()
+		isFlipped: z.boolean(), // Upside opaque, bottom transparent
+		partialCover: PartialCoverPoseSchema.optional()
 	})
 ]);
 export type StackItem = z.infer<typeof StackItemSchema>;

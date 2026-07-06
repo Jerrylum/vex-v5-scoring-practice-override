@@ -7,11 +7,23 @@ import type { PinType } from '../GameObject';
 export async function visualizeGoalStack(scene: Scene, basePosition: THREE.Vector3, stack: StackItem[]): Promise<void> {
 	let y = basePosition.y;
 
-	for (const item of stack) {
+	for (let i = 0; i < stack.length; i++) {
+		const item = stack[i]!;
+		const isLast = i === stack.length - 1;
 		const position = new THREE.Vector3(basePosition.x, y, basePosition.z);
 
 		if (item.kind === 'pin') {
 			await addPin(scene, item.pinType, position, item.isFlipped);
+		} else if (item.partialCover && isLast) {
+			position.y += item.partialCover.offsetY;
+			// Y before X: rotationY picks azimuth, then tiltRad leans the cup that way.
+			const rotation = new THREE.Euler(
+				item.isFlipped ? Math.PI + item.partialCover.tiltRad : item.partialCover.tiltRad,
+				item.partialCover.rotationY,
+				0,
+				'YXZ'
+			);
+			await scene.addCup(position, item.isFlipped, rotation);
 		} else {
 			await scene.addCup(position, item.isFlipped);
 		}
