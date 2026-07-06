@@ -18,12 +18,7 @@
 		type UserScenarioScoring
 	} from '$lib/userScoring';
 	import type { ScoringPatch } from '@vex-v5-override/protocol';
-	import {
-		diffMidfieldGoalPatch,
-		diffMidfieldRobotsPatch,
-		diffQuadrantSectionPatch,
-		mergeScoringPatches
-	} from '@vex-v5-override/protocol';
+	import { diffScoringSectionPatch, mergeNestedPatch } from '@vex-v5-override/protocol';
 
 	interface Props {
 		userScoring?: UserScenarioScoring;
@@ -96,18 +91,16 @@
 	}
 
 	function updateQuadrant(key: (typeof QUADRANT_TAB_CONFIG)[number]['key'], quadrant: UserScenarioScoring[typeof key]) {
-		const patch = diffQuadrantSectionPatch(key, userScoring[key], quadrant);
+		const patch = diffScoringSectionPatch(key, userScoring[key], quadrant);
 		userScoring = { ...userScoring, [key]: quadrant };
 		emitScoringPatch(patch);
 	}
 
 	function updateMidfield(next: UserScenarioScoring) {
-		const goalPatch = diffMidfieldGoalPatch(userScoring.midfieldGoal, next.midfieldGoal);
-		const robotsPatch = diffMidfieldRobotsPatch(userScoring.midfieldRobots, next.midfieldRobots);
+		const goalPatch = diffScoringSectionPatch('midfieldGoal', userScoring.midfieldGoal, next.midfieldGoal);
+		const robotsPatch = diffScoringSectionPatch('midfieldRobots', userScoring.midfieldRobots, next.midfieldRobots);
 		const patch =
-			goalPatch && robotsPatch
-				? mergeScoringPatches(goalPatch, robotsPatch)
-				: (goalPatch ?? robotsPatch);
+			goalPatch && robotsPatch ? mergeNestedPatch(goalPatch, robotsPatch) : (goalPatch ?? robotsPatch);
 		userScoring = next;
 		emitScoringPatch(patch);
 	}

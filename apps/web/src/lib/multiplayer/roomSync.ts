@@ -1,5 +1,9 @@
-import type { ScoringPatch } from '@vex-v5-override/protocol';
-import { mergeScoringPatches, removeOverlappingFromPatch } from '@vex-v5-override/protocol';
+import {
+	mergeNestedPatch,
+	removeOverlappingPatch,
+	type ScoringPatch,
+	type UserScenarioScoring
+} from '@vex-v5-override/protocol';
 
 /** Ignore stale broadcasts (e.g. out-of-order or duplicate) after we already applied a newer revision. */
 export function shouldApplyRemoteRevision(incomingRevision: number, lastAppliedRevision: number): boolean {
@@ -16,7 +20,7 @@ export function createDebouncedScoringPatchUpdate(
 
 	return {
 		schedule(patch: ScoringPatch) {
-			pending = pending ? mergeScoringPatches(pending, patch) : patch;
+			pending = pending ? mergeNestedPatch(pending, patch) : patch;
 			if (timer !== null) clearTimeout(timer);
 			timer = setTimeout(() => {
 				timer = null;
@@ -36,7 +40,7 @@ export function createDebouncedScoringPatchUpdate(
 		},
 		removeOverlapping(applied: ScoringPatch) {
 			if (!pending) return;
-			pending = removeOverlappingFromPatch(pending, applied);
+			pending = removeOverlappingPatch<UserScenarioScoring>(pending, applied);
 		},
 		cancel() {
 			if (timer !== null) clearTimeout(timer);

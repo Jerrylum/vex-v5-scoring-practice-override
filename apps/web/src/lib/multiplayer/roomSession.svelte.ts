@@ -1,5 +1,4 @@
-import type { JoiningKit, RoomPhase, RoomState, ScenarioSnapshot, ScoringPatch, ScoringUpdateEvent } from '@vex-v5-override/protocol';
-import { mergeScoringPatch } from '@vex-v5-override/protocol';
+import { mergeNestedPatch, type JoiningKit, type RoomPhase, type RoomState, type ScenarioSnapshot, type ScoringPatch, type ScoringUpdateEvent } from '@vex-v5-override/protocol';
 import type { ConnectionState } from '@vex-v5-override/wrpc/client';
 import { setOnRoomStateUpdateHandler, setOnScoringPatchHandler } from './client-router';
 import {
@@ -118,7 +117,7 @@ class RoomSessionStore {
 			state: {
 				...this.kit.state,
 				revision: event.revision,
-				scoring: mergeScoringPatch(this.kit.state.scoring, event.patch)
+				scoring: mergeNestedPatch(this.kit.state.scoring, event.patch)
 			}
 		};
 		queueMicrotask(() => {
