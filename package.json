@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "bun run --filter @vex-v5-override/web dev",
 		"dev:worker": "bun run --filter @vex-v5-override/worker dev",
-		"dev:all": "bun run --filter @vex-v5-override/web dev & bun run --filter @vex-v5-override/worker dev",
+		"dev:all": "bun run --filter @vex-v5-override/web dev --host 0.0.0.0 & bun run --filter @vex-v5-override/worker dev --ip 0.0.0.0",
 		"build": "bun run --filter @vex-v5-override/web build",
 		"deploy": "bun run build && bun run --filter @vex-v5-override/worker deploy",
 		"check": "bun run --filter '*' check",
