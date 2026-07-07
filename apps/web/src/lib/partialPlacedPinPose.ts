@@ -3,7 +3,9 @@ import type { PartialCoverPose } from '@vex-v5-override/protocol';
 
 /** Container rotation for a partial-placed pin (matches GoalStackVisualization). */
 export function partialPlacedPinContainerRotation(pose: PartialCoverPose, isFlipped: boolean): THREE.Euler {
-	return new THREE.Euler(isFlipped ? Math.PI + pose.tiltRad : pose.tiltRad, pose.rotationY, 0, 'YXZ');
+	// Upright pin: small tilt from vertical (π - tilt). Flipped pin: model π plus container (π + tilt).
+	// Using tiltRad alone for upright pins would combine with flipped to the same world orientation.
+	return new THREE.Euler(isFlipped ? Math.PI + pose.tiltRad : Math.PI - pose.tiltRad, pose.rotationY, 0, 'YXZ');
 }
 
 /**
