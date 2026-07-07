@@ -203,6 +203,7 @@
 
 		if (options?.resetScoring !== false && !isMultiplayer) {
 			userScoring = emptyUserScenarioScoring();
+			showAnswer = false;
 		}
 
 		if (!isMultiplayer && options?.updateUrl !== false && scenario.provenance) {
