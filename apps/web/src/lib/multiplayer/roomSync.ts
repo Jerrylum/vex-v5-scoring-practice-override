@@ -5,8 +5,8 @@ export function shouldApplyRemoteRevision(incomingRevision: number, lastAppliedR
 	return incomingRevision >= lastAppliedRevision;
 }
 
-/** Coalesce rapid scoring patch edits before sending updateScoring mutations to the room. */
-export function createDebouncedScoringPatchUpdate(flush: (patch: ScoringPatch) => Promise<void>, delayMs = 200) {
+/** Coalesce rapid scoring patch edits before sending updateScoring notifications to the room. */
+export function createDebouncedScoringPatchUpdate(flush: (patch: ScoringPatch) => void, delayMs = 200) {
 	let timer: ReturnType<typeof setTimeout> | null = null;
 	let pending: ScoringPatch | null = null;
 
@@ -18,17 +18,17 @@ export function createDebouncedScoringPatchUpdate(flush: (patch: ScoringPatch) =
 				timer = null;
 				const toFlush = pending;
 				pending = null;
-				if (toFlush) void flush(toFlush);
+				if (toFlush) flush(toFlush);
 			}, delayMs);
 		},
-		async flushNow() {
+		flushNow() {
 			if (timer !== null) {
 				clearTimeout(timer);
 				timer = null;
 			}
 			const toFlush = pending;
 			pending = null;
-			if (toFlush) await flush(toFlush);
+			if (toFlush) flush(toFlush);
 		},
 		removeOverlapping(applied: ScoringPatch) {
 			if (!pending) return;

@@ -52,7 +52,7 @@ class RoomSessionStore {
 	private resyncInFlight = false;
 	/** User clicked Leave; suppresses auto re-join if wrpc fires connected during teardown. */
 	private intentionalDisconnect = false;
-	private scoringUpdate = createDebouncedScoringPatchUpdate((patch) => this.updateScoringPatch(patch));
+	private scoringUpdate = createDebouncedScoringPatchUpdate((patch) => this.sendScoringPatch(patch));
 
 	constructor() {
 		setConnectionStateListener((state) => {
@@ -147,8 +147,8 @@ class RoomSessionStore {
 		this.scoringUpdate.schedule(patch);
 	}
 
-	async flushScoringUpdate(): Promise<void> {
-		await this.scoringUpdate.flushNow();
+	flushScoringUpdate(): void {
+		this.scoringUpdate.flushNow();
 	}
 
 	async createRoom(scenario: ScenarioSnapshot): Promise<void> {
@@ -249,9 +249,9 @@ class RoomSessionStore {
 		}
 	}
 
-	async updateScoringPatch(patch: ScoringPatch): Promise<void> {
+	private sendScoringPatch(patch: ScoringPatch): void {
 		if (this.syncingFromServer || !this.kit || this.connectionState !== 'connected') return;
-		await this.callMutation(() => getRoomRpcClient().room.updateScoring.mutation(patch));
+		getRoomRpcClient().room.updateScoring.notify(patch);
 	}
 
 	async regenerateScenario(scenario: ScenarioSnapshot): Promise<void> {

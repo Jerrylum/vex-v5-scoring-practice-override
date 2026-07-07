@@ -8,7 +8,7 @@
     "apps/web": {
       "name": "@vex-v5-override/web",
       "dependencies": {
-        "@jerrylum/wrpc": "^1.0.1",
+        "@jerrylum/wrpc": "^1.1.0",
         "@vex-v5-override/protocol": "workspace:*",
         "@vex-v5-override/worker": "workspace:*",
         "polygon-clipping": "^0.15.7",
@@ -56,7 +56,7 @@
       "name": "@vex-v5-override/worker",
       "version": "0.0.0",
       "dependencies": {
-        "@jerrylum/wrpc": "^1.0.1",
+        "@jerrylum/wrpc": "^1.1.0",
         "@vex-v5-override/protocol": "workspace:*",
         "@vex-v5-override/web": "workspace:*",
         "zod": "^4.0.15",
@@ -239,7 +239,7 @@
 
     "@img/sharp-win32-x64": ["@img/sharp-win32-x64@0.33.5", "", { "os": "win32", "cpu": "x64" }, "sha512-MpY/o8/8kj+EcnxwvrP4aTJSWw/aZ7JIGR4aBeZkZw5B7/Jn+tY9/VNwtcoGmdT7GfggGIU4kygOMSbYnOrAbg=="],
 
-    "@jerrylum/wrpc": ["@jerrylum/wrpc@1.0.1", "", { "peerDependencies": { "zod": "^4.0.0" } }, "sha512-+O8GRkJut70XToTJhDUZjY9SkIIfgaFbpStEkNqdwYc/ialoFRx0ph63bWI0AL2QUS/Pi1CKx/LyF1HJoenwPQ=="],
+    "@jerrylum/wrpc": ["@jerrylum/wrpc@1.1.0", "", { "peerDependencies": { "zod": "^4.0.0" } }, "sha512-a99K5z6aHm81N3019nkjjBXnHOUFTLnFhBw4Q4NsRbTGQxqnQAe2hU0mR/qmGNdBQiejSYGIQjyTWok781AEfw=="],
 
     "@jridgewell/gen-mapping": ["@jridgewell/gen-mapping@0.3.13", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA=="],
 

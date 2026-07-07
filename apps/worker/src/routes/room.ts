@@ -22,7 +22,7 @@ export function buildRoomRoute(
   return {
     updateScoring: w.procedure
       .input(UpdateScoringInputSchema)
-      .mutation(async ({ ctx, input, session }) => {
+      .notify(async ({ ctx, input, session }) => {
         const next = updateScoring(ctx.store, input);
         ctx.store.state = next;
         await ctx.persist();

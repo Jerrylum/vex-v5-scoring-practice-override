@@ -7,7 +7,7 @@ export function broadcastRoomState(
   broadcast: RouterBroadcastProxy<ClientRouter>,
   state: RoomState,
 ): void {
-  void broadcast.onRoomStateUpdate.mutation(state);
+  broadcast.onRoomStateUpdate.notify(state);
 }
 
 /** Broadcast a scoring field patch to all connected clients except the sender. */
@@ -19,6 +19,6 @@ export function broadcastScoringPatch(
 ): void {
   for (const clientId of network.getConnectedClients()) {
     if (clientId === excludeClientId) continue;
-    void getClient(clientId).onScoringPatch.mutation(event);
+    getClient(clientId).onScoringPatch.notify(event);
   }
 }

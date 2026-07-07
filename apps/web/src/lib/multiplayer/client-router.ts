@@ -15,10 +15,10 @@ export function setOnScoringPatchHandler(handler: ((event: ScoringUpdateEvent) =
 }
 
 export const clientRouter = w.router({
-	onRoomStateUpdate: w.procedure.input(RoomStateSchema).mutation(async ({ input }) => {
+	onRoomStateUpdate: w.procedure.input(RoomStateSchema).notify(({ input }) => {
 		onRoomStateUpdateHandler?.(input);
 	}),
-	onScoringPatch: w.procedure.input(ScoringUpdateEventSchema).mutation(async ({ input }) => {
+	onScoringPatch: w.procedure.input(ScoringUpdateEventSchema).notify(({ input }) => {
 		onScoringPatchHandler?.(input);
 	})
 });
