@@ -42,7 +42,8 @@ export const StackItemSchema = z.discriminatedUnion('kind', [
 	z.object({
 		kind: z.literal('pin'),
 		pinType: PinTypeSchema,
-		isFlipped: z.boolean()
+		isFlipped: z.boolean(),
+		partialPlaced: PartialCoverPoseSchema.optional()
 	}),
 	z.object({
 		kind: z.literal('cup'),

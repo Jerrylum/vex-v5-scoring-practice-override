@@ -56,28 +56,45 @@ describe('generateScenario determinism', () => {
 		const hasPartialCover = (snapshot: ReturnType<typeof scenarioToSnapshot>) => {
 			const stacks = [
 				snapshot.midfield.stack,
-				...[
-					snapshot.redQuadrantOne,
-					snapshot.redQuadrantTwo,
-					snapshot.blueQuadrantOne,
-					snapshot.blueQuadrantTwo
-				].flatMap((q) => [q.allianceStack, q.neutralStack])
+				...[snapshot.redQuadrantOne, snapshot.redQuadrantTwo, snapshot.blueQuadrantOne, snapshot.blueQuadrantTwo].flatMap((q) => [
+					q.allianceStack,
+					q.neutralStack
+				])
 			];
-			return stacks.some((stack) =>
-				stack.some((item) => item.kind === 'cup' && item.partialCover !== undefined)
-			);
+			return stacks.some((stack) => stack.some((item) => item.kind === 'cup' && item.partialCover !== undefined));
 		};
 
-		expect(hasPartialCover(scenarioToSnapshot(generateScenario({ difficulty: 'easy', masterSeed: 482910374 }), 'easy'))).toBe(
-			false
-		);
-		expect(hasPartialCover(scenarioToSnapshot(generateScenario({ difficulty: 'medium', masterSeed: 482910374 }), 'medium'))).toBe(
-			false
-		);
+		expect(hasPartialCover(scenarioToSnapshot(generateScenario({ difficulty: 'easy', masterSeed: 482910374 }), 'easy'))).toBe(false);
+		expect(hasPartialCover(scenarioToSnapshot(generateScenario({ difficulty: 'medium', masterSeed: 482910374 }), 'medium'))).toBe(false);
 
 		let foundOnHard = false;
 		for (let seed = 0; seed < 200; seed++) {
 			if (hasPartialCover(scenarioToSnapshot(generateScenario({ difficulty: 'hard', masterSeed: seed }), 'hard'))) {
+				foundOnHard = true;
+				break;
+			}
+		}
+		expect(foundOnHard).toBe(true);
+	});
+
+	it('may include partialPlaced pins on hard but never on easy or medium', () => {
+		const hasPartialPlaced = (snapshot: ReturnType<typeof scenarioToSnapshot>) => {
+			const stacks = [
+				snapshot.midfield.stack,
+				...[snapshot.redQuadrantOne, snapshot.redQuadrantTwo, snapshot.blueQuadrantOne, snapshot.blueQuadrantTwo].flatMap((q) => [
+					q.allianceStack,
+					q.neutralStack
+				])
+			];
+			return stacks.some((stack) => stack.some((item) => item.kind === 'pin' && item.partialPlaced !== undefined));
+		};
+
+		expect(hasPartialPlaced(scenarioToSnapshot(generateScenario({ difficulty: 'easy', masterSeed: 482910374 }), 'easy'))).toBe(false);
+		expect(hasPartialPlaced(scenarioToSnapshot(generateScenario({ difficulty: 'medium', masterSeed: 482910374 }), 'medium'))).toBe(false);
+
+		let foundOnHard = false;
+		for (let seed = 0; seed < 500; seed++) {
+			if (hasPartialPlaced(scenarioToSnapshot(generateScenario({ difficulty: 'hard', masterSeed: seed }), 'hard'))) {
 				foundOnHard = true;
 				break;
 			}

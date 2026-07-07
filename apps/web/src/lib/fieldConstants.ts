@@ -26,6 +26,13 @@ export const PARTIAL_COVER_OFFSET_Y_MM = 45;
 export const PARTIAL_COVER_TILT_RAD = (160 * Math.PI) / 180;
 export const PARTIAL_COVER_PROBABILITY = 0.2;
 
+/** PartialPlacedPin pose when hard stacks end in a pin (10% chance). */
+export const PARTIAL_PLACED_PIN_OFFSET_Y_MM = 25;
+export const PARTIAL_PLACED_PIN_TILT_RAD = (160 * Math.PI) / 180;
+/** Horizontal shift opposite pin lean (positive mm); uses container tilt, not model flip. */
+export const PARTIAL_PLACED_PIN_BACKOFF_MM = 25;
+export const PARTIAL_PLACED_PIN_PROBABILITY = 0.1;
+
 /** Keep-away distance from goal centers and fixed field elements (mm). */
 export const EXCLUSION_BUFFER = 200;
 

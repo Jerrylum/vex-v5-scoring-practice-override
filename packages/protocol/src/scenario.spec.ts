@@ -58,6 +58,19 @@ describe('StackItemSchema', () => {
 			pinType: 'redBlue',
 			isFlipped: false
 		});
+		expect(
+			StackItemSchema.parse({
+				kind: 'pin',
+				pinType: 'redYellow',
+				isFlipped: false,
+				partialPlaced: { offsetY: 45, tiltRad: 0.5, rotationY: 1.2 }
+			})
+		).toEqual({
+			kind: 'pin',
+			pinType: 'redYellow',
+			isFlipped: false,
+			partialPlaced: { offsetY: 45, tiltRad: 0.5, rotationY: 1.2 }
+		});
 		expect(StackItemSchema.parse({ kind: 'cup', isFlipped: true })).toEqual({
 			kind: 'cup',
 			isFlipped: true

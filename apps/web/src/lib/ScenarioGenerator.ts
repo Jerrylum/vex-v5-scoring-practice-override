@@ -14,6 +14,7 @@ import type { ScenarioSnapshot, ScenarioProvenance } from './ScenarioSnapshot';
 import type { ToggleColor } from './Scoring';
 import { ALL_PIN_TYPES, generateGoalStack, pickStackLengthSeeded, shuffleSeeded, type StackLengthRange } from './stackGeneration';
 import { maybeApplyPartialCover, PARTIAL_COVER_SEED_OFFSET } from './partialCover';
+import { maybeApplyPartialPlacedPin, PARTIAL_PLACED_PIN_SEED_OFFSET } from './partialPlacedPin';
 import { mulberry32 } from './utils';
 import {
 	ALL_QUADRANTS,
@@ -262,16 +263,20 @@ function generateScenarioStacks(pool: FieldResourcePool, jobs: StackJob[], diffi
 
 	for (const job of jobs) {
 		const random = mulberry32(job.seed);
-		const stack = maybeApplyPartialCover(
-			generateGoalStack({
-				targetLength: job.targetLength,
-				requiresYYBase: job.requiresYYBase,
-				allowedPinTypes: job.allowedPinTypes,
-				pool,
-				random
-			}),
+		const stack = maybeApplyPartialPlacedPin(
+			maybeApplyPartialCover(
+				generateGoalStack({
+					targetLength: job.targetLength,
+					requiresYYBase: job.requiresYYBase,
+					allowedPinTypes: job.allowedPinTypes,
+					pool,
+					random
+				}),
+				difficulty,
+				job.seed + PARTIAL_COVER_SEED_OFFSET
+			),
 			difficulty,
-			job.seed + PARTIAL_COVER_SEED_OFFSET
+			job.seed + PARTIAL_PLACED_PIN_SEED_OFFSET
 		);
 
 		if (job.id === 'midfield') {
