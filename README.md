@@ -2,7 +2,7 @@
 
 An interactive 3D web application for practicing [V5RC Override](https://link.vex.com/docs/26-27/v5rc/game-manual) (2026–2027) scoring. Examine randomly generated field setups in a 3D viewport, enter counts on the scoring panel similar to TM Mobile, and check your answer against the correct totals.
 
-Practice solo or with other referees in **multiplayer** rooms where scoring, scenarios stay in sync. Like the companion [VEX IQ Scoring Practice — Level Up](https://github.com/Jerrylum/vex-iq-scoring-practice-level-up) project, this app is intended as a training tool for scorekeeper referees and anyone learning the Override scoring system. This project simplifies some edge cases for learning, but works well as a starting point for new scorekeeper referees preparing for Override events.
+Practice solo or with other referees in **multiplayer** rooms where scoring and scenarios stay in sync. Like the companion [VEX IQ Scoring Practice — Level Up](https://github.com/Jerrylum/vex-iq-scoring-practice-level-up) project, this app is intended as a training tool for scorekeeper referees and anyone learning the Override scoring system. This project simplifies some edge cases for learning, but works well as a starting point for new scorekeeper referees preparing for Override events.
 
 **Available at:** [vex-v5-scoring.jerryio.com](https://vex-v5-scoring.jerryio.com)
 
