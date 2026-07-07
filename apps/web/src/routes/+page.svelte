@@ -10,6 +10,7 @@
 	import LoadingScreen from '$lib/screens/LoadingScreen.svelte';
 	import LobbyScreen from '$lib/screens/LobbyScreen.svelte';
 	import MenuScreen from '$lib/screens/MenuScreen.svelte';
+	import ScreenBackdrop from '$lib/components/ScreenBackdrop.svelte';
 	import { loadGraphicProfileSetting, resolveGraphicProfile, type GraphicProfileSetting } from '$lib/graphicProfile';
 	import { loadScenarioDefaultViewSetting, type ScenarioDefaultViewSetting } from '$lib/scenarioDefaultView';
 	import { ModelLoader } from '$lib/ModelLoader';
@@ -38,6 +39,8 @@
 	let scenarioDefaultViewSetting = $state<ScenarioDefaultViewSetting>(null);
 	let modelLoader = $state<ModelLoader | null>(null);
 	let initError = $state<string | null>(null);
+
+	const showScreenBackdrop = $derived(screen === 'loading' || screen === 'menu' || screen === 'lobby');
 
 	function openSettings() {
 		dismissConfirm(false);
@@ -187,6 +190,7 @@
 				scenarioDefaultViewSetting = loadScenarioDefaultViewSetting();
 				const profile = resolveGraphicProfile(graphicProfileSetting);
 				const loader = new ModelLoader(profile);
+
 				await preloadGameAssets(loader, (message) => {
 					loadingMessage = message;
 				});
@@ -222,6 +226,9 @@
 </svelte:head>
 
 <div class="relative h-screen w-screen overflow-hidden bg-black">
+	{#if showScreenBackdrop}
+		<ScreenBackdrop />
+	{/if}
 	{#if screen === 'loading'}
 		<LoadingScreen message={loadingMessage} />
 	{:else if screen === 'menu'}

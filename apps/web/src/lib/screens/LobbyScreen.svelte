@@ -100,7 +100,7 @@
 	});
 </script>
 
-<div class="relative z-10 flex h-screen w-screen flex-col items-center justify-center bg-black px-6 text-[#CDD7E1]">
+<div class="relative z-10 flex h-screen w-screen flex-col items-center justify-center px-6 text-[#CDD7E1]">
 	<div class="w-full max-w-md">
 		<h1 class="mb-2 text-2xl font-bold text-white">Multiplayer Room</h1>
 		<p class="mb-6 text-sm text-gray-400">{connectionLabel}</p>
@@ -112,7 +112,7 @@
 		{#if roomSession.kit}
 			<button type="button" class="mb-3 cursor-pointer text-sm text-gray-400 hover:text-white" onclick={onLeave}>← Leave</button>
 
-			<div class="mb-4 rounded-lg border border-gray-800 bg-[#141414] p-4">
+			<div class="mb-4 rounded-lg border border-gray-800 bg-[#141414]/90 p-4 backdrop-blur-sm">
 				<p class="mb-1 text-xs tracking-wide text-gray-500 uppercase">Room ID</p>
 				<p class="mb-4 font-mono text-xs break-all text-gray-300">{roomSession.roomId}</p>
 
