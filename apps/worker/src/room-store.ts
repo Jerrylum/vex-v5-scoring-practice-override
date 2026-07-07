@@ -13,20 +13,48 @@ import type {
 import {
   emptyUserScenarioScoring,
   mergeNestedPatch,
+  SNAPSHOT_VERSION,
 } from "@vex-v5-override/protocol";
+import { WRPCError } from "@vex-v5-override/wrpc/server";
 
-export class RoomNotFoundError extends Error {
+export class RoomNotFoundError extends WRPCError {
   constructor() {
-    super("Room not found");
+    super("Room not found", "NOT_FOUND");
     this.name = "RoomNotFoundError";
   }
 }
 
-export class RoomAlreadyExistsError extends Error {
+export class RoomAlreadyExistsError extends WRPCError {
   constructor() {
-    super("Room already exists");
+    super("Room already exists", "CONFLICT");
     this.name = "RoomAlreadyExistsError";
   }
+}
+
+export class ScenarioVersionMismatchError extends WRPCError {
+  readonly storedVersion: number | null;
+  readonly expectedVersion: number;
+
+  constructor(storedVersion: number | null, expectedVersion: number) {
+    const message =
+      "This room created in an older version of the app. Create a new room to continue.";
+    super(message, "SCENARIO_VERSION_MISMATCH");
+    this.name = "ScenarioVersionMismatchError";
+    this.storedVersion = storedVersion;
+    this.expectedVersion = expectedVersion;
+  }
+}
+
+export function assertScenarioSnapshotCompatible(scenario: {
+  version?: unknown;
+}): void {
+  if (scenario.version === SNAPSHOT_VERSION) {
+    return;
+  }
+
+  const storedVersion =
+    typeof scenario.version === "number" ? scenario.version : null;
+  throw new ScenarioVersionMismatchError(storedVersion, SNAPSHOT_VERSION);
 }
 
 export interface RoomStoreData {

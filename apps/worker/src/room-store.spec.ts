@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { SNAPSHOT_VERSION } from "@vex-v5-override/protocol";
 import {
+  assertScenarioSnapshotCompatible,
   RoomAlreadyExistsError,
   RoomNotFoundError,
+  ScenarioVersionMismatchError,
   createRoom,
   joinRoom,
   regenerateScenario,
@@ -186,5 +188,19 @@ describe("room-store", () => {
     expect(() =>
       joinRoom({ meta: null, state: null }, clientTwoId, "Guest", {}),
     ).toThrow(RoomNotFoundError);
+  });
+});
+
+describe("assertScenarioSnapshotCompatible", () => {
+  it("accepts the current snapshot version", () => {
+    expect(() =>
+      assertScenarioSnapshotCompatible({ version: SNAPSHOT_VERSION }),
+    ).not.toThrow();
+  });
+
+  it("throws when the stored version differs", () => {
+    expect(() =>
+      assertScenarioSnapshotCompatible({ version: SNAPSHOT_VERSION - 1 }),
+    ).toThrow(ScenarioVersionMismatchError);
   });
 });

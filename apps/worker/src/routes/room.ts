@@ -5,10 +5,8 @@ import {
   UpdateScoringInputSchema,
 } from "@vex-v5-override/protocol";
 import type { WRPCRootObject } from "@vex-v5-override/wrpc/server";
-import { WRPCError } from "@vex-v5-override/wrpc/server";
 import type { ClientRouter } from "@vex-v5-override/web/src/lib/multiplayer/client-router";
 import {
-  RoomNotFoundError,
   regenerateScenario,
   resetScoring,
   setPhase,
@@ -25,101 +23,66 @@ export function buildRoomRoute(
     updateScoring: w.procedure
       .input(UpdateScoringInputSchema)
       .mutation(async ({ ctx, input, session }) => {
-        try {
-          const next = updateScoring(ctx.store, input);
-          ctx.store.state = next;
-          await ctx.persist();
+        const next = updateScoring(ctx.store, input);
+        ctx.store.state = next;
+        await ctx.persist();
 
-          broadcastScoringPatch(
-            ctx.network,
-            (clientId) => session.getClient<ClientRouter>(clientId),
-            session.currentClient.clientId,
-            { revision: next.revision, patch: input },
-          );
-        } catch (error) {
-          if (error instanceof RoomNotFoundError) {
-            throw new WRPCError(error.message, "NOT_FOUND");
-          }
-          throw error;
-        }
+        broadcastScoringPatch(
+          ctx.network,
+          (clientId) => session.getClient<ClientRouter>(clientId),
+          session.currentClient.clientId,
+          { revision: next.revision, patch: input },
+        );
       }),
 
     regenerateScenario: w.procedure
       .input(RegenerateScenarioInputSchema)
       .mutation(async ({ ctx, input, session }) => {
-        try {
-          const next = regenerateScenario(
-            ctx.store,
-            session.currentClient.clientId,
-            input,
-          );
-          ctx.store.state = next;
-          await ctx.persist();
-
-          broadcastRoomState(session.broadcast<ClientRouter>(), next);
-        } catch (error) {
-          if (error instanceof RoomNotFoundError) {
-            throw new WRPCError(error.message, "NOT_FOUND");
-          }
-          throw error;
-        }
-      }),
-
-    resetScoring: w.procedure.mutation(async ({ ctx, session }) => {
-      try {
-        const next = resetScoring(ctx.store, session.currentClient.clientId);
+        const next = regenerateScenario(
+          ctx.store,
+          session.currentClient.clientId,
+          input,
+        );
         ctx.store.state = next;
         await ctx.persist();
 
         broadcastRoomState(session.broadcast<ClientRouter>(), next);
-      } catch (error) {
-        if (error instanceof RoomNotFoundError) {
-          throw new WRPCError(error.message, "NOT_FOUND");
-        }
-        throw error;
-      }
+      }),
+
+    resetScoring: w.procedure.mutation(async ({ ctx, session }) => {
+      const next = resetScoring(ctx.store, session.currentClient.clientId);
+      ctx.store.state = next;
+      await ctx.persist();
+
+      broadcastRoomState(session.broadcast<ClientRouter>(), next);
     }),
 
     setShowAnswer: w.procedure
       .input(SetShowAnswerInputSchema)
       .mutation(async ({ ctx, input, session }) => {
-        try {
-          const next = setShowAnswer(
-            ctx.store,
-            session.currentClient.clientId,
-            input.showAnswer,
-          );
-          ctx.store.state = next;
-          await ctx.persist();
+        const next = setShowAnswer(
+          ctx.store,
+          session.currentClient.clientId,
+          input.showAnswer,
+        );
+        ctx.store.state = next;
+        await ctx.persist();
 
-          broadcastRoomState(session.broadcast<ClientRouter>(), next);
-        } catch (error) {
-          if (error instanceof RoomNotFoundError) {
-            throw new WRPCError(error.message, "NOT_FOUND");
-          }
-          throw error;
-        }
+        broadcastRoomState(session.broadcast<ClientRouter>(), next);
       }),
 
     setPhase: w.procedure
       .input(SetPhaseInputSchema)
       .mutation(async ({ ctx, input, session }) => {
-        try {
-          const next = setPhase(
-            ctx.store,
-            session.currentClient.clientId,
-            input.phase,
-          );
-          ctx.store.state = next;
-          await ctx.persist();
+        const next = setPhase(
+          ctx.store,
+          session.currentClient.clientId,
+          input.phase,
+        );
+        ctx.store.state = next;
+        await ctx.persist();
 
-          broadcastRoomState(session.broadcast<ClientRouter>(), next);
-        } catch (error) {
-          if (error instanceof RoomNotFoundError) {
-            throw new WRPCError(error.message, "NOT_FOUND");
-          }
-          throw error;
-        }
+        broadcastRoomState(session.broadcast<ClientRouter>(), next);
       }),
   };
 }
