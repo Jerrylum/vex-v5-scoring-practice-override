@@ -2,9 +2,11 @@
 
 An interactive 3D web application for practicing [V5RC Override](https://link.vex.com/docs/26-27/v5rc/game-manual) (2026–2027) scoring. Examine randomly generated field setups in a 3D viewport, enter counts on the scoring panel similar to TM Mobile, and check your answer against the correct totals.
 
-Like the companion [VEX IQ Scoring Practice — Level Up](https://github.com/Jerrylum/vex-iq-scoring-practice-level-up) project, this app is built with SvelteKit, Three.js, and Bun. It is intended as a training tool for scorekeeper referees and anyone learning the Override scoring system. The scoring panel is organized by field region—four quadrants plus the midfield—similar to how scorekeepers work at events, with an overview tab for a full-field summary.
+Practice solo or with other referees in **multiplayer** rooms where scoring, scenarios stay in sync. Like the companion [VEX IQ Scoring Practice — Level Up](https://github.com/Jerrylum/vex-iq-scoring-practice-level-up) project, this app is intended as a training tool for scorekeeper referees and anyone learning the Override scoring system. This project simplifies some edge cases for learning, but works well as a starting point for new scorekeeper referees preparing for Override events.
 
-This project simplifies some edge cases for learning, but works well as a starting point for new scorekeeper referees preparing for Override events.
+**Available at:** [vex-v5-scoring.jerryio.com](https://vex-v5-scoring.jerryio.com)
+
+![VEX V5 Scoring Practice — Override Screenshot](docs/web-app-screenshot-2627-4.png)
 
 ## How to Play
 
@@ -14,15 +16,19 @@ This project simplifies some edge cases for learning, but works well as a starti
 4. Click **Check** to verify your answer and see the correct counts per region.
 5. Use the link button to copy a shareable URL so others can practice the same scenario.
 
+
+
 ## Scoring (2026–2027 Override)
 
 Each **placed pin** can have zero, one, or two **scored halves**. Only **fully visible** halves count. End-of-match point values:
+
 
 | Scoring item                                        | Points |
 | --------------------------------------------------- | ------ |
 | Each scored alliance-colored pin (red or blue half) | 5      |
 | Each scored yellow pin (visible half, when owned)   | 10     |
 | Each robot in the midfield                          | 8      |
+
 
 **Yellow pin ownership** determines which alliance receives yellow points:
 
@@ -33,11 +39,15 @@ Alliance-colored halves always score for their respective alliances regardless o
 
 ## Difficulty Levels
 
+
+
 ### Easy
 
 - No robots on the field
 - Simple midfield configuration (single yellow/yellow pin)
 - Shorter quadrant stacks
+
+
 
 ### Medium
 
@@ -45,11 +55,15 @@ Alliance-colored halves always score for their respective alliances regardless o
 - Varied midfield stacks (single pin or short stack)
 - Medium-complexity quadrant stacks with cups
 
+
+
 ### Hard
 
 - Robots on the field, including a clawbot that may occupy midfield space
 - Tall midfield stacks
 - Complex quadrant stacks with mixed pin types and edge cases
+
+
 
 ## Scenario Sharing
 
@@ -78,6 +92,8 @@ Practice scoring with other referees in a shared room (similar to Tournament Man
 - **Sync:** scoring, scenario, and show-answer state broadcast to all clients. Edits are debounced; reconnect re-joins the room after a transport drop.
 - **View presets:** use the pause menu (Esc) to switch local camera angles (Head Ref, SW/SE scorekeeper, Observer). View choice is per-tab only and is not synced.
 
+
+
 ### Multiplayer development
 
 Run the web app and Cloudflare Worker together:
@@ -95,11 +111,17 @@ Regenerate Worker types after changing `wrangler.jsonc`:
 cd apps/worker && bun run cf-typegen
 ```
 
+
+
 ## Getting Started
+
+
 
 ### Prerequisites
 
 - [Bun](https://bun.sh) v1.0 or higher
+
+
 
 ### Installation
 
@@ -107,6 +129,8 @@ cd apps/worker && bun run cf-typegen
 # Install dependencies
 bun install
 ```
+
+
 
 ### Development
 
@@ -127,17 +151,23 @@ bun run build
 bun run preview
 ```
 
+
+
 ### Deploy
 
 ```bash
 bun run deploy
 ```
 
+
+
 ### Tests
 
 ```bash
 bun run test
 ```
+
+
 
 ### Code Formatting
 
@@ -146,7 +176,11 @@ bun run test
 bun run format
 ```
 
+
+
 ## Keyboard & Mouse Controls
+
+
 
 ### 3D Viewport
 
@@ -155,10 +189,14 @@ bun run format
 - **Scroll Wheel**: Zoom in/out
 - **Touch**: Pinch to zoom, drag to rotate
 
+
+
 ### Scoring Panel
 
 - **Desktop**: Click arrow button on the left to collapse/expand
 - **Mobile**: Tap the floating menu button to open the panel
+
+
 
 ## Browser Support
 
@@ -166,6 +204,8 @@ bun run format
 - Firefox 88+
 - Safari 14+
 - Mobile browsers with WebGL support
+
+
 
 ## Contributing
 
