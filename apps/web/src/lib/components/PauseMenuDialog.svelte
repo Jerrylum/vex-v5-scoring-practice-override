@@ -13,7 +13,7 @@
 	let { open, mode, onClose, onOpenSettings, onOpenShareDialog, onBackToMenu }: Props = $props();
 
 	const titleId = 'pause-menu-dialog-title';
-	const backLabel = $derived(mode === 'multiplayer' ? 'Leave room' : 'Back to menu');
+	const backLabel = $derived(mode === 'multiplayer' ? 'Leave room' : 'Exit');
 </script>
 
 <Dialog {open} {onClose} ariaLabelledBy={titleId}>
