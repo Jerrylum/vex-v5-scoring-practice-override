@@ -1,5 +1,5 @@
 import type { RoomState, ScoringUpdateEvent } from "@vex-v5-override/protocol";
-import type { Network, RouterBroadcastProxy, RouterProxy } from "@vex-v5-override/wrpc/server";
+import type { Network, RouterBroadcastProxy, RouterProxy } from "@jerrylum/wrpc/server";
 import type { ClientRouter } from "@vex-v5-override/web/src/lib/multiplayer/client-router";
 
 /** Broadcast full room state to all connected clients. */

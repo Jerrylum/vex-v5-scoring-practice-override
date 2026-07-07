@@ -9,7 +9,7 @@ import {
 } from './Generator';
 import { FieldResourcePool } from './FieldResources';
 import { GENERATOR_VERSION, SNAPSHOT_VERSION } from '@vex-v5-override/protocol';
-import { WRPCError } from '@vex-v5-override/wrpc/server';
+import { WRPCError } from '@jerrylum/wrpc/server';
 import { Scenario } from './Scenario';
 import type { ScenarioSnapshot, ScenarioProvenance } from './ScenarioSnapshot';
 import type { ToggleColor } from './Scoring';

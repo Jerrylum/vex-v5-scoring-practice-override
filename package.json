@@ -11,6 +11,6 @@
 		"check": "bun run --filter '*' check",
 		"test": "bun run --filter '*' test",
 		"lint": "bun run --filter '*' lint",
-		"format": "prettier --write \"apps/web\" \"apps/worker\" \"packages/protocol\" \"packages/wrpc\" --ignore-path .prettierignore"
+		"format": "prettier --write \"apps/web\" \"apps/worker\" \"packages/protocol\" --ignore-path .prettierignore"
 	}
 }

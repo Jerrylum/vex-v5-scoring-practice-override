@@ -1,4 +1,4 @@
-import { createClientManager, type ClientOptions, type ConnectionState } from '@vex-v5-override/wrpc/client';
+import { createClientManager, type ClientOptions, type ConnectionState } from '@jerrylum/wrpc/client';
 import type { ServerRouter } from '@vex-v5-override/worker/src/server-router';
 import { clientRouter, type ClientRouter } from './client-router';
 import { generateClientName, generateUUID } from './identity';
@@ -46,7 +46,6 @@ function createClientOptions(): ClientOptions<ClientRouter> {
 		clientId: pending.clientId,
 		deviceId: pending.clientId,
 		deviceName: pending.displayName,
-		action: pending.action,
 		onContext: async () => ({}),
 		onOpen: () => {},
 		onClosed: () => {},

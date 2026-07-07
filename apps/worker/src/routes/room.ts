@@ -4,7 +4,7 @@ import {
   SetShowAnswerInputSchema,
   UpdateScoringInputSchema,
 } from "@vex-v5-override/protocol";
-import type { WRPCRootObject } from "@vex-v5-override/wrpc/server";
+import type { WRPCRootObject } from "@jerrylum/wrpc/server";
 import type { ClientRouter } from "@vex-v5-override/web/src/lib/multiplayer/client-router";
 import {
   regenerateScenario,

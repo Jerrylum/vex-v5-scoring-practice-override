@@ -7,7 +7,7 @@ import {
 	type ScoringPatch,
 	type ScoringUpdateEvent
 } from '@vex-v5-override/protocol';
-import type { ConnectionState } from '@vex-v5-override/wrpc/client';
+import type { ConnectionState } from '@jerrylum/wrpc/client';
 import { setOnRoomStateUpdateHandler, setOnScoringPatchHandler } from './client-router';
 import {
 	connectRoom,

@@ -3,7 +3,7 @@ import {
   JoinRoomInputSchema,
   JoiningKitSchema,
 } from "@vex-v5-override/protocol";
-import type { WRPCRootObject } from "@vex-v5-override/wrpc/server";
+import type { WRPCRootObject } from "@jerrylum/wrpc/server";
 import {
   assertScenarioSnapshotCompatible,
   createRoom,

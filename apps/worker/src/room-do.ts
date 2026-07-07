@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import { createWebSocketHandler } from "@vex-v5-override/wrpc/server";
+import { createWebSocketHandler } from "@jerrylum/wrpc/server";
 import type { RoomMeta, RoomState } from "@vex-v5-override/protocol";
 import type { RoomStoreData } from "./room-store";
 import { removeClient } from "./room-store";

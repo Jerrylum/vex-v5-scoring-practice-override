@@ -1,5 +1,5 @@
 import { RoomStateSchema, ScoringUpdateEventSchema, type RoomState, type ScoringUpdateEvent } from '@vex-v5-override/protocol';
-import { initWRPC } from '@vex-v5-override/wrpc/client';
+import { initWRPC } from '@jerrylum/wrpc/client';
 
 const w = initWRPC.createClient();
 

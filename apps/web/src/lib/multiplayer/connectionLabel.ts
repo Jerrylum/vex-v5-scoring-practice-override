@@ -1,4 +1,4 @@
-import type { ConnectionState } from '@vex-v5-override/wrpc/client';
+import type { ConnectionState } from '@jerrylum/wrpc/client';
 
 export function connectionLabelForState(state: ConnectionState): string {
 	switch (state) {

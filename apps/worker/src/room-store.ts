@@ -15,7 +15,7 @@ import {
   mergeNestedPatch,
   SNAPSHOT_VERSION,
 } from "@vex-v5-override/protocol";
-import { WRPCError } from "@vex-v5-override/wrpc/server";
+import { WRPCError } from "@jerrylum/wrpc/server";
 
 export class RoomNotFoundError extends WRPCError {
   constructor() {

@@ -1,5 +1,5 @@
-import { initWRPC } from "@vex-v5-override/wrpc/server";
-import type { Network } from "@vex-v5-override/wrpc/server";
+import { initWRPC } from "@jerrylum/wrpc/server";
+import type { Network } from "@jerrylum/wrpc/server";
 import type { RoomStoreData } from "./room-store";
 import { buildHandshakeRoute } from "./routes/handshake";
 import { buildRoomRoute } from "./routes/room";
