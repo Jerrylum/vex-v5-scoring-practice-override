@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import AboutDialog from '$lib/components/AboutDialog.svelte';
 	import PauseMenuDialog from '$lib/components/PauseMenuDialog.svelte';
 	import ConfirmDialog from '$lib/components/dialog/ConfirmDialog.svelte';
 	import RoomShareDialog from '$lib/components/RoomShareDialog.svelte';
@@ -23,6 +24,7 @@
 	type GameMode = 'singleplayer' | 'multiplayer';
 	type AppDialog =
 		| 'settings'
+		| 'about'
 		| 'pause'
 		| 'share'
 		| { type: 'confirm'; content: Pick<ConfirmRequestOptions, 'title' | 'message' | 'confirmLabel'> };
@@ -45,6 +47,11 @@
 	function openSettings() {
 		dismissConfirm(false);
 		openDialog = 'settings';
+	}
+
+	function openAbout() {
+		dismissConfirm(false);
+		openDialog = 'about';
 	}
 
 	function openPauseMenu() {
@@ -252,6 +259,7 @@
 	mode={gameMode}
 	onClose={closeDialog}
 	onOpenSettings={openSettings}
+	onOpenAbout={openAbout}
 	onOpenShareDialog={gameMode === 'multiplayer' ? openShareDialog : undefined}
 	onBackToMenu={handleBackToMenu}
 />
@@ -266,6 +274,8 @@
 	onChange={handleProfileChange}
 	onScenarioDefaultViewChange={handleScenarioDefaultViewChange}
 />
+
+<AboutDialog open={openDialog === 'about'} onClose={closeDialog} />
 
 {#if isConfirmDialog(openDialog)}
 	<ConfirmDialog

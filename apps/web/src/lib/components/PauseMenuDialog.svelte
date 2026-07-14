@@ -6,11 +6,12 @@
 		mode: 'singleplayer' | 'multiplayer';
 		onClose: () => void;
 		onOpenSettings: () => void;
+		onOpenAbout: () => void;
 		onOpenShareDialog?: () => void;
 		onBackToMenu: () => void;
 	}
 
-	let { open, mode, onClose, onOpenSettings, onOpenShareDialog, onBackToMenu }: Props = $props();
+	let { open, mode, onClose, onOpenSettings, onOpenAbout, onOpenShareDialog, onBackToMenu }: Props = $props();
 
 	const titleId = 'pause-menu-dialog-title';
 	const backLabel = $derived(mode === 'multiplayer' ? 'Leave room' : 'Exit');
@@ -27,6 +28,14 @@
 				onclick={onOpenSettings}
 			>
 				Settings
+			</button>
+
+			<button
+				type="button"
+				class="w-full cursor-pointer rounded-lg border border-gray-800 px-4 py-3 text-left text-sm font-medium text-white hover:bg-[#141414]"
+				onclick={onOpenAbout}
+			>
+				About
 			</button>
 
 			{#if mode === 'multiplayer' && onOpenShareDialog}
