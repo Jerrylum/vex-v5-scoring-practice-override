@@ -37,9 +37,10 @@
 			></button>
 			<div
 				class={[
-					'relative flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-lg border border-gray-800 bg-[#0a0a0a] text-[#CDD7E1] shadow-xl',
+					'relative flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-lg border border-gray-800 bg-[#0a0a0a] text-[#CDD7E1] shadow-xl outline-none',
 					contentClass
 				]}
+				tabindex="-1"
 				use:focusTrap
 			>
 				<div class="scoring-panel-scroll min-h-0 overflow-y-auto p-4">

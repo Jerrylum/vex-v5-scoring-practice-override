@@ -9,12 +9,15 @@ const FOCUSABLE = [
 	'[contenteditable="true"]'
 ].join(', ');
 
+const FOCUS_OPTS: FocusOptions = { preventScroll: true };
+
 /**
  * Svelte action that traps keyboard focus within a container.
  *
- * On mount the first focusable element receives focus. Tab / Shift+Tab wrap
- * around so focus never leaves the node. When the node is destroyed, focus is
- * restored to whatever element was focused before the trap took over.
+ * On mount the trap node receives focus (so dialogs with a late focusable link
+ * do not jump-scroll). Tab / Shift+Tab wrap around so focus never leaves the
+ * node. When the node is destroyed, focus is restored to whatever element was
+ * focused before the trap took over.
  */
 export function focusTrap(node: HTMLElement) {
 	function isVisible(el: HTMLElement): boolean {
@@ -26,19 +29,29 @@ export function focusTrap(node: HTMLElement) {
 		return [...node.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(isVisible);
 	}
 
+	function focusTrapNode() {
+		node.focus(FOCUS_OPTS);
+	}
+
 	function focusFirst() {
-		getFocusable()[0]?.focus();
+		const first = getFocusable()[0];
+		if (first) first.focus(FOCUS_OPTS);
+		else focusTrapNode();
 	}
 
 	function focusLast() {
 		const focusable = getFocusable();
-		focusable[focusable.length - 1]?.focus();
+		const last = focusable[focusable.length - 1];
+		if (last) last.focus(FOCUS_OPTS);
+		else focusTrapNode();
 	}
 
 	// Remember what had focus before the trap took over, so we can restore it later.
 	const previouslyFocused = document.activeElement as HTMLElement | null;
 
-	focusFirst();
+	// Focus the container, not the first tabbable child. AboutDialog's only link
+	// sits at the bottom; focusing it would scroll the panel to the end.
+	focusTrapNode();
 
 	function handleTabKeydown(e: KeyboardEvent) {
 		if (e.key !== 'Tab') return;
@@ -46,7 +59,7 @@ export function focusTrap(node: HTMLElement) {
 		const focusable = getFocusable();
 		if (!focusable.length) {
 			e.preventDefault();
-			node.focus();
+			focusTrapNode();
 			return;
 		}
 
@@ -66,14 +79,14 @@ export function focusTrap(node: HTMLElement) {
 		}
 
 		if (e.shiftKey) {
-			if (document.activeElement === firstEl) {
+			if (document.activeElement === firstEl || document.activeElement === node) {
 				e.preventDefault();
-				lastEl.focus();
+				lastEl.focus(FOCUS_OPTS);
 			}
 		} else {
 			if (document.activeElement === lastEl) {
 				e.preventDefault();
-				firstEl.focus();
+				firstEl.focus(FOCUS_OPTS);
 			}
 		}
 	}
@@ -81,7 +94,9 @@ export function focusTrap(node: HTMLElement) {
 	function handleFocusIn(e: FocusEvent) {
 		const target = e.target as Node | null;
 		if (target && !node.contains(target)) {
-			focusFirst();
+			// Prefer the trap node so recovering from a text click / body blur does
+			// not scroll a late focusable (e.g. footer link) into view.
+			focusTrapNode();
 		}
 	}
 
@@ -95,7 +110,7 @@ export function focusTrap(node: HTMLElement) {
 			document.removeEventListener('keydown', handleTabKeydown, true);
 			document.removeEventListener('focusin', handleFocusIn, true);
 			if (previouslyFocused && previouslyFocused.isConnected && typeof previouslyFocused.focus === 'function') {
-				previouslyFocused.focus();
+				previouslyFocused.focus(FOCUS_OPTS);
 			}
 		}
 	};
