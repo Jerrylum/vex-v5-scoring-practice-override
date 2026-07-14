@@ -19,9 +19,8 @@
 			<section>
 				<h3 class="mb-2 text-base font-semibold text-[#007fff]">Getting Started</h3>
 				<p>
-					Select a difficulty level and click <strong>New</strong> to generate a random field scenario.
-					Examine the 3D field: count visible pin halves on each goal, note each quadrant's toggle color, and
-					count robots in midfield. Enter those counts in the scoring panel tabs.
+					Select a difficulty level and click <strong>New</strong> to generate a random field scenario. Examine the 3D field: count visible pin
+					halves on each goal, note each quadrant's toggle color, and count robots in midfield. Enter those counts in the scoring panel tabs.
 				</p>
 			</section>
 
@@ -33,8 +32,8 @@
 					<li><strong>Robot in midfield:</strong> 8 pts</li>
 				</ul>
 				<p class="mt-2 text-gray-400">
-					Yellow ownership: a quadrant uses its toggle color; midfield uses the alliance with more robots (tied
-					= yellow doesn't score). Alliance-colored halves always score for their alliance.
+					Yellow ownership: a quadrant uses its toggle color; midfield uses the alliance with more robots (tied = yellow doesn't score).
+					Alliance-colored halves always score for their alliance.
 				</p>
 			</section>
 
@@ -52,16 +51,16 @@
 			<section>
 				<h3 class="mb-2 text-base font-semibold text-[#007fff]">Checking Your Score</h3>
 				<p>
-					After entering your counts, click <strong>Check</strong> to verify. Correct counts for each region are
-					shown so you can see what you might have missed.
+					After entering your counts, click <strong>Check</strong> to verify. Correct counts for each region are shown so you can see what you
+					might have missed.
 				</p>
 			</section>
 
 			<section>
 				<h3 class="mb-2 text-base font-semibold text-[#007fff]">Multiplayer</h3>
 				<p>
-					Create a room from <strong>Multiplayer</strong> on the main menu, then share the link or QR code.
-					Scoring and scenarios stay in sync across clients.
+					Create a room from <strong>Multiplayer</strong> on the main menu, then share the link or QR code. Scoring and scenarios stay in sync
+					across clients.
 				</p>
 			</section>
 
@@ -79,10 +78,20 @@
 					</a>
 				</p>
 				<p class="text-xs text-gray-500">
-					This project is licensed under the GNU General Public License v3.0 (GPLv3). VEX and VEX V5 are
-					trademarks of Innovation First International, Inc.
+					This project is licensed under the GNU General Public License v3.0 (GPLv3). VEX and VEX V5 are trademarks of Innovation First
+					International, Inc.
 				</p>
 			</section>
+		</div>
+
+		<div class="flex justify-end border-t border-gray-800 pt-4">
+			<button
+				type="button"
+				class="cursor-pointer rounded-full bg-[#32383E] px-4 py-2 text-sm text-[#CDD7E1] hover:bg-[#3d444b]"
+				onclick={onClose}
+			>
+				Close
+			</button>
 		</div>
 	</div>
 </Dialog>
