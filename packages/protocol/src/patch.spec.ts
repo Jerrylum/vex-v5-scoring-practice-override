@@ -19,6 +19,16 @@ describe('mergeNestedPatch', () => {
 		expect(afterBoth.sectionA).toEqual({ x: 1, y: 2 });
 	});
 
+	// Client race: local blue edit must live on kit before a remote red-only patch merges in,
+	// otherwise UI replace-from-kit resets blue to the stale kit value (0).
+	it('keeps optimistic sibling fields when a remote section patch arrives', () => {
+		const kit: SampleDoc = { sectionA: { x: 0, y: 0 }, sectionB: { z: 0 } };
+		const afterOptimistic = mergeNestedPatch(kit, { sectionA: { y: 4 } });
+		const afterRemote = mergeNestedPatch(afterOptimistic, { sectionA: { x: 20 } });
+
+		expect(afterRemote.sectionA).toEqual({ x: 20, y: 4 });
+	});
+
 	it('last write wins for the same field', () => {
 		const base: SampleDoc = { sectionA: { x: 0, y: 0 }, sectionB: { z: 0 } };
 		const first = mergeNestedPatch(base, { sectionA: { x: 1 } });

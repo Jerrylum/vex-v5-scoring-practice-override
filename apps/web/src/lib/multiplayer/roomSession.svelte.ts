@@ -144,6 +144,16 @@ class RoomSessionStore {
 
 	scheduleScoringPatch(patch: ScoringPatch): void {
 		if (this.syncingFromServer || !this.kit || this.connectionState !== 'connected') return;
+
+		// Optimistically merge into kit so inbound patches don't wipe unsent sibling fields
+		// when GameScreen replaces UI from kit (own patches are not echoed back).
+		this.kit = {
+			...this.kit,
+			state: {
+				...this.kit.state,
+				scoring: mergeNestedPatch(this.kit.state.scoring, patch)
+			}
+		};
 		this.scoringUpdate.schedule(patch);
 	}
 

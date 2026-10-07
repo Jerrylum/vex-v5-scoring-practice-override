@@ -134,7 +134,8 @@
 		return () => observer.disconnect();
 	});
 
-	// Inbound: drive userScoring from room revision, not from diff vs local state (that reverted edits).
+	// Inbound: replace UI scoring from kit on revision change. Kit already includes optimistic
+	// local patches (see roomSession.scheduleScoringPatch), so sibling fields survive remote merges.
 	$effect(() => {
 		if (!isMultiplayer || !roomSession.roomState) return;
 
