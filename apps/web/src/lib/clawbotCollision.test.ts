@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ROBOT_SIZE, isRobotInMidfield } from './fieldConstants';
+import { FIELD_TAPE_WIDTH, ROBOT_SIZE, isRobotInMidfield } from './fieldConstants';
 import { clawbotOverlapsMidfield, transformClawbotFootprint } from './clawbotCollision';
 import { CLAWBOT_FOOTPRINT_MAX_RING_VERTICES, CLAWBOT_LOCAL_FOOTPRINT } from './generated/clawbotFootprint';
 import { ClawbotOnFieldCase } from './structure/RobotsStructure';
@@ -52,7 +52,8 @@ describe('clawbot collision footprint', () => {
 
 	it('counts overlap from the generated footprint where the generic square misses midfield', () => {
 		const x = 10;
-		const z = -840;
+		// Just outside the inside tape edge: the 18" square misses, the clawbot body still crosses.
+		const z = -840 + FIELD_TAPE_WIDTH * Math.SQRT2;
 		const rotationY = 0;
 
 		expect(isRobotInMidfield(x, z, ROBOT_SIZE, rotationY)).toBe(false);
@@ -70,7 +71,7 @@ describe('ClawbotOnFieldCase.getMidfieldCounts', () => {
 		const placements: RobotPlacement[] = [
 			{ alliance: 'red', slot: 0, x: 0, z: 0, rotationY: 0 },
 			{ alliance: 'red', slot: 1, x: 0, z: 1200, rotationY: 0 },
-			{ alliance: 'blue', slot: 0, x: 10, z: -840, rotationY: 0 },
+			{ alliance: 'blue', slot: 0, x: 10, z: -840 + FIELD_TAPE_WIDTH * Math.SQRT2, rotationY: 0 },
 			{ alliance: 'blue', slot: 1, x: 1400, z: 1400, rotationY: Math.PI / 2 }
 		];
 

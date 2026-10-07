@@ -67,15 +67,29 @@ export const EXCLUSION_ZONES: ReadonlyArray<{ x: number; z: number }> = [
 	{ x: 6 * FT, z: -5 * FT }
 ];
 
+/** Field tape width (mm). Midfield scoring uses the inside edge of the tape. */
+export const FIELD_TAPE_WIDTH = 19;
+
+/**
+ * Distance from field center to a midfield diamond vertex on the outside edge of the tape (mm).
+ */
+const MIDFIELD_OUTER_VERTEX_RADIUS = 2.005 * FT;
+
+/**
+ * Inside-edge vertex radius. Each side is inset by {@link FIELD_TAPE_WIDTH} perpendicular
+ * to the tape. Diamond edges sit at 45°, so each vertex moves inward by tapeWidth * √2.
+ */
+const MIDFIELD_VERTEX_RADIUS = MIDFIELD_OUTER_VERTEX_RADIUS - FIELD_TAPE_WIDTH * Math.SQRT2;
+
 /**
  * Midfield diamond vertices in XZ (mm), centered at origin.
- * Matches the yellow debug highlight and SC6 vertical projection.
+ * Inside edge of the tape (SC6 vertical projection).
  */
 export const MIDFIELD_POLYGON: ReadonlyArray<{ x: number; z: number }> = [
-	{ x: 0, z: -2.005 * FT },
-	{ x: 2.005 * FT, z: 0 },
-	{ x: 0, z: 2.005 * FT },
-	{ x: -2.005 * FT, z: 0 }
+	{ x: 0, z: -MIDFIELD_VERTEX_RADIUS },
+	{ x: MIDFIELD_VERTEX_RADIUS, z: 0 },
+	{ x: 0, z: MIDFIELD_VERTEX_RADIUS },
+	{ x: -MIDFIELD_VERTEX_RADIUS, z: 0 }
 ];
 
 type Point2D = { x: number; z: number };
